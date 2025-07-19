@@ -87,6 +87,8 @@ async function initializeDatabase() {
   }
 }
 
+// =================== RUTAS BÁSICAS ===================
+
 // Ruta de health check
 app.get('/health', (req, res) => {
   res.json({ 
@@ -108,9 +110,6 @@ app.get('/api/test-db', async (req, res) => {
     });
 
     await client.connect();
-
-    // Las tablas ya se crean en initializeDatabase()
-    
     const result = await client.query('SELECT COUNT(*) as user_count FROM users');
     await client.end();
 
@@ -128,6 +127,76 @@ app.get('/api/test-db', async (req, res) => {
       error: error.message 
     });
   }
+});
+
+// =================== RUTAS DE AUTENTICACIÓN ADMIN ===================
+
+// POST /api/admin/login - Login de administrador
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    console.log('🔑 Intento de login admin:', req.body);
+    const { username, password } = req.body;
+
+    // Credenciales hardcodeadas (en producción usar base de datos)
+    const ADMIN_USERNAME = 'admin';
+    const ADMIN_PASSWORD = 'admin123';
+
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      // Generar token simple (en producción usar JWT real)
+      const token = `admin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      console.log('✅ Login exitoso, token generado:', token);
+      
+      res.json({
+        success: true,
+        message: 'Login exitoso',
+        token,
+        user: {
+          username: 'admin',
+          role: 'administrator'
+        }
+      });
+    } else {
+      console.log('❌ Credenciales incorrectas');
+      res.status(401).json({
+        success: false,
+        message: 'Credenciales incorrectas'
+      });
+    }
+  } catch (error) {
+    console.error('❌ Error en login admin:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: error.message
+    });
+  }
+});
+
+// Middleware para verificar token de admin
+function verifyAdminToken(req, res, next) {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  
+  if (!token || !token.startsWith('admin_')) {
+    return res.status(401).json({
+      success: false,
+      message: 'Token de admin requerido'
+    });
+  }
+  
+  next();
+}
+
+// GET /api/admin/verify - Verificar token de admin
+app.get('/api/admin/verify', verifyAdminToken, (req, res) => {
+  res.json({
+    success: true,
+    message: 'Token válido',
+    user: {
+      username: 'admin',
+      role: 'administrator'
+    }
+  });
 });
 
 // =================== RUTAS DE ÓRDENES ===================
@@ -154,8 +223,6 @@ app.post('/api/orders', async (req, res) => {
     });
 
     await client.connect();
-
-    // Las tablas ya se crean en initializeDatabase() - no necesita crearlas aquí
 
     // Generar número de orden único
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
@@ -229,7 +296,7 @@ app.post('/api/orders', async (req, res) => {
 });
 
 // GET /api/orders - Obtener todas las órdenes (para admin)
-app.get('/api/orders', async (req, res) => {
+app.get('/api/orders', verifyAdminToken, async (req, res) => {
   try {
     const { Client } = require('pg');
     const client = new Client({
@@ -337,7 +404,7 @@ app.get('/api/orders/:orderNumber', async (req, res) => {
 });
 
 // PATCH /api/orders/:id/status - Actualizar estado de orden
-app.patch('/api/orders/:id/status', async (req, res) => {
+app.patch('/api/orders/:id/status', verifyAdminToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -393,61 +460,7 @@ app.patch('/api/orders/:id/status', async (req, res) => {
 
 // =================== OTRAS RUTAS ===================
 
-// Rutas de API básicas
-// =================== RUTAS DE AUTENTICACIÓN ADMIN ===================
-
-// POST /api/admin/login - Login de administrador
-app.post('/api/admin/login', async (req, res) => {
-  try {
-    const { username, password } = req.body;
-
-    // Credenciales hardcodeadas (en producción usar base de datos)
-    const ADMIN_USERNAME = 'admin';
-    const ADMIN_PASSWORD = 'admin123';
-
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      // Generar token simple (en producción usar JWT real)
-      const token = `admin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      res.json({
-        success: true,
-        message: 'Login exitoso',
-        token,
-        user: {
-          username: 'admin',
-          role: 'administrator'
-        }
-      });
-    } else {
-      res.status(401).json({
-        success: false,
-        message: 'Credenciales incorrectas'
-      });
-    }
-  } catch (error) {
-    console.error('Error en login admin:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor',
-      error: error.message
-    });
-  }
-});
-
-// Middleware para verificar token de admin
-function verifyAdminToken(req, res, next) {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  
-  if (!token || !token.startsWith('admin_')) {
-    return res.status(401).json({
-      success: false,
-      message: 'Token de admin requerido'
-    });
-  }
-  
-  next();
-}
-
+// Rutas básicas de API
 app.use('/api/auth', (req, res) => {
   res.json({ message: 'Rutas de autenticación - próximamente' });
 });
@@ -467,7 +480,12 @@ app.use((err, req, res, next) => {
 
 // Ruta 404
 app.use('*', (req, res) => {
-  res.status(404).json({ message: 'Ruta no encontrada' });
+  console.log(`❌ Ruta no encontrada: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({ 
+    message: 'Ruta no encontrada',
+    path: req.originalUrl,
+    method: req.method
+  });
 });
 
 // Iniciar servidor
@@ -476,6 +494,7 @@ app.listen(PORT, async () => {
   console.log(`🏥 Health check en http://localhost:${PORT}/health`);
   console.log(`🗄️  Test DB en http://localhost:${PORT}/api/test-db`);
   console.log(`📦 Orders API en http://localhost:${PORT}/api/orders`);
+  console.log(`🔑 Admin Login en http://localhost:${PORT}/api/admin/login`);
   console.log(`📊 Entorno: ${process.env.NODE_ENV || 'development'}`);
   
   // Inicializar base de datos al arrancar el servidor

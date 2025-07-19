@@ -26,9 +26,10 @@ interface Order {
 
 interface AdminDashboardProps {
   onClose: () => void;
+  adminToken: string; // Agregamos el token como prop
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, adminToken }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,14 +42,38 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3001/api/orders');
+      console.log('🔑 Enviando petición con token:', adminToken);
+      
+      const response = await fetch('http://localhost:3001/api/orders', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}` // ✅ Incluir el token aquí
+        }
+      });
+      
+      console.log('📡 Respuesta del servidor:', response.status);
+      
+      if (response.status === 401) {
+        console.error('❌ Token no válido o expirado');
+        localStorage.removeItem('adminToken');
+        alert('Sesión expirada. Por favor inicia sesión de nuevo.');
+        onClose();
+        return;
+      }
+      
       const result = await response.json();
+      console.log('📦 Datos recibidos:', result);
       
       if (result.success) {
         setOrders(result.data);
+        console.log('✅ Órdenes cargadas:', result.data.length);
+      } else {
+        console.error('❌ Error en respuesta:', result.message);
       }
     } catch (error) {
-      console.error('Error al cargar órdenes:', error);
+      console.error('❌ Error al cargar órdenes:', error);
+      alert('Error al cargar las órdenes. Verifica la conexión.');
     } finally {
       setLoading(false);
     }
@@ -56,15 +81,27 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
 
   const updateOrderStatus = async (orderId: number, newStatus: string) => {
     try {
+      console.log(`🔄 Actualizando orden ${orderId} a estado: ${newStatus}`);
+      
       const response = await fetch(`http://localhost:3001/api/orders/${orderId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}` // ✅ Incluir el token aquí también
         },
         body: JSON.stringify({ status: newStatus })
       });
 
+      if (response.status === 401) {
+        console.error('❌ Token no válido para actualización');
+        localStorage.removeItem('adminToken');
+        alert('Sesión expirada. Por favor inicia sesión de nuevo.');
+        onClose();
+        return;
+      }
+
       if (response.ok) {
+        console.log('✅ Estado actualizado correctamente');
         // Actualizar estado local
         setOrders(orders.map(order => 
           order.id === orderId ? { ...order, status: newStatus } : order
@@ -73,9 +110,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
         if (selectedOrder && selectedOrder.id === orderId) {
           setSelectedOrder({ ...selectedOrder, status: newStatus });
         }
+        
+        // Mostrar mensaje de éxito
+        alert(`Estado actualizado a: ${newStatus}`);
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Error al actualizar:', errorData);
+        alert('Error al actualizar el estado');
       }
     } catch (error) {
-      console.error('Error al actualizar estado:', error);
+      console.error('❌ Error al actualizar estado:', error);
+      alert('Error de conexión al actualizar el estado');
     }
   };
 
@@ -127,6 +172,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
               <h1 className="text-2xl font-bold text-gray-900">Panel de Administración</h1>
               <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
                 Admin
+              </span>
+              <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                ✓ Autenticado
               </span>
             </div>
             <button
@@ -295,7 +343,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                   </svg>
                   <h3 className="mt-2 text-sm font-medium text-gray-900">No hay órdenes</h3>
-                  <p className="mt-1 text-sm text-gray-500">Cuando recibas órdenes, aparecerán aquí.</p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {filter === 'all' 
+                      ? 'Cuando recibas órdenes, aparecerán aquí.' 
+                      : `No hay órdenes con estado: ${filter}`
+                    }
+                  </p>
                 </div>
               )}
             </div>
