@@ -1,7 +1,7 @@
 {
   "name": "dropshipping-backend",
-  "version": "1.0.0",
-  "description": "Backend para tienda de dropshipping de carcasas y cargadores iPhone",
+  "version": "2.0.0",
+  "description": "Backend completo para tienda de dropshipping de carcasas iPhone",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -10,7 +10,9 @@
     "test:watch": "jest --watch",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
-    "db:seed": "node src/utils/seed.js"
+    "db:seed": "node src/utils/seed.js",
+    "db:reset": "prisma migrate reset",
+    "stripe:listen": "stripe listen --forward-to localhost:3001/api/webhooks/stripe"
   },
   "dependencies": {
     "@prisma/client": "^6.12.0",
@@ -21,6 +23,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.18.2",
+    "express-fileupload": "^1.4.0",
     "express-rate-limit": "^6.10.0",
     "helmet": "^7.0.0",
     "joi": "^17.9.2",
@@ -28,11 +31,15 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.4",
+    "node-cron": "^3.0.2",
     "pg": "^8.16.3",
     "prisma": "^6.12.0",
+    "qrcode": "^1.5.3",
     "stripe": "^13.3.0",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.0"
+    "swagger-ui-express": "^5.0.0",
+    "uuid": "^9.0.0",
+    "whatsapp-web.js": "^1.22.2"
   },
   "devDependencies": {
     "@types/jest": "^29.5.4",
@@ -44,7 +51,9 @@
     "dropshipping",
     "ecommerce",
     "iphone",
-    "api"
+    "api",
+    "stripe",
+    "notifications"
   ],
   "author": "Tu Nombre",
   "license": "ISC"

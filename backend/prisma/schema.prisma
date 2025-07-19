@@ -11,7 +11,7 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
-  password  String
+  password  String?
   firstName String
   lastName  String
   phone     String?
@@ -36,6 +36,7 @@ model Category {
   description String?
   imageUrl    String?
   isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -60,6 +61,8 @@ model Product {
   // Estado
   isActive    Boolean @default(true)
   isFeatured  Boolean @default(false)
+  inStock     Boolean @default(true)
+  stockCount  Int     @default(0)
   
   // SEO
   metaTitle       String?
@@ -140,37 +143,53 @@ model ProductImage {
 
 model Order {
   id     String      @id @default(cuid())
-  userId String
+  userId String?
   
   // Información del pedido
   orderNumber String @unique
   status      OrderStatus @default(PENDING)
   
+  // Información del cliente
+  customerFirstName String
+  customerLastName  String
+  customerEmail     String
+  customerPhone     String
+  
   // Montos
-  subtotal    Decimal @db.Decimal(10, 2)
+  subtotal     Decimal @db.Decimal(10, 2)
   shippingCost Decimal @db.Decimal(10, 2)
-  tax         Decimal @db.Decimal(10, 2)
-  total       Decimal @db.Decimal(10, 2)
+  tax          Decimal @db.Decimal(10, 2) @default(0)
+  total        Decimal @db.Decimal(10, 2)
   
   // Información de pago
-  paymentMethod String
-  paymentStatus PaymentStatus @default(PENDING)
+  paymentMethod   String?
+  paymentStatus   PaymentStatus @default(PENDING)
   stripePaymentId String?
+  stripeSessionId String?
   
   // Información de envío
-  shippingAddress Json
-  billingAddress  Json?
-  trackingNumber  String?
-  shippedAt       DateTime?
-  deliveredAt     DateTime?
+  shippingAddress    String
+  shippingCity       String
+  shippingState      String
+  shippingPostalCode String
+  shippingCountry    String
+  notes              String?
+  
+  // Tracking
+  trackingNumber String?
+  trackingUrl    String?
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
   
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relaciones
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items     OrderItem[]
+  user           User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items          OrderItem[]
+  statusHistory  OrderStatusHistory[]
+  notifications  OrderNotification[]
 
   @@map("orders")
 }
@@ -179,26 +198,66 @@ model OrderItem {
   id        String @id @default(cuid())
   orderId   String
   productId String
-  variantId String
+  variantId String?
   
-  quantity  Int
-  price     Decimal @db.Decimal(10, 2) // Precio al momento de la compra
+  // Datos del producto al momento de la compra
+  productName  String
+  productModel String?
+  productColor String?
+  quantity     Int
+  price        Decimal @db.Decimal(10, 2)
+  total        Decimal @db.Decimal(10, 2)
   
   createdAt DateTime @default(now())
 
   // Relaciones
   order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
-  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
 
   @@map("order_items")
 }
 
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  status    OrderStatus
+  notes     String?
+  createdBy String?     // Admin que cambió el estado
+  createdAt DateTime    @default(now())
+
+  // Relaciones
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_status_history")
+}
+
+model OrderNotification {
+  id          String            @id @default(cuid())
+  orderId     String
+  type        NotificationType
+  channel     NotificationChannel
+  recipient   String            // Email o número de teléfono
+  subject     String?
+  message     String
+  sentAt      DateTime?
+  status      NotificationStatus @default(PENDING)
+  error       String?
+  retryCount  Int               @default(0)
+  createdAt   DateTime          @default(now())
+
+  // Relaciones
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_notifications")
+}
+
 model CartItem {
   id        String @id @default(cuid())
-  userId    String
+  userId    String?
+  sessionId String? // Para usuarios anónimos
   productId String
-  variantId String
+  variantId String?
   
   quantity  Int
   
@@ -206,18 +265,23 @@ model CartItem {
   updatedAt DateTime @updatedAt
 
   // Relaciones
-  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
-  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  user    User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
 
-  @@unique([userId, variantId])
+  @@unique([userId, productId, variantId])
+  @@unique([sessionId, productId, variantId])
   @@map("cart_items")
 }
 
 model Review {
   id        String @id @default(cuid())
-  userId    String
+  userId    String?
   productId String
+  
+  // Información del reviewer (para usuarios anónimos)
+  customerName  String?
+  customerEmail String?
   
   rating    Int    @db.SmallInt // 1-5
   title     String?
@@ -230,10 +294,9 @@ model Review {
   updatedAt DateTime @updatedAt
 
   // Relaciones
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, productId])
   @@map("reviews")
 }
 
@@ -263,18 +326,30 @@ model Address {
   @@map("addresses")
 }
 
-model Supplier {
-  id          String @id @default(cuid())
-  name        String
-  apiKey      String?
-  apiSecret   String?
-  baseUrl     String?
-  isActive    Boolean @default(true)
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  type  SettingType @default(STRING)
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("suppliers")
+  @@map("settings")
+}
+
+model Analytics {
+  id        String      @id @default(cuid())
+  type      AnalyticsType
+  event     String      // page_view, product_view, add_to_cart, purchase, etc.
+  data      Json?       // Datos adicionales del evento
+  sessionId String?
+  userId    String?
+  ip        String?
+  userAgent String?
+  createdAt DateTime    @default(now())
+
+  @@map("analytics")
 }
 
 // Enums
@@ -299,4 +374,43 @@ enum PaymentStatus {
   PAID
   FAILED
   REFUNDED
+  CANCELLED
+}
+
+enum NotificationType {
+  ORDER_CONFIRMATION
+  ORDER_SHIPPED
+  ORDER_DELIVERED
+  ORDER_CANCELLED
+  PAYMENT_FAILED
+  STOCK_ALERT
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  WHATSAPP
+  PUSH
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  DELIVERED
+}
+
+enum SettingType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+}
+
+enum AnalyticsType {
+  PAGE_VIEW
+  PRODUCT_VIEW
+  CART_ACTION
+  PURCHASE
+  USER_ACTION
 }
