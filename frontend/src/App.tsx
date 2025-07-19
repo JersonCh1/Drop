@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
+import Checkout from './components/checkout/Checkout.tsx';
+import AdminDashboard from './components/admin/AdminDashboard.tsx';
+import AdminLogin from './components/admin/AdminLogin.tsx';
 
 interface CartItem {
   id: string;
@@ -16,10 +19,22 @@ function App() {
   const [selectedColor, setSelectedColor] = useState('Negro');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [adminToken, setAdminToken] = useState<string | null>(null);
 
   const models = ['iPhone 15', 'iPhone 14', 'iPhone 13'];
   const colors = ['Negro', 'Azul', 'Rosa', 'Transparente'];
   const price = 19.99;
+
+  // Verificar si hay token de admin guardado
+  useEffect(() => {
+    const savedToken = localStorage.getItem('adminToken');
+    if (savedToken) {
+      setAdminToken(savedToken);
+    }
+  }, []);
 
   const addToCart = () => {
     const newItem: CartItem = {
@@ -58,6 +73,39 @@ function App() {
     return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
+  const handleCheckout = () => {
+    setIsCartOpen(false);
+    setIsCheckoutOpen(true);
+  };
+
+  const handleOrderComplete = () => {
+    setCart([]);
+    setIsCheckoutOpen(false);
+    setIsCartOpen(false);
+  };
+
+  const handleAdminClick = () => {
+    if (adminToken) {
+      // Si ya está autenticado, abrir admin directamente
+      setIsAdminOpen(true);
+    } else {
+      // Si no está autenticado, mostrar login
+      setIsAdminLoginOpen(true);
+    }
+  };
+
+  const handleAdminLogin = (token: string) => {
+    setAdminToken(token);
+    setIsAdminLoginOpen(false);
+    setIsAdminOpen(true);
+  };
+
+  const handleAdminLogout = () => {
+    localStorage.removeItem('adminToken');
+    setAdminToken(null);
+    setIsAdminOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -65,19 +113,49 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <h1 className="text-2xl font-bold text-gray-900">iPhone Cases Store</h1>
-            <button
-              onClick={() => setIsCartOpen(true)}
-              className="relative p-2 text-gray-600 hover:text-gray-900"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6H19" />
-              </svg>
-              {getTotalItems() > 0 && (
-                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {getTotalItems()}
-                </span>
+            <div className="flex items-center space-x-2">
+              {/* Admin Button */}
+              <button
+                onClick={handleAdminClick}
+                className={`p-2 hover:text-gray-900 ${adminToken ? 'text-blue-600' : 'text-gray-600'}`}
+                title={adminToken ? 'Panel de Administración (Autenticado)' : 'Acceder como Admin'}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                {adminToken && (
+                  <span className="absolute -top-1 -right-1 bg-green-500 w-3 h-3 rounded-full"></span>
+                )}
+              </button>
+              
+              {/* Logout Button (solo si está autenticado) */}
+              {adminToken && (
+                <button
+                  onClick={handleAdminLogout}
+                  className="p-2 text-red-600 hover:text-red-700"
+                  title="Cerrar Sesión Admin"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </button>
               )}
-            </button>
+              
+              {/* Cart Button */}
+              <button
+                onClick={() => setIsCartOpen(true)}
+                className="relative p-2 text-gray-600 hover:text-gray-900"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6H19" />
+                </svg>
+                {getTotalItems() > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {getTotalItems()}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -216,7 +294,10 @@ function App() {
                     <span className="font-medium">Total:</span>
                     <span className="text-xl font-bold">${getTotalPrice().toFixed(2)}</span>
                   </div>
-                  <button className="w-full bg-green-600 text-white py-3 rounded-md font-medium hover:bg-green-700 transition-colors">
+                  <button 
+                    onClick={handleCheckout}
+                    className="w-full bg-green-600 text-white py-3 rounded-md font-medium hover:bg-green-700 transition-colors"
+                  >
                     Proceder al Checkout
                   </button>
                 </div>
@@ -224,6 +305,31 @@ function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Checkout Modal */}
+      {isCheckoutOpen && (
+        <Checkout 
+          cart={cart}
+          onClose={() => setIsCheckoutOpen(false)}
+          onOrderComplete={handleOrderComplete}
+        />
+      )}
+
+      {/* Admin Login */}
+      {isAdminLoginOpen && (
+        <AdminLogin 
+          onLogin={handleAdminLogin}
+          onClose={() => setIsAdminLoginOpen(false)}
+        />
+      )}
+
+      {/* Admin Dashboard */}
+      {isAdminOpen && adminToken && (
+        <AdminDashboard 
+          onClose={() => setIsAdminOpen(false)}
+          adminToken={adminToken}
+        />
       )}
     </div>
   );
