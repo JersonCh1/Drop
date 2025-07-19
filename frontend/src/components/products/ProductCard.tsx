@@ -1,245 +1,110 @@
-// frontend/src/components/products/ProductCard.tsx
+// frontend/src/components/layout/Footer.tsx
 import React from 'react';
-import { useCart, CartItem } from '../../context/CartContext';
-import analyticsService from '../../services/analyticsService';
 
-interface ProductCardProps {
-  selectedModel: string;
-  selectedColor: string;
-  models: string[];
-  colors: string[];
-  price: number;
-  onModelChange: (model: string) => void;
-  onColorChange: (color: string) => void;
-  createCartItem: () => CartItem;
-}
-
-const ProductCard: React.FC<ProductCardProps> = ({
-  selectedModel,
-  selectedColor,
-  models,
-  colors,
-  price,
-  onModelChange,
-  onColorChange,
-  createCartItem
-}) => {
-  const { addItem, openCart } = useCart();
-
-  const handleAddToCart = () => {
-    const item = createCartItem();
-    addItem(item);
-    openCart();
-
-    // Track analytics
-    analyticsService.trackAddToCart(
-      item.productId,
-      1,
-      item.price,
-      item.name
-    );
-  };
-
-  const handleModelChange = (model: string) => {
-    onModelChange(model);
-    analyticsService.trackCustomEvent('product_option_changed', {
-      option_type: 'model',
-      option_value: model,
-      product_name: 'Carcasa iPhone Premium'
-    });
-  };
-
-  const handleColorChange = (color: string) => {
-    onColorChange(color);
-    analyticsService.trackCustomEvent('product_option_changed', {
-      option_type: 'color',
-      option_value: color,
-      product_name: 'Carcasa iPhone Premium'
-    });
-  };
+const Footer: React.FC = () => {
+  const currentYear = new Date().getFullYear();
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-8">
-      <div className="mb-6">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Carcasa iPhone Premium</h2>
-        <div className="flex items-center space-x-4 mb-4">
-          <p className="text-3xl font-bold text-blue-600">${price}</p>
-          <div className="flex items-center space-x-1">
-            {[...Array(5)].map((_, i) => (
-              <svg key={i} className="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-            ))}
-            <span className="text-sm text-gray-600 ml-2">(4.8) 234 reseñas</span>
+    <footer className="bg-gray-900 text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* Company Info */}
+          <div className="col-span-1 md:col-span-2">
+            <div className="flex items-center space-x-2 mb-4">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">📱</span>
+              </div>
+              <h3 className="text-xl font-bold">iPhone Cases Store</h3>
+            </div>
+            <p className="text-gray-400 mb-4 max-w-md">
+              Carcasas iPhone de alta calidad con diseños únicos. Protege tu dispositivo 
+              con estilo y recibe envío gratis en todo el mundo.
+            </p>
           </div>
-        </div>
-      </div>
-      
-      <div className="space-y-6">
-        {/* Model Selection */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
-            Modelo de iPhone
-          </label>
-          <select
-            value={selectedModel}
-            onChange={(e) => handleModelChange(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-          >
-            {models.map(model => (
-              <option key={model} value={model}>{model}</option>
-            ))}
-          </select>
-        </div>
 
-        {/* Color Selection */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
-            Color
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            {colors.map(color => (
-              <button
-                key={color}
-                onClick={() => handleColorChange(color)}
-                className={`p-3 border rounded-lg text-sm font-medium transition-all duration-200 ${
-                  selectedColor === color
-                    ? 'border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-200'
-                    : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <div className={`w-4 h-4 rounded-full border ${getColorClasses(color)}`}></div>
-                  <span>{color}</span>
-                </div>
-              </button>
-            ))}
+          {/* Quick Links */}
+          <div>
+            <h4 className="text-lg font-semibold mb-4">Enlaces Rápidos</h4>
+            <ul className="space-y-2">
+              <li><a href="/" className="text-gray-400 hover:text-white transition-colors">Inicio</a></li>
+              <li><a href="/products" className="text-gray-400 hover:text-white transition-colors">Productos</a></li>
+              <li><a href="/track" className="text-gray-400 hover:text-white transition-colors">Rastrear Orden</a></li>
+              <li><a href="/contact" className="text-gray-400 hover:text-white transition-colors">Contacto</a></li>
+            </ul>
+          </div>
+
+          {/* Customer Service */}
+          <div>
+            <h4 className="text-lg font-semibold mb-4">Atención al Cliente</h4>
+            <ul className="space-y-2">
+              <li><a href="/help" className="text-gray-400 hover:text-white transition-colors">Centro de Ayuda</a></li>
+              <li><a href="/returns" className="text-gray-400 hover:text-white transition-colors">Devoluciones</a></li>
+              <li><a href="/shipping" className="text-gray-400 hover:text-white transition-colors">Envíos</a></li>
+              <li><a href="/warranty" className="text-gray-400 hover:text-white transition-colors">Garantía</a></li>
+            </ul>
           </div>
         </div>
 
-        {/* Price Breakdown */}
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-600">Precio base:</span>
-            <span className="font-medium">${price}</span>
-          </div>
-          <div className="flex justify-between items-center text-sm mt-1">
-            <span className="text-gray-600">Envío:</span>
-            <span className="font-medium text-green-600">GRATIS</span>
-          </div>
-          <div className="border-t mt-3 pt-3">
-            <div className="flex justify-between items-center">
-              <span className="text-lg font-semibold">Total:</span>
-              <span className="text-xl font-bold text-blue-600">${price}</span>
+        {/* Contact Info */}
+        <div className="border-t border-gray-800 mt-8 pt-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex items-center space-x-3">
+              <div className="bg-blue-600 p-2 rounded-lg">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Email</p>
+                <p className="text-white">soporte@iphonecases.com</p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <div className="bg-green-600 p-2 rounded-lg">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">WhatsApp</p>
+                <p className="text-white">+51 999 888 777</p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <div className="bg-purple-600 p-2 rounded-lg">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Horario</p>
+                <p className="text-white">24/7 Soporte</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Add to Cart Button */}
-        <button
-          onClick={handleAddToCart}
-          className="w-full bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-200 transform hover:scale-105"
-        >
-          Agregar al Carrito - ${price}
-        </button>
-
-        {/* Quick Actions */}
-        <div className="flex space-x-3">
-          <button className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors">
-            💝 Lista de Deseos
-          </button>
-          <button className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors">
-            📤 Compartir
-          </button>
-        </div>
-
-        {/* Product Features */}
-        <div className="border-t pt-6">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-            <span className="mr-2">✨</span>
-            Características Destacadas
-          </h3>
-          <ul className="space-y-3">
-            <FeatureItem 
-              icon="🛡️" 
-              title="Protección Militar"
-              description="Resistente a caídas desde 2 metros"
-            />
-            <FeatureItem 
-              icon="🔌" 
-              title="Acceso Total"
-              description="Todos los puertos y botones accesibles"
-            />
-            <FeatureItem 
-              icon="💎" 
-              title="Material Premium"
-              description="TPU flexible y PC resistente"
-            />
-            <FeatureItem 
-              icon="🚚" 
-              title="Envío Express"
-              description="Entrega en 5-10 días hábiles"
-            />
-          </ul>
-        </div>
-
-        {/* Trust Badges */}
-        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-          <div className="flex items-center justify-center space-x-6 text-sm">
-            <div className="flex items-center space-x-1 text-green-700">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              <span className="font-medium">Garantía 30 días</span>
-            </div>
-            <div className="flex items-center space-x-1 text-green-700">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-              </svg>
-              <span className="font-medium">Compra Segura</span>
-            </div>
-            <div className="flex items-center space-x-1 text-green-700">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-              </svg>
-              <span className="font-medium">Envío Gratis</span>
+        {/* Copyright */}
+        <div className="border-t border-gray-800 mt-8 pt-8 text-center">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-gray-400 text-sm">
+              © {currentYear} iPhone Cases Store. Todos los derechos reservados.
+            </p>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+              <a href="/terms" className="text-gray-400 hover:text-white text-sm transition-colors">
+                Términos de Servicio
+              </a>
+              <a href="/privacy" className="text-gray-400 hover:text-white text-sm transition-colors">
+                Política de Privacidad
+              </a>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </footer>
   );
 };
 
-// Componente para características
-interface FeatureItemProps {
-  icon: string;
-  title: string;
-  description: string;
-}
-
-const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, description }) => (
-  <li className="flex items-start space-x-3">
-    <span className="text-lg">{icon}</span>
-    <div>
-      <p className="font-medium text-gray-900">{title}</p>
-      <p className="text-sm text-gray-600">{description}</p>
-    </div>
-  </li>
-);
-
-// Función para obtener clases de color
-const getColorClasses = (color: string): string => {
-  const colorMap: { [key: string]: string } = {
-    'Negro': 'bg-gray-900',
-    'Azul': 'bg-blue-500',
-    'Rosa': 'bg-pink-400',
-    'Transparente': 'bg-gray-100 border-gray-300',
-    'Verde': 'bg-green-500',
-    'Morado': 'bg-purple-500'
-  };
-  
-  return colorMap[color] || 'bg-gray-300';
-};
-
-export default ProductCard;
+export default Footer;

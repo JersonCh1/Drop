@@ -7,20 +7,20 @@ import { loadStripe } from '@stripe/stripe-js';
 import './App.css';
 
 // Context
-import { CartProvider } from './context/CartContext';
-import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext.tsx';
+import { AuthProvider } from './context/AuthContext.tsx';
 
 // Components
-import Header from './components/layout/Header';
-import Footer from './components/layout/Footer';
-import ProductCard from './components/products/ProductCard';
-import CartSidebar from './components/cart/CartSidebar';
-import Checkout from './components/checkout/Checkout';
-import AdminDashboard from './components/admin/AdminDashboard';
-import AdminLogin from './components/admin/AdminLogin';
+import Header from './components/layout/Header.tsx';
+import Footer from './components/layout/Footer.tsx';
+import ProductCard from './components/products/ProductCard.tsx';
+import CartSidebar from './components/cart/CartSidebar.tsx';
+import Checkout from './components/checkout/Checkout.tsx';
+import AdminDashboard from './components/admin/AdminDashboard.tsx';
+import AdminLogin from './components/admin/AdminLogin.tsx';
 
 // Services
-import analyticsService from './services/analyticsService';
+import analyticsService from './services/analyticsService.ts';
 
 // Types
 export interface CartItem {

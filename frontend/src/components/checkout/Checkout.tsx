@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useCart } from '../../context/CartContext';
 
 interface CartItem {
   id: string;
@@ -24,12 +25,12 @@ interface CheckoutFormData {
 }
 
 interface CheckoutProps {
-  cart: CartItem[];
   onClose: () => void;
   onOrderComplete: () => void;
 }
 
-const Checkout: React.FC<CheckoutProps> = ({ cart, onClose, onOrderComplete }) => {
+const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
+  const { items: cart, totalPrice, shippingCost, finalTotal, clearCart } = useCart();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<CheckoutFormData>({
     firstName: '',
@@ -48,9 +49,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, onClose, onOrderComplete }) =
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Cálculos de precios
-  const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-  const shippingCost = calculateShipping(formData.country);
-  const total = subtotal + shippingCost;
+  const subtotal = totalPrice;
+  const total = finalTotal;
 
   function calculateShipping(country: string): number {
     const shippingRates: { [key: string]: number } = {
@@ -134,6 +134,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, onClose, onOrderComplete }) =
       if (response.ok) {
         const result = await response.json();
         console.log('Orden creada:', result);
+        clearCart(); // Limpiar carrito después de orden exitosa
         onOrderComplete();
         alert('¡Orden creada exitosamente! Te contactaremos pronto.');
       } else {

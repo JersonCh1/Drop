@@ -1,3 +1,4 @@
+// frontend/src/components/admin/AdminLogin.tsx
 import React, { useState } from 'react';
 
 interface AdminLoginProps {
@@ -28,7 +29,6 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onClose }) => {
       const result = await response.json();
 
       if (result.success) {
-        // Guardar token en localStorage
         localStorage.setItem('adminToken', result.token);
         onLogin(result.token);
       } else {
