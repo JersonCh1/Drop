@@ -1,6 +1,6 @@
 // frontend/src/components/layout/Header.tsx
 import React from 'react';
-import { useCart } from '../../context/CartContext';
+import { useCart } from '../../context/CartContext.tsx';
 
 interface HeaderProps {
   onAdminClick: () => void;
