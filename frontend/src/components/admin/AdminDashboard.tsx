@@ -21,10 +21,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, adminToken }) 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+  // En src/components/admin/AdminDashboard.tsx
+// Busca el useEffect (línea 26) y cámbialo por:
 
+useEffect(() => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
@@ -54,6 +54,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, adminToken }) 
       setLoading(false);
     }
   };
+
+  fetchOrders();
+}, [adminToken, onClose]); // Agregar dependencias correctas
 
   const updateOrderStatus = async (orderId: number, newStatus: string) => {
     try {

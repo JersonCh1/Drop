@@ -233,4 +233,433 @@ class EmailService {
       return false;
     }
   }
-  
+  // Método para enviar notificación de envío
+  async sendShippingNotification(orderData, trackingNumber = null, trackingUrl = null) {
+    try {
+      if (!this.isConfigured) {
+        console.log('📧 Email no configurado, saltando notificación de envío');
+        return false;
+      }
+
+      const { order } = orderData;
+
+      const html = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Tu orden ha sido enviada</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb;">
+          
+          <div style="max-width: 600px; margin: 0 auto; background: white;">
+            
+            <!-- Header -->
+            <div style="background-color: #3b82f6; color: white; padding: 30px 20px; text-align: center;">
+              <div style="font-size: 48px; margin-bottom: 10px;">📦</div>
+              <h1 style="margin: 0; font-size: 24px; font-weight: 700;">¡Tu orden ha sido enviada!</h1>
+              <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Orden ${order.order_number}</p>
+            </div>
+
+            <!-- Content -->
+            <div style="padding: 30px 20px;">
+              <div style="background: #dbeafe; padding: 25px; border-radius: 12px; margin-bottom: 25px; text-align: center;">
+                <p style="margin: 0 0 15px 0; font-size: 16px; color: #1e40af; line-height: 1.6;">
+                  ¡Excelentes noticias! Tu orden está en camino y llegará pronto.
+                </p>
+                ${trackingNumber ? `
+                <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                  <p style="margin: 0 0 5px 0; font-size: 14px; color: #374151;">Número de seguimiento:</p>
+                  <p style="margin: 0; font-size: 18px; font-weight: 700; color: #1f2937; font-family: monospace;">${trackingNumber}</p>
+                </div>
+                ` : ''}
+              </div>
+
+              <!-- Order Details -->
+              <div style="background: #fefefe; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 25px;">
+                <h3 style="margin: 0 0 15px 0; color: #1f2937;">Detalles de la Orden</h3>
+                <table style="width: 100%;">
+                  <tr>
+                    <td style="padding: 5px 0; color: #6b7280;">Número:</td>
+                    <td style="padding: 5px 0; font-weight: 600; color: #1f2937;">${order.order_number}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0; color: #6b7280;">Total:</td>
+                    <td style="padding: 5px 0; font-weight: 600; color: #059669;">$${parseFloat(order.total).toFixed(2)} USD</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0; color: #6b7280;">Estado:</td>
+                    <td style="padding: 5px 0; font-weight: 600; color: #3b82f6;">Enviado</td>
+                  </tr>
+                  ${order.shipped_at ? `
+                  <tr>
+                    <td style="padding: 5px 0; color: #6b7280;">Fecha de envío:</td>
+                    <td style="padding: 5px 0; font-weight: 600; color: #1f2937;">${new Date(order.shipped_at).toLocaleDateString('es-ES')}</td>
+                  </tr>
+                  ` : ''}
+                </table>
+              </div>
+
+              <!-- Shipping Timeline -->
+              <div style="background: #f8fafc; padding: 25px; border-radius: 12px; margin-bottom: 25px;">
+                <h4 style="margin: 0 0 15px 0; color: #1f2937;">¿Qué sigue?</h4>
+                <div style="space-y: 10px;">
+                  <div style="flex items-center space-x-3; margin-bottom: 10px;">
+                    <div style="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center;">
+                      <span style="color: white; font-size: 12px;">✓</span>
+                    </div>
+                    <span style="color: #374151;">Orden procesada y enviada</span>
+                  </div>
+                  <div style="flex items-center space-x-3; margin-bottom: 10px;">
+                    <div style="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center;">
+                      <span style="color: white; font-size: 12px;">→</span>
+                    </div>
+                    <span style="color: #374151;">En tránsito (5-10 días hábiles)</span>
+                  </div>
+                  <div style="flex items-center space-x-3;">
+                    <div style="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center;">
+                      <span style="color: white; font-size: 12px;">📦</span>
+                    </div>
+                    <span style="color: #6b7280;">Entregado</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div style="text-align: center; margin: 30px 0;">
+                ${trackingUrl ? `
+                <a href="${trackingUrl}" 
+                   style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 0 10px;">
+                  🔍 Rastrear Envío
+                </a>
+                ` : ''}
+                <a href="mailto:${process.env.SUPPORT_EMAIL || 'support@example.com'}" 
+                   style="display: inline-block; background: #6b7280; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 0 10px;">
+                  📧 Contactar Soporte
+                </a>
+              </div>
+
+              <!-- Footer -->
+              <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
+                <p style="margin: 0;">© ${new Date().getFullYear()} iPhone Cases Store. Todos los derechos reservados.</p>
+              </div>
+
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      const mailOptions = {
+        from: `"iPhone Cases Store" <${process.env.EMAIL_USER}>`,
+        to: order.customer_email,
+        subject: `Tu orden ${order.order_number} ha sido enviada 📦`,
+        html: html
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log(`✅ Notificación de envío enviada a ${order.customer_email}`);
+      return true;
+
+    } catch (error) {
+      console.error('❌ Error enviando notificación de envío:', error);
+      return false;
+    }
+  }
+
+  // Método para enviar notificación de entrega
+  async sendDeliveryNotification(orderData) {
+    try {
+      if (!this.isConfigured) {
+        console.log('📧 Email no configurado, saltando notificación de entrega');
+        return false;
+      }
+
+      const { order } = orderData;
+
+      const html = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>¡Tu orden ha sido entregada!</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb;">
+          
+          <div style="max-width: 600px; margin: 0 auto; background: white;">
+            
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px 20px; text-align: center;">
+              <div style="font-size: 48px; margin-bottom: 10px;">🎉</div>
+              <h1 style="margin: 0; font-size: 24px; font-weight: 700;">¡Tu orden ha sido entregada!</h1>
+              <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Orden ${order.order_number}</p>
+            </div>
+
+            <!-- Content -->
+            <div style="padding: 30px 20px;">
+              <div style="background: #d1fae5; padding: 25px; border-radius: 12px; margin-bottom: 25px; text-align: center;">
+                <p style="margin: 0; font-size: 16px; color: #065f46; line-height: 1.6;">
+                  ¡Esperamos que disfrutes tu nueva carcasa iPhone! Gracias por elegirnos para proteger tu dispositivo.
+                </p>
+              </div>
+
+              <!-- Order Details -->
+              <div style="background: #fefefe; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 25px;">
+                <h3 style="margin: 0 0 15px 0; color: #1f2937;">Detalles de la Orden</h3>
+                <table style="width: 100%;">
+                  <tr>
+                    <td style="padding: 5px 0; color: #6b7280;">Número:</td>
+                    <td style="padding: 5px 0; font-weight: 600; color: #1f2937;">${order.order_number}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0; color: #6b7280;">Total:</td>
+                    <td style="padding: 5px 0; font-weight: 600; color: #059669;">$${parseFloat(order.total).toFixed(2)} USD</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0; color: #6b7280;">Estado:</td>
+                    <td style="padding: 5px 0; font-weight: 600; color: #10b981;">Entregado</td>
+                  </tr>
+                  ${order.delivered_at ? `
+                  <tr>
+                    <td style="padding: 5px 0; color: #6b7280;">Fecha de entrega:</td>
+                    <td style="padding: 5px 0; font-weight: 600; color: #1f2937;">${new Date(order.delivered_at).toLocaleDateString('es-ES')}</td>
+                  </tr>
+                  ` : ''}
+                </table>
+              </div>
+
+              <!-- Review Request -->
+              <div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 25px; border-radius: 12px; margin-bottom: 25px;">
+                <h4 style="margin: 0 0 15px 0; color: #92400e;">¿Te gustó tu compra?</h4>
+                <p style="margin: 0 0 15px 0; color: #92400e; font-size: 14px;">
+                  Tu opinión es muy importante para nosotros. ¡Ayúdanos dejando una reseña!
+                </p>
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/review/${order.order_number}" 
+                   style="display: inline-block; background: #f59e0b; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: 600;">
+                  ⭐ Dejar Reseña
+                </a>
+              </div>
+
+              <!-- Support -->
+              <div style="text-align: center; margin: 30px 0;">
+                <p style="margin: 0 0 15px 0; color: #6b7280;">¿Algún problema con tu orden?</p>
+                <a href="mailto:${process.env.SUPPORT_EMAIL || 'support@example.com'}" 
+                   style="display: inline-block; background: #6b7280; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">
+                  📧 Contactar Soporte
+                </a>
+              </div>
+
+              <!-- Footer -->
+              <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
+                <p style="margin: 0;">© ${new Date().getFullYear()} iPhone Cases Store. Todos los derechos reservados.</p>
+              </div>
+
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      const mailOptions = {
+        from: `"iPhone Cases Store" <${process.env.EMAIL_USER}>`,
+        to: order.customer_email,
+        subject: `¡Tu orden ${order.order_number} ha sido entregada! 🎉`,
+        html: html
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log(`✅ Notificación de entrega enviada a ${order.customer_email}`);
+      return true;
+
+    } catch (error) {
+      console.error('❌ Error enviando notificación de entrega:', error);
+      return false;
+    }
+  }
+
+  // Método para enviar email de prueba
+  async sendTestEmail(email) {
+    try {
+      if (!this.isConfigured) {
+        return {
+          success: false,
+          error: 'Servicio de email no configurado'
+        };
+      }
+
+      const html = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Email de Prueba</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f9fafb;">
+          <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #1f2937; margin: 0;">✅ Email de Prueba</h1>
+              <p style="color: #6b7280; margin: 15px 0 0 0;">iPhone Cases Store</p>
+            </div>
+            
+            <div style="background: #dbeafe; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <p style="margin: 0; color: #1e40af;">
+                ¡Perfecto! El servicio de email está funcionando correctamente.
+              </p>
+            </div>
+            
+            <div style="color: #6b7280; font-size: 14px;">
+              <p>Detalles del envío:</p>
+              <ul>
+                <li>Fecha: ${new Date().toLocaleString('es-ES')}</li>
+                <li>Servidor: ${process.env.EMAIL_HOST}</li>
+                <li>Desde: ${process.env.EMAIL_USER}</li>
+                <li>Hacia: ${email}</li>
+              </ul>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
+              <p style="margin: 0;">© ${new Date().getFullYear()} iPhone Cases Store</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      const mailOptions = {
+        from: `"iPhone Cases Store" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: '✅ Email de Prueba - iPhone Cases Store',
+        html: html
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log(`✅ Email de prueba enviado a ${email}`);
+
+      return {
+        success: true,
+        messageId: info.messageId
+      };
+
+    } catch (error) {
+      console.error('❌ Error enviando email de prueba:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  // Método para enviar notificación al admin
+  async sendAdminNotification(orderData) {
+    try {
+      if (!this.isConfigured) {
+        return false;
+      }
+
+      const adminEmail = process.env.ADMIN_EMAIL || process.env.SUPPORT_EMAIL;
+      if (!adminEmail) {
+        console.log('⚠️  Email de admin no configurado');
+        return false;
+      }
+
+      const { order, items } = orderData;
+
+      const itemsHtml = items.map(item => `
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${item.product_name}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">$${parseFloat(item.price).toFixed(2)}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">$${parseFloat(item.total).toFixed(2)}</td>
+        </tr>
+      `).join('');
+
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Nueva Orden Recibida</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5;">
+          <div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
+            <h1 style="color: #333; margin-bottom: 20px;">🛒 Nueva Orden Recibida</h1>
+            
+            <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+              <h2 style="margin: 0; color: #1976d2;">Orden ${order.order_number}</h2>
+              <p style="margin: 5px 0 0 0; color: #1976d2;">Total: $${parseFloat(order.total).toFixed(2)} USD</p>
+            </div>
+            
+            <h3>Cliente:</h3>
+            <p>
+              <strong>${order.customer_first_name} ${order.customer_last_name}</strong><br>
+              Email: ${order.customer_email}<br>
+              Teléfono: ${order.customer_phone}
+            </p>
+            
+            <h3>Dirección de Envío:</h3>
+            <p>
+              ${order.shipping_address}<br>
+              ${order.shipping_city}, ${order.shipping_state} ${order.shipping_postal_code}<br>
+              ${order.shipping_country}
+            </p>
+            
+            <h3>Productos:</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+              <thead>
+                <tr style="background: #f5f5f5;">
+                  <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Producto</th>
+                  <th style="padding: 10px; text-align: center; border-bottom: 2px solid #ddd;">Cant.</th>
+                  <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Precio</th>
+                  <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsHtml}
+              </tbody>
+            </table>
+            
+            <div style="text-align: right; margin-top: 20px; font-size: 18px;">
+              <strong>Total: $${parseFloat(order.total).toFixed(2)} USD</strong>
+            </div>
+            
+            <div style="margin-top: 30px; padding: 15px; background: #fff3e0; border-radius: 5px;">
+              <p style="margin: 0; color: #f57c00;"><strong>Acción requerida:</strong> Procesar esta orden y contactar al cliente para coordinar el pago y envío.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      const mailOptions = {
+        from: `"iPhone Cases Store" <${process.env.EMAIL_USER}>`,
+        to: adminEmail,
+        subject: `🛒 Nueva Orden ${order.order_number} - $${parseFloat(order.total).toFixed(2)}`,
+        html: html
+      };
+
+      await this.transporter.sendMail(mailOptions);
+      console.log(`✅ Notificación de admin enviada para orden ${order.order_number}`);
+      return true;
+
+    } catch (error) {
+      console.error('❌ Error enviando notificación de admin:', error);
+      return false;
+    }
+  }
+
+  // Método para obtener información del servicio
+  getServiceInfo() {
+    return {
+      isConfigured: this.isConfigured,
+      host: process.env.EMAIL_HOST,
+      user: process.env.EMAIL_USER,
+      port: process.env.EMAIL_PORT || 587,
+      secure: process.env.EMAIL_SECURE === 'true'
+    };
+  }
+}
+
+module.exports = new EmailService();

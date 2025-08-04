@@ -37,8 +37,10 @@ export interface CartItem {
   maxQuantity?: number;
 }
 
-// Stripe
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || '');
+// Stripe - Solo inicializar si hay clave disponible
+const stripePromise = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY 
+  ? loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY) 
+  : null;
 
 // React Query Client
 const queryClient = new QueryClient({
@@ -50,6 +52,137 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Componente AppContent - Todo el contenido principal
+const AppContent: React.FC<{
+  selectedModel: string;
+  selectedColor: string;
+  models: string[];
+  colors: string[];
+  basePrice: number;
+  setSelectedModel: (model: string) => void;
+  setSelectedColor: (color: string) => void;
+  handleAdminClick: () => void;
+  adminToken: string | null;
+  handleAdminLogout: () => void;
+  handleCheckout: () => void;
+  isCheckoutOpen: boolean;
+  setIsCheckoutOpen: (open: boolean) => void;
+  handleOrderComplete: () => void;
+  isAdminLoginOpen: boolean;
+  setIsAdminLoginOpen: (open: boolean) => void;
+  handleAdminLogin: (token: string) => void;
+  isAdminOpen: boolean;
+  setIsAdminOpen: (open: boolean) => void;
+  createCartItem: () => CartItem;
+}> = ({
+  selectedModel,
+  selectedColor,
+  models,
+  colors,
+  basePrice,
+  setSelectedModel,
+  setSelectedColor,
+  handleAdminClick,
+  adminToken,
+  handleAdminLogout,
+  handleCheckout,
+  isCheckoutOpen,
+  setIsCheckoutOpen,
+  handleOrderComplete,
+  isAdminLoginOpen,
+  setIsAdminLoginOpen,
+  handleAdminLogin,
+  isAdminOpen,
+  setIsAdminOpen,
+  createCartItem
+}) => {
+  return (
+    <AuthProvider>
+      <CartProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-50 flex flex-col">
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#363636',
+                  color: '#fff',
+                },
+              }}
+            />
+
+            {/* Header */}
+            <Header 
+              onAdminClick={handleAdminClick}
+              adminToken={adminToken}
+              onAdminLogout={handleAdminLogout}
+            />
+
+            {/* Main Content */}
+            <main className="flex-1">
+              <Routes>
+                <Route path="/" element={
+                  <HomePage 
+                    selectedModel={selectedModel}
+                    selectedColor={selectedColor}
+                    models={models}
+                    colors={colors}
+                    price={basePrice}
+                    onModelChange={setSelectedModel}
+                    onColorChange={setSelectedColor}
+                    createCartItem={createCartItem}
+                  />
+                } />
+                
+                {/* Rutas futuras */}
+                <Route path="/products" element={<ProductsPage />} />
+                <Route path="/products/:slug" element={<ProductDetailPage />} />
+                <Route path="/cart" element={<CartPage />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/order-success" element={<OrderSuccessPage />} />
+                <Route path="/track/:orderNumber?" element={<TrackingPage />} />
+                
+                {/* 404 */}
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </main>
+
+            <Footer />
+
+            {/* Cart Sidebar */}
+            <CartSidebar onCheckout={handleCheckout} />
+
+            {/* Checkout Modal */}
+            {isCheckoutOpen && (
+              <Checkout 
+                onClose={() => setIsCheckoutOpen(false)}
+                onOrderComplete={handleOrderComplete}
+              />
+            )}
+
+            {/* Admin Login */}
+            {isAdminLoginOpen && (
+              <AdminLogin 
+                onLogin={handleAdminLogin}
+                onClose={() => setIsAdminLoginOpen(false)}
+              />
+            )}
+
+            {/* Admin Dashboard */}
+            {isAdminOpen && adminToken && (
+              <AdminDashboard 
+                onClose={() => setIsAdminOpen(false)}
+                adminToken={adminToken}
+              />
+            )}
+          </div>
+        </Router>
+      </CartProvider>
+    </AuthProvider>
+  );
+};
 
 function App() {
   const [selectedModel, setSelectedModel] = useState('iPhone 15');
@@ -138,93 +271,39 @@ function App() {
     );
   }
 
+  // Props para AppContent
+  const appContentProps = {
+    selectedModel,
+    selectedColor,
+    models,
+    colors,
+    basePrice,
+    setSelectedModel,
+    setSelectedColor,
+    handleAdminClick,
+    adminToken,
+    handleAdminLogout,
+    handleCheckout,
+    isCheckoutOpen,
+    setIsCheckoutOpen,
+    handleOrderComplete,
+    isAdminLoginOpen,
+    setIsAdminLoginOpen,
+    handleAdminLogin,
+    isAdminOpen,
+    setIsAdminOpen,
+    createCartItem
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
-      <Elements stripe={stripePromise}>
-        <AuthProvider>
-          <CartProvider>
-            <Router>
-              <div className="min-h-screen bg-gray-50 flex flex-col">
-                <Toaster
-                  position="top-right"
-                  toastOptions={{
-                    duration: 4000,
-                    style: {
-                      background: '#363636',
-                      color: '#fff',
-                    },
-                  }}
-                />
-
-                {/* Header */}
-                <Header 
-                  onAdminClick={handleAdminClick}
-                  adminToken={adminToken}
-                  onAdminLogout={handleAdminLogout}
-                />
-
-                {/* Main Content */}
-                <main className="flex-1">
-                  <Routes>
-                    <Route path="/" element={
-                      <HomePage 
-                        selectedModel={selectedModel}
-                        selectedColor={selectedColor}
-                        models={models}
-                        colors={colors}
-                        price={basePrice}
-                        onModelChange={setSelectedModel}
-                        onColorChange={setSelectedColor}
-                        createCartItem={createCartItem}
-                      />
-                    } />
-                    
-                    {/* Rutas futuras */}
-                    <Route path="/products" element={<ProductsPage />} />
-                    <Route path="/products/:slug" element={<ProductDetailPage />} />
-                    <Route path="/cart" element={<CartPage />} />
-                    <Route path="/checkout" element={<CheckoutPage />} />
-                    <Route path="/order-success" element={<OrderSuccessPage />} />
-                    <Route path="/track/:orderNumber?" element={<TrackingPage />} />
-                    
-                    {/* 404 */}
-                    <Route path="*" element={<NotFoundPage />} />
-                  </Routes>
-                </main>
-
-                <Footer />
-
-                {/* Cart Sidebar */}
-                <CartSidebar onCheckout={handleCheckout} />
-
-                {/* Checkout Modal */}
-                {isCheckoutOpen && (
-                  <Checkout 
-                    onClose={() => setIsCheckoutOpen(false)}
-                    onOrderComplete={handleOrderComplete}
-                  />
-                )}
-
-                {/* Admin Login */}
-                {isAdminLoginOpen && (
-                  <AdminLogin 
-                    onLogin={handleAdminLogin}
-                    onClose={() => setIsAdminLoginOpen(false)}
-                  />
-                )}
-
-                {/* Admin Dashboard */}
-                {isAdminOpen && adminToken && (
-                  <AdminDashboard 
-                    onClose={() => setIsAdminOpen(false)}
-                    adminToken={adminToken}
-                  />
-                )}
-              </div>
-            </Router>
-          </CartProvider>
-        </AuthProvider>
-      </Elements>
+      {stripePromise ? (
+        <Elements stripe={stripePromise}>
+          <AppContent {...appContentProps} />
+        </Elements>
+      ) : (
+        <AppContent {...appContentProps} />
+      )}
     </QueryClientProvider>
   );
 }

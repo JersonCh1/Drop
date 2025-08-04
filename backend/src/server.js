@@ -60,6 +60,8 @@ app.use(fileUpload({
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('combined'));
 }
+// Manejar favicon.ico
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // =================== MIDDLEWARE PARA VERIFICAR ADMIN ===================
 function verifyAdminToken(req, res, next) {
@@ -688,6 +690,7 @@ app.patch('/api/orders/:id/status', verifyAdminToken, async (req, res) => {
   }
 });
 
+
 // =================== CRON JOBS ===================
 
 // Solo ejecutar cron jobs en producción o si está habilitado
@@ -796,7 +799,9 @@ app.get('/api/admin/stats', verifyAdminToken, async (req, res) => {
     });
   }
 });
-
+// =================== RUTAS DE ANALYTICS ===================
+const analyticsRoutes = require('./routes/analytics');
+app.use('/api/analytics', analyticsRoutes);
 // =================== RUTAS HEREDADAS ===================
 
 // Rutas básicas de API (compatibilidad)
@@ -850,15 +855,19 @@ app.use('*', (req, res) => {
     path: req.originalUrl,
     method: req.method,
     availableEndpoints: [
-      'GET /health',
-      'GET /api/test-db',
-      'POST /api/admin/login',
-      'GET /api/admin/verify',
-      'POST /api/orders',
-      'GET /api/orders (admin)',
-      'GET /api/orders/:orderNumber',
-      'PATCH /api/orders/:id/status (admin)'
-    ]
+  'GET /health',
+  'GET /api/test-db',
+  'POST /api/admin/login',
+  'GET /api/admin/verify',
+  'POST /api/orders',
+  'GET /api/orders (admin)',
+  'GET /api/orders/:orderNumber',
+  'PATCH /api/orders/:id/status (admin)',
+  'POST /api/analytics/track',
+  'GET /api/analytics/dashboard (admin)',
+  'POST /api/admin/test-email (admin)',
+  'GET /api/admin/stats (admin)'
+]
   });
 });
 
