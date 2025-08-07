@@ -209,9 +209,12 @@ app.get('/api/admin/verify', verifyAdminToken, (req, res) => {
 // =================== RUTAS DE ÓRDENES (INTEGRADAS) ===================
 
 // POST /api/orders - Crear nueva orden
+// backend/src/server.js - Reemplaza la función POST /api/orders (alrededor de línea 240)
+
+// POST /api/orders - Crear nueva orden
 app.post('/api/orders', async (req, res) => {
   try {
-    const { customerInfo, items, subtotal, shippingCost, total, paymentMethod = 'manual', tax = 0 } = req.body;
+    const { customerInfo, items, subtotal, shippingCost, total, paymentMethod = 'manual' } = req.body;
 
     console.log('📦 Nueva orden recibida:', { 
       email: customerInfo?.email, 
@@ -245,14 +248,14 @@ app.post('/api/orders', async (req, res) => {
     // Generar número de orden único
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
 
-    // Insertar orden principal
+    // Insertar orden principal SIN la columna tax
     const orderResult = await client.query(`
       INSERT INTO orders (
         order_number, customer_first_name, customer_last_name, customer_email, 
         customer_phone, shipping_address, shipping_city, shipping_state, 
         shipping_postal_code, shipping_country, notes, subtotal, shipping_cost, 
-        tax, total, payment_method, status, payment_status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+        total, payment_method, status, payment_status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       RETURNING id, order_number, created_at
     `, [
       orderNumber,
@@ -266,13 +269,12 @@ app.post('/api/orders', async (req, res) => {
       customerInfo.postalCode,
       customerInfo.country,
       customerInfo.notes || null,
-      subtotal,
-      shippingCost,
-      tax,
+      subtotal || total,
+      shippingCost || 0,
       total,
       paymentMethod,
-      paymentMethod === 'stripe' ? 'pending' : 'confirmed',
-      paymentMethod === 'stripe' ? 'pending' : 'pending'
+      'pending',
+      'pending'
     ]);
 
     const orderId = orderResult.rows[0].id;
@@ -296,17 +298,19 @@ app.post('/api/orders', async (req, res) => {
       ]);
     }
 
-    // Registrar en historial de estados si la tabla existe
-    try {
-      await client.query(`
-        INSERT INTO order_status_history (order_id, status, notes, created_by)
-        VALUES ($1, $2, $3, $4)
-      `, [orderId, paymentMethod === 'stripe' ? 'pending' : 'confirmed', 'Orden creada', 'system']);
-    } catch (historyError) {
-      console.log('⚠️  Tabla de historial no disponible');
-    }
-
     await client.end();
+
+    // Generar URL de WhatsApp para el pago
+    const whatsappNumber = process.env.WHATSAPP_NUMBER || '51917780708'; // Tu número de WhatsApp
+    const message = encodeURIComponent(
+      `¡Hola! 🛍️\n\n` +
+      `Acabo de realizar una orden:\n` +
+      `📋 Orden: ${orderNumber}\n` +
+      `💰 Total: $${total} USD\n` +
+      `📧 Email: ${customerInfo.email}\n\n` +
+      `Por favor, indícame las opciones de pago disponibles.`
+    );
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
 
     let response = {
       success: true,
@@ -316,56 +320,13 @@ app.post('/api/orders', async (req, res) => {
         orderNumber: orderResult.rows[0].order_number,
         total,
         createdAt: orderResult.rows[0].created_at,
-        status: paymentMethod === 'stripe' ? 'pending' : 'confirmed'
+        status: 'pending',
+        // Información de pago
+        paymentMethod: paymentMethod,
+        paymentUrl: whatsappUrl,
+        paymentInstructions: 'Te contactaremos por WhatsApp para coordinar el pago y envío. También puedes escribirnos directamente.'
       }
     };
-
-    // Si el método de pago es Stripe, crear sesión de checkout
-    if (paymentMethod === 'stripe' && process.env.STRIPE_SECRET_KEY) {
-      try {
-        const checkoutSession = await stripeService.createCheckoutSession({
-          customerInfo,
-          items,
-          orderId,
-          orderNumber: orderResult.rows[0].order_number,
-          subtotal,
-          shippingCost,
-          total
-        });
-
-        response.data.stripeSessionId = checkoutSession.sessionId;
-        response.data.checkoutUrl = checkoutSession.url;
-        
-        console.log('💳 Sesión de Stripe creada:', checkoutSession.sessionId);
-      } catch (stripeError) {
-        console.error('❌ Error creando sesión de Stripe:', stripeError);
-        response.message += ' (Pago manual requerido - Error en Stripe)';
-      }
-    } else {
-      // Para pagos manuales, enviar notificación inmediatamente
-      setTimeout(async () => {
-        try {
-          await notificationService.sendOrderConfirmation(orderId);
-        } catch (notificationError) {
-          console.error('❌ Error enviando notificación:', notificationError);
-        }
-      }, 1000);
-    }
-
-    // Track analytics si hay session ID
-    if (req.headers['x-session-id']) {
-      try {
-        await analyticsService.trackPurchase(
-          req.headers['x-session-id'],
-          orderId,
-          orderResult.rows[0].order_number,
-          total,
-          items
-        );
-      } catch (analyticsError) {
-        console.error('⚠️  Error en analytics:', analyticsError);
-      }
-    }
 
     console.log(`✅ Orden creada: ${orderResult.rows[0].order_number} - $${total}`);
 
@@ -688,6 +649,9 @@ app.patch('/api/orders/:id/status', verifyAdminToken, async (req, res) => {
       error: error.message
     });
   }
+  // Agregar rutas de tracking
+const trackingRoutes = require('./routes/tracking');
+app.use('/api/tracking', trackingRoutes);
 });
 
 
@@ -802,6 +766,8 @@ app.get('/api/admin/stats', verifyAdminToken, async (req, res) => {
 // =================== RUTAS DE ANALYTICS ===================
 const analyticsRoutes = require('./routes/analytics');
 app.use('/api/analytics', analyticsRoutes);
+
+
 // =================== RUTAS HEREDADAS ===================
 
 // Rutas básicas de API (compatibilidad)
@@ -845,7 +811,10 @@ app.use((err, req, res, next) => {
     error: process.env.NODE_ENV === 'development' ? err.message : 'Error interno'
   });
 });
+// =================== RUTAS DE TRACKING ===================
 
+const trackingRoutes = require('./routes/tracking');
+app.use('/api/tracking', trackingRoutes);
 // 404 handler
 app.use('*', (req, res) => {
   console.log(`❌ Ruta no encontrada: ${req.method} ${req.originalUrl}`);

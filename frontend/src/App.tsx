@@ -18,6 +18,7 @@ import CartSidebar from './components/cart/CartSidebar.tsx';
 import Checkout from './components/checkout/Checkout.tsx';
 import AdminDashboard from './components/admin/AdminDashboard.tsx';
 import AdminLogin from './components/admin/AdminLogin.tsx';
+import OrderTracking from './components/tracking/OrderTracking.tsx';
 
 // Services
 import analyticsService from './services/analyticsService.ts';
@@ -136,13 +137,14 @@ const AppContent: React.FC<{
                   />
                 } />
                 
-                {/* Rutas futuras */}
+                {/* Rutas implementadas y funcionales */}
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/products/:slug" element={<ProductDetailPage />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/order-success" element={<OrderSuccessPage />} />
-                <Route path="/track/:orderNumber?" element={<TrackingPage />} />
+                <Route path="/track" element={<TrackingPage />} />
+                <Route path="/track/:orderNumber" element={<TrackingPage />} />
                 
                 {/* 404 */}
                 <Route path="*" element={<NotFoundPage />} />
@@ -401,12 +403,8 @@ const OrderSuccessPage = () => (
   </div>
 );
 
-const TrackingPage = () => (
-  <div className="container mx-auto px-4 py-8">
-    <h1 className="text-3xl font-bold mb-8">Rastrear Orden</h1>
-    <p>Página de tracking próximamente...</p>
-  </div>
-);
+// Componente de Tracking - Ahora usa el componente real
+const TrackingPage = () => <OrderTracking />;
 
 const NotFoundPage = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
