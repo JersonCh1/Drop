@@ -7,6 +7,8 @@ export interface ApiResponse<T = any> {
   data?: T;
   message?: string;
   error?: string;
+  token?: string;
+  user?: any;
   pagination?: {
     page: number;
     limit: number;
@@ -37,16 +39,16 @@ class ApiService {
     // Request interceptor
     this.api.interceptors.request.use(
       (config) => {
-        // Add auth token if available
-        const token = localStorage.getItem('authToken');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-
-        // Add admin token if available
+        // Add admin token if available (priority over auth token)
         const adminToken = localStorage.getItem('adminToken');
-        if (adminToken && config.url?.includes('/admin')) {
+        if (adminToken) {
           config.headers.Authorization = `Bearer ${adminToken}`;
+        } else {
+          // Add auth token if available and no admin token
+          const token = localStorage.getItem('authToken');
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+          }
         }
 
         // Add session ID for analytics
@@ -76,6 +78,16 @@ class ApiService {
         return response;
       },
       (error: AxiosError) => {
+        // Si es 401 y tenemos un token que no es JWT (token antiguo), limpiarlo
+        if (error.response?.status === 401) {
+          const adminToken = localStorage.getItem('adminToken');
+          if (adminToken && adminToken.startsWith('admin_')) {
+            console.log('🔄 Limpiando token antiguo no-JWT...');
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('authToken');
+            window.location.reload();
+          }
+        }
         this.handleApiError(error);
         return Promise.reject(error);
       }
@@ -366,7 +378,7 @@ export const categoriesApi = {
 
 // Auth API
 export const authApi = {
-  login: (email: string, password: string) => 
+  login: (email: string, password: string) =>
     apiService.post('/auth/login', { email, password }),
 
   register: (data: {
@@ -381,16 +393,21 @@ export const authApi = {
 
   verifyToken: () => apiService.get('/auth/verify'),
 
-  resetPassword: (email: string) => 
+  getMe: () => apiService.get('/auth/me'),
+
+  resetPassword: (email: string) =>
     apiService.post('/auth/reset-password', { email }),
 
-  updatePassword: (data: { currentPassword: string; newPassword: string }) => 
+  updatePassword: (data: { currentPassword: string; newPassword: string }) =>
     apiService.post('/auth/update-password', data),
 
   updateProfile: (data: any) => apiService.patch('/auth/profile', data),
 
+  getMyOrders: (page?: number, limit?: number) =>
+    apiService.get('/auth/orders', { page, limit }),
+
   // Admin auth
-  adminLogin: (username: string, password: string) => 
+  adminLogin: (username: string, password: string) =>
     apiService.post('/admin/login', { username, password }),
 
   verifyAdminToken: () => apiService.get('/admin/verify'),

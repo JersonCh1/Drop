@@ -2,35 +2,64 @@
 const express = require('express');
 const router = express.Router();
 const { getDbClient } = require('../utils/database');
-const analyticsService = require('../services/analyticsService');
+const cloudinaryService = require('../services/cloudinaryService');
 
 // Middleware para verificar admin
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'dropshipping-super-secret-key-2024';
+
 function verifyAdminToken(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token || !token.startsWith('admin_')) {
+
+  if (!token) {
     return res.status(401).json({
       success: false,
-      message: 'Token de admin requerido'
+      message: 'Token requerido'
     });
   }
-  next();
+
+  try {
+    // Verificar JWT
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    // Verificar que el usuario sea ADMIN
+    if (decoded.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'Acceso denegado. Se requieren permisos de administrador.'
+      });
+    }
+
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: 'Token inválido'
+    });
+  }
 }
 
-// GET /api/products - Obtener todos los productos (público)
+// =================== RUTAS PÚBLICAS ===================
+
+// GET /api/products - Listar productos (público)
 router.get('/', async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 20, 
-      category, 
-      featured, 
+    const {
+      page = 1,
+      limit = 20,
+      category,
       search,
-      sort = 'created_at',
-      order = 'DESC'
+      model,
+      color,
+      minPrice,
+      maxPrice,
+      featured,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC'
     } = req.query;
 
     const offset = (parseInt(page) - 1) * parseInt(limit);
-    
     const client = await getDbClient();
     await client.connect();
 
@@ -45,100 +74,110 @@ router.get('/', async (req, res) => {
       params.push(category);
     }
 
+    if (search) {
+      paramCount++;
+      whereClause += ` AND (
+        p.name ILIKE $${paramCount} OR
+        p.description ILIKE $${paramCount} OR
+        p.model ILIKE $${paramCount} OR
+        EXISTS (
+          SELECT 1 FROM unnest(p.compatibility) AS compat
+          WHERE compat ILIKE $${paramCount}
+        )
+      )`;
+      params.push(`%${search}%`);
+    }
+
+    if (model) {
+      paramCount++;
+      // Buscar si el modelo está contenido en cualquier elemento del array de compatibilidad
+      whereClause += ` AND EXISTS (
+        SELECT 1 FROM unnest(p.compatibility) AS compat
+        WHERE compat ILIKE $${paramCount}
+      )`;
+      params.push(`%${model}%`);
+    }
+
+    if (minPrice) {
+      paramCount++;
+      whereClause += ` AND p.base_price >= $${paramCount}`;
+      params.push(parseFloat(minPrice));
+    }
+
+    if (maxPrice) {
+      paramCount++;
+      whereClause += ` AND p.base_price <= $${paramCount}`;
+      params.push(parseFloat(maxPrice));
+    }
+
     if (featured === 'true') {
       whereClause += ' AND p.is_featured = true';
     }
 
-    if (search) {
-      paramCount++;
-      whereClause += ` AND (p.name ILIKE $${paramCount} OR p.description ILIKE $${paramCount})`;
-      params.push(`%${search}%`);
-    }
+    // Determinar orden
+    const validSortFields = {
+      'createdAt': 'p.created_at',
+      'price': 'p.base_price',
+      'name': 'p.name'
+    };
+    const orderByField = validSortFields[sortBy] || 'p.created_at';
+    const orderByDirection = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
-    // Validar campo de ordenamiento
-    const validSortFields = ['created_at', 'name', 'base_price', 'stock_count'];
-    const sortField = validSortFields.includes(sort) ? sort : 'created_at';
-    const sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
-
-    const query = `
-      SELECT 
+    // Query principal
+    const result = await client.query(`
+      SELECT
         p.*,
         c.name as category_name,
         c.slug as category_slug,
-        (
-          SELECT json_agg(
-            json_build_object(
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
+              'id', pi.id,
+              'url', pi.url,
+              'altText', pi.alt_text,
+              'position', pi.position,
+              'isMain', pi.is_main
+            )
+          ) FILTER (WHERE pi.id IS NOT NULL),
+          '[]'::json
+        ) as images,
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
               'id', pv.id,
               'name', pv.name,
               'color', pv.color,
               'price', pv.price,
-              'compare_price', pv.compare_price,
               'sku', pv.sku,
-              'stock_quantity', pv.stock_quantity,
-              'is_active', pv.is_active
+              'stockQuantity', pv.stock_quantity,
+              'isActive', pv.is_active
             )
-          )
-          FROM product_variants pv 
-          WHERE pv.product_id = p.id AND pv.is_active = true
+          ) FILTER (WHERE pv.id IS NOT NULL),
+          '[]'::json
         ) as variants,
-        (
-          SELECT json_agg(
-            json_build_object(
-              'id', pi.id,
-              'url', pi.url,
-              'alt_text', pi.alt_text,
-              'position', pi.position,
-              'is_main', pi.is_main
-            )
-            ORDER BY pi.position
-          )
-          FROM product_images pi 
-          WHERE pi.product_id = p.id
-        ) as images,
-        (
-          SELECT COALESCE(AVG(rating), 0)
-          FROM reviews r 
-          WHERE r.product_id = p.id AND r.is_approved = true
-        ) as avg_rating,
-        (
-          SELECT COUNT(*)
-          FROM reviews r 
-          WHERE r.product_id = p.id AND r.is_approved = true
-        ) as review_count
+        (SELECT AVG(rating)::numeric(3,2) FROM reviews WHERE product_id = p.id AND is_approved = true) as avg_rating,
+        (SELECT COUNT(*) FROM reviews WHERE product_id = p.id AND is_approved = true) as review_count
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN product_images pi ON p.id = pi.product_id
+      LEFT JOIN product_variants pv ON p.id = pv.product_id
       ${whereClause}
-      ORDER BY p.${sortField} ${sortOrder}
+      GROUP BY p.id, c.name, c.slug
+      ORDER BY ${orderByField} ${orderByDirection}
       LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}
-    `;
+    `, [...params, parseInt(limit), offset]);
 
-    params.push(parseInt(limit), offset);
-
-    const result = await client.query(query, params);
-
-    // Contar total para paginación
-    const countQuery = `
-      SELECT COUNT(*) as total
+    // Contar total
+    const countResult = await client.query(`
+      SELECT COUNT(DISTINCT p.id) as total
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
       ${whereClause}
-    `;
+    `, params);
 
-    const countResult = await client.query(countQuery, params.slice(0, -2));
     const total = parseInt(countResult.rows[0].total);
 
     await client.end();
-
-    // Track analytics si hay sessionId
-    if (req.headers['x-session-id']) {
-      await analyticsService.trackPageView(
-        req.headers['x-session-id'], 
-        'products',
-        null,
-        req.ip,
-        req.get('User-Agent')
-      );
-    }
 
     res.json({
       success: true,
@@ -152,7 +191,7 @@ router.get('/', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error obteniendo productos:', error);
+    console.error('❌ Error obteniendo productos:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -165,126 +204,68 @@ router.get('/', async (req, res) => {
 router.get('/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
-    
     const client = await getDbClient();
     await client.connect();
 
     const result = await client.query(`
-      SELECT 
+      SELECT
         p.*,
         c.name as category_name,
         c.slug as category_slug,
-        (
-          SELECT json_agg(
-            json_build_object(
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
+              'id', pi.id,
+              'url', pi.url,
+              'altText', pi.alt_text,
+              'position', pi.position,
+              'isMain', pi.is_main
+            ) ORDER BY pi.position
+          ) FILTER (WHERE pi.id IS NOT NULL),
+          '[]'::json
+        ) as images,
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
               'id', pv.id,
               'name', pv.name,
               'color', pv.color,
-              'size', pv.size,
-              'material', pv.material,
               'price', pv.price,
-              'compare_price', pv.compare_price,
+              'comparePrice', pv.compare_price,
               'sku', pv.sku,
-              'stock_quantity', pv.stock_quantity,
-              'is_active', pv.is_active
+              'stockQuantity', pv.stock_quantity,
+              'isActive', pv.is_active
             )
-          )
-          FROM product_variants pv 
-          WHERE pv.product_id = p.id AND pv.is_active = true
+          ) FILTER (WHERE pv.id IS NOT NULL),
+          '[]'::json
         ) as variants,
-        (
-          SELECT json_agg(
-            json_build_object(
-              'id', pi.id,
-              'url', pi.url,
-              'alt_text', pi.alt_text,
-              'position', pi.position,
-              'is_main', pi.is_main
-            )
-            ORDER BY pi.position
-          )
-          FROM product_images pi 
-          WHERE pi.product_id = p.id
-        ) as images,
-        (
-          SELECT COALESCE(AVG(rating), 0)
-          FROM reviews r 
-          WHERE r.product_id = p.id AND r.is_approved = true
-        ) as avg_rating,
-        (
-          SELECT COUNT(*)
-          FROM reviews r 
-          WHERE r.product_id = p.id AND r.is_approved = true
-        ) as review_count
+        (SELECT AVG(rating)::numeric(3,2) FROM reviews WHERE product_id = p.id AND is_approved = true) as avg_rating,
+        (SELECT COUNT(*) FROM reviews WHERE product_id = p.id AND is_approved = true) as review_count
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN product_images pi ON p.id = pi.product_id
+      LEFT JOIN product_variants pv ON p.id = pv.product_id
       WHERE p.slug = $1 AND p.is_active = true
+      GROUP BY p.id, c.name, c.slug
     `, [slug]);
 
     if (result.rows.length === 0) {
+      await client.end();
       return res.status(404).json({
         success: false,
         message: 'Producto no encontrado'
       });
     }
 
-    const product = result.rows[0];
-
-    // Obtener reseñas del producto
-    const reviewsResult = await client.query(`
-      SELECT 
-        r.*,
-        CASE 
-          WHEN r.user_id IS NOT NULL THEN CONCAT(u.first_name, ' ', SUBSTRING(u.last_name, 1, 1), '.')
-          ELSE r.customer_name
-        END as reviewer_name
-      FROM reviews r
-      LEFT JOIN users u ON r.user_id = u.id
-      WHERE r.product_id = $1 AND r.is_approved = true
-      ORDER BY r.created_at DESC
-      LIMIT 10
-    `, [product.id]);
-
-    product.reviews = reviewsResult.rows;
-
-    // Obtener productos relacionados
-    const relatedResult = await client.query(`
-      SELECT 
-        p.id, p.name, p.slug, p.base_price,
-        (
-          SELECT url FROM product_images 
-          WHERE product_id = p.id AND is_main = true 
-          LIMIT 1
-        ) as main_image
-      FROM products p
-      WHERE p.category_id = $1 
-        AND p.id != $2 
-        AND p.is_active = true
-      ORDER BY p.is_featured DESC, p.created_at DESC
-      LIMIT 4
-    `, [product.category_id, product.id]);
-
-    product.related_products = relatedResult.rows;
-
     await client.end();
-
-    // Track product view
-    if (req.headers['x-session-id']) {
-      await analyticsService.trackProductView(
-        req.headers['x-session-id'],
-        product.id,
-        product.name,
-        null
-      );
-    }
 
     res.json({
       success: true,
-      data: product
+      data: result.rows[0]
     });
 
   } catch (error) {
-    console.error('Error obteniendo producto:', error);
+    console.error('❌ Error obteniendo producto:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -292,6 +273,8 @@ router.get('/:slug', async (req, res) => {
     });
   }
 });
+
+// =================== RUTAS ADMIN ===================
 
 // POST /api/products - Crear producto (admin)
 router.post('/', verifyAdminToken, async (req, res) => {
@@ -301,13 +284,13 @@ router.post('/', verifyAdminToken, async (req, res) => {
       slug,
       description,
       basePrice,
+      categoryId,
       brand,
       model,
       compatibility,
-      categoryId,
-      isFeatured = false,
-      inStock = true,
-      stockCount = 0,
+      isFeatured,
+      inStock,
+      stockCount,
       metaTitle,
       metaDescription
     } = req.body;
@@ -323,7 +306,7 @@ router.post('/', verifyAdminToken, async (req, res) => {
     const client = await getDbClient();
     await client.connect();
 
-    // Verificar que el slug no exista
+    // Verificar si el slug ya existe
     const slugCheck = await client.query('SELECT id FROM products WHERE slug = $1', [slug]);
     if (slugCheck.rows.length > 0) {
       await client.end();
@@ -333,24 +316,33 @@ router.post('/', verifyAdminToken, async (req, res) => {
       });
     }
 
-    // Crear producto
+    // Insertar producto
     const result = await client.query(`
       INSERT INTO products (
-        name, slug, description, base_price, brand, model, 
-        compatibility, category_id, is_featured, in_stock, 
-        stock_count, meta_title, meta_description
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        name, slug, description, base_price, category_id, brand, model,
+        compatibility, is_featured, in_stock, stock_count,
+        meta_title, meta_description
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *
     `, [
-      name, slug, description, basePrice, brand, model,
-      compatibility || [], categoryId, isFeatured, inStock,
-      stockCount, metaTitle, metaDescription
+      name,
+      slug,
+      description || null,
+      basePrice,
+      categoryId,
+      brand || null,
+      model || null,
+      compatibility || [],
+      isFeatured || false,
+      inStock !== false,
+      stockCount || 0,
+      metaTitle || name,
+      metaDescription || description
     ]);
 
     await client.end();
 
-    console.log(`✅ Producto creado: ${name} (ID: ${result.rows[0].id})`);
+    console.log(`✅ Producto creado: ${result.rows[0].name}`);
 
     res.status(201).json({
       success: true,
@@ -359,7 +351,7 @@ router.post('/', verifyAdminToken, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error creando producto:', error);
+    console.error('❌ Error creando producto:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -372,13 +364,13 @@ router.post('/', verifyAdminToken, async (req, res) => {
 router.put('/:id', verifyAdminToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
+    const updateFields = req.body;
 
     const client = await getDbClient();
     await client.connect();
 
     // Verificar que el producto existe
-    const productCheck = await client.query('SELECT id FROM products WHERE id = $1', [id]);
+    const productCheck = await client.query('SELECT * FROM products WHERE id = $1', [id]);
     if (productCheck.rows.length === 0) {
       await client.end();
       return res.status(404).json({
@@ -387,26 +379,27 @@ router.put('/:id', verifyAdminToken, async (req, res) => {
       });
     }
 
-    // Construir query dinámicamente
-    const updateFields = [];
+    // Construir query de actualización dinámica
+    const allowedFields = [
+      'name', 'slug', 'description', 'base_price', 'category_id', 'brand', 'model',
+      'compatibility', 'is_active', 'is_featured', 'in_stock', 'stock_count',
+      'meta_title', 'meta_description'
+    ];
+
+    const updates = [];
     const values = [];
     let paramCount = 0;
 
-    const allowedFields = [
-      'name', 'slug', 'description', 'base_price', 'brand', 'model',
-      'compatibility', 'category_id', 'is_featured', 'in_stock',
-      'stock_count', 'meta_title', 'meta_description', 'is_active'
-    ];
-
-    for (const [key, value] of Object.entries(updateData)) {
-      if (allowedFields.includes(key) && value !== undefined) {
+    Object.keys(updateFields).forEach(field => {
+      const snakeField = field.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+      if (allowedFields.includes(snakeField)) {
         paramCount++;
-        updateFields.push(`${key} = $${paramCount}`);
-        values.push(value);
+        updates.push(`${snakeField} = $${paramCount}`);
+        values.push(updateFields[field]);
       }
-    }
+    });
 
-    if (updateFields.length === 0) {
+    if (updates.length === 0) {
       await client.end();
       return res.status(400).json({
         success: false,
@@ -414,26 +407,19 @@ router.put('/:id', verifyAdminToken, async (req, res) => {
       });
     }
 
-    // Agregar updated_at
-    paramCount++;
-    updateFields.push(`updated_at = $${paramCount}`);
-    values.push(new Date());
-
-    // Agregar ID para WHERE
     paramCount++;
     values.push(id);
 
-    const query = `
-      UPDATE products 
-      SET ${updateFields.join(', ')}
-      WHERE id = ${paramCount}
+    const result = await client.query(`
+      UPDATE products
+      SET ${updates.join(', ')}, updated_at = NOW()
+      WHERE id = $${paramCount}
       RETURNING *
-    `;
+    `, values);
 
-    const result = await client.query(query, values);
     await client.end();
 
-    console.log(`✅ Producto actualizado: ${id}`);
+    console.log(`✅ Producto actualizado: ${result.rows[0].name}`);
 
     res.json({
       success: true,
@@ -442,7 +428,7 @@ router.put('/:id', verifyAdminToken, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error actualizando producto:', error);
+    console.error('❌ Error actualizando producto:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -459,9 +445,15 @@ router.delete('/:id', verifyAdminToken, async (req, res) => {
     const client = await getDbClient();
     await client.connect();
 
-    // Verificar que el producto existe
-    const productCheck = await client.query('SELECT name FROM products WHERE id = $1', [id]);
-    if (productCheck.rows.length === 0) {
+    // Soft delete - solo marcar como inactivo
+    const result = await client.query(`
+      UPDATE products
+      SET is_active = false, updated_at = NOW()
+      WHERE id = $1
+      RETURNING *
+    `, [id]);
+
+    if (result.rows.length === 0) {
       await client.end();
       return res.status(404).json({
         success: false,
@@ -469,26 +461,17 @@ router.delete('/:id', verifyAdminToken, async (req, res) => {
       });
     }
 
-    const productName = productCheck.rows[0].name;
-
-    // Soft delete - marcar como inactivo en lugar de eliminar
-    await client.query(`
-      UPDATE products 
-      SET is_active = false, updated_at = NOW()
-      WHERE id = $1
-    `, [id]);
-
     await client.end();
 
-    console.log(`🗑️ Producto eliminado (soft delete): ${productName}`);
+    console.log(`🗑️  Producto desactivado: ${result.rows[0].name}`);
 
     res.json({
       success: true,
-      message: 'Producto eliminado exitosamente'
+      message: 'Producto desactivado exitosamente'
     });
 
   } catch (error) {
-    console.error('Error eliminando producto:', error);
+    console.error('❌ Error eliminando producto:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -497,45 +480,62 @@ router.delete('/:id', verifyAdminToken, async (req, res) => {
   }
 });
 
-// GET /api/products/:id/variants - Obtener variantes de producto
-router.get('/:id/variants', async (req, res) => {
+// POST /api/products/:id/images - Subir imágenes de producto (admin)
+router.post('/:id/images', verifyAdminToken, async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!req.files || !req.files.images) {
+      return res.status(400).json({
+        success: false,
+        message: 'No se enviaron imágenes'
+      });
+    }
 
     const client = await getDbClient();
     await client.connect();
 
-    const result = await client.query(`
-      SELECT 
-        pv.*,
-        (
-          SELECT json_agg(
-            json_build_object(
-              'id', pi.id,
-              'url', pi.url,
-              'alt_text', pi.alt_text,
-              'position', pi.position,
-              'is_main', pi.is_main
-            )
-            ORDER BY pi.position
-          )
-          FROM product_images pi 
-          WHERE pi.variant_id = pv.id
-        ) as images
-      FROM product_variants pv
-      WHERE pv.product_id = $1 AND pv.is_active = true
-      ORDER BY pv.created_at ASC
-    `, [id]);
+    // Verificar que el producto existe
+    const productCheck = await client.query('SELECT * FROM products WHERE id = $1', [id]);
+    if (productCheck.rows.length === 0) {
+      await client.end();
+      return res.status(404).json({
+        success: false,
+        message: 'Producto no encontrado'
+      });
+    }
+
+    // Subir imágenes a Cloudinary
+    const images = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
+    const uploadedImages = await cloudinaryService.uploadMultipleImages(images, {
+      folder: `dropshipping-products/${id}`
+    });
+
+    // Guardar URLs en la base de datos
+    const insertedImages = [];
+    for (let i = 0; i < uploadedImages.length; i++) {
+      const image = uploadedImages[i];
+      const result = await client.query(`
+        INSERT INTO product_images (product_id, url, alt_text, position, is_main)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING *
+      `, [id, image.url, productCheck.rows[0].name, i, i === 0]);
+
+      insertedImages.push(result.rows[0]);
+    }
 
     await client.end();
 
-    res.json({
+    console.log(`✅ ${insertedImages.length} imágenes subidas para producto ${id}`);
+
+    res.status(201).json({
       success: true,
-      data: result.rows
+      message: 'Imágenes subidas exitosamente',
+      data: insertedImages
     });
 
   } catch (error) {
-    console.error('Error obteniendo variantes:', error);
+    console.error('❌ Error subiendo imágenes:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -548,19 +548,7 @@ router.get('/:id/variants', async (req, res) => {
 router.post('/:id/variants', verifyAdminToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      name,
-      color,
-      size,
-      material,
-      price,
-      comparePrice,
-      sku,
-      stockQuantity = 0,
-      supplierProductId,
-      supplierUrl,
-      supplierPrice
-    } = req.body;
+    const { name, color, price, sku, stockQuantity } = req.body;
 
     if (!name || !price || !sku) {
       return res.status(400).json({
@@ -572,42 +560,15 @@ router.post('/:id/variants', verifyAdminToken, async (req, res) => {
     const client = await getDbClient();
     await client.connect();
 
-    // Verificar que el producto existe
-    const productCheck = await client.query('SELECT id FROM products WHERE id = $1', [id]);
-    if (productCheck.rows.length === 0) {
-      await client.end();
-      return res.status(404).json({
-        success: false,
-        message: 'Producto no encontrado'
-      });
-    }
-
-    // Verificar que el SKU no exista
-    const skuCheck = await client.query('SELECT id FROM product_variants WHERE sku = $1', [sku]);
-    if (skuCheck.rows.length > 0) {
-      await client.end();
-      return res.status(400).json({
-        success: false,
-        message: 'El SKU ya existe'
-      });
-    }
-
-    // Crear variante
     const result = await client.query(`
-      INSERT INTO product_variants (
-        product_id, name, color, size, material, price, compare_price,
-        sku, stock_quantity, supplier_product_id, supplier_url, supplier_price
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      INSERT INTO product_variants (product_id, name, color, price, sku, stock_quantity)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
-    `, [
-      id, name, color, size, material, price, comparePrice,
-      sku, stockQuantity, supplierProductId, supplierUrl, supplierPrice
-    ]);
+    `, [id, name, color || null, price, sku, stockQuantity || 0]);
 
     await client.end();
 
-    console.log(`✅ Variante creada: ${name} (SKU: ${sku})`);
+    console.log(`✅ Variante creada: ${result.rows[0].name}`);
 
     res.status(201).json({
       success: true,
@@ -616,157 +577,7 @@ router.post('/:id/variants', verifyAdminToken, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error creando variante:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor',
-      error: error.message
-    });
-  }
-});
-
-// GET /api/products/:id/reviews - Obtener reseñas de producto
-router.get('/:id/reviews', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { page = 1, limit = 10 } = req.query;
-    const offset = (parseInt(page) - 1) * parseInt(limit);
-
-    const client = await getDbClient();
-    await client.connect();
-
-    const result = await client.query(`
-      SELECT 
-        r.*,
-        CASE 
-          WHEN r.user_id IS NOT NULL THEN CONCAT(u."firstName", ' ', SUBSTRING(u."lastName", 1, 1), '.')
-          ELSE r.customer_name
-        END as reviewer_name
-      FROM reviews r
-      LEFT JOIN users u ON r.user_id = u.id
-      WHERE r.product_id = $1 AND r.is_approved = true
-      ORDER BY r.created_at DESC
-      LIMIT $2 OFFSET $3
-    `, [id, parseInt(limit), offset]);
-
-    // Contar total
-    const countResult = await client.query(`
-      SELECT COUNT(*) as total
-      FROM reviews 
-      WHERE product_id = $1 AND is_approved = true
-    `, [id]);
-
-    const total = parseInt(countResult.rows[0].total);
-
-    await client.end();
-
-    res.json({
-      success: true,
-      data: result.rows,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / parseInt(limit))
-      }
-    });
-
-  } catch (error) {
-    console.error('Error obteniendo reseñas:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor',
-      error: error.message
-    });
-  }
-});
-
-// POST /api/products/:id/reviews - Crear reseña de producto
-router.post('/:id/reviews', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const {
-      rating,
-      title,
-      comment,
-      customerName,
-      customerEmail,
-      userId = null
-    } = req.body;
-
-    if (!rating || rating < 1 || rating > 5) {
-      return res.status(400).json({
-        success: false,
-        message: 'Rating debe ser entre 1 y 5'
-      });
-    }
-
-    if (!userId && (!customerName || !customerEmail)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Se requiere customerName y customerEmail para usuarios anónimos'
-      });
-    }
-
-    const client = await getDbClient();
-    await client.connect();
-
-    // Verificar que el producto existe
-    const productCheck = await client.query('SELECT id FROM products WHERE id = $1', [id]);
-    if (productCheck.rows.length === 0) {
-      await client.end();
-      return res.status(404).json({
-        success: false,
-        message: 'Producto no encontrado'
-      });
-    }
-
-    // Crear reseña
-    const result = await client.query(`
-      INSERT INTO reviews (
-        product_id, user_id, customer_name, customer_email,
-        rating, title, comment, is_approved
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING *
-    `, [
-      id, userId, customerName, customerEmail,
-      rating, title, comment, false // Requiere aprobación manual
-    ]);
-
-    await client.end();
-
-    console.log(`⭐ Reseña creada para producto ${id}: ${rating} estrellas`);
-
-    res.status(201).json({
-      success: true,
-      message: 'Reseña enviada exitosamente. Será revisada antes de publicarse.',
-      data: result.rows[0]
-    });
-
-  } catch (error) {
-    console.error('Error creando reseña:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor',
-      error: error.message
-    });
-  }
-});
-
-// GET /api/products/:id/analytics - Obtener analytics de producto (admin)
-router.get('/:id/analytics', verifyAdminToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const analytics = await analyticsService.getProductAnalytics(id);
-
-    res.json({
-      success: true,
-      data: analytics
-    });
-
-  } catch (error) {
-    console.error('Error obteniendo analytics del producto:', error);
+    console.error('❌ Error creando variante:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',

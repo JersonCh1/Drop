@@ -4,15 +4,39 @@ const router = express.Router();
 const analyticsService = require('../services/analyticsService');
 
 // Middleware para verificar admin
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'dropshipping-super-secret-key-2024';
+
 function verifyAdminToken(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token || !token.startsWith('admin_')) {
+
+  if (!token) {
     return res.status(401).json({
       success: false,
-      message: 'Token de admin requerido'
+      message: 'Token requerido'
     });
   }
-  next();
+
+  try {
+    // Verificar JWT
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    // Verificar que el usuario sea ADMIN
+    if (decoded.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'Acceso denegado. Se requieren permisos de administrador.'
+      });
+    }
+
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: 'Token inválido'
+    });
+  }
 }
 
 // POST /api/analytics/track - Rastrear evento

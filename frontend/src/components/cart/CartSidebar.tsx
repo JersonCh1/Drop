@@ -1,6 +1,6 @@
 // frontend/src/components/cart/CartSidebar.tsx
 import React from 'react';
-import { useCart } from '../../context/CartContext.tsx';
+import { useCart } from '../../context/CartContext';
 
 interface CartSidebarProps {
   onCheckout: () => void;

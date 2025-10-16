@@ -41,21 +41,30 @@ class AuthService {
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
       const response = await authApi.login(email, password);
-      
-      if (response.success && response.data) {
-        // Store token and user data
-        localStorage.setItem(this.tokenKey, response.data.token);
-        localStorage.setItem(this.userKey, JSON.stringify(response.data.user));
-        
-        return {
-          success: true,
-          token: response.data.token,
-          user: response.data.user
-        };
+      console.log('📡 Respuesta de login:', response);
+
+      // El backend retorna { success: true, token: '...', user: {...} }
+      if (response.success) {
+        const token = response.token || (response.data as any)?.token;
+        const user = response.user || (response.data as any)?.user;
+
+        if (token && user) {
+          // Store token and user data
+          localStorage.setItem(this.tokenKey, token);
+          localStorage.setItem(this.userKey, JSON.stringify(user));
+          console.log('✅ Token y usuario guardados');
+
+          return {
+            success: true,
+            token,
+            user
+          };
+        }
       }
-      
+
       throw new Error(response.message || 'Error en el login');
     } catch (error: any) {
+      console.error('❌ Error en login:', error);
       throw new Error(error.message || 'Error de conexión');
     }
   }
@@ -63,21 +72,30 @@ class AuthService {
   async register(userData: RegisterData): Promise<LoginResponse> {
     try {
       const response = await authApi.register(userData);
-      
-      if (response.success && response.data) {
-        // Store token and user data
-        localStorage.setItem(this.tokenKey, response.data.token);
-        localStorage.setItem(this.userKey, JSON.stringify(response.data.user));
-        
-        return {
-          success: true,
-          token: response.data.token,
-          user: response.data.user
-        };
+      console.log('📡 Respuesta de registro:', response);
+
+      // Verificar si hay token y user en response o en response.data
+      if (response.success) {
+        const token = response.token || (response.data as any)?.token;
+        const user = response.user || (response.data as any)?.user;
+
+        if (token && user) {
+          // Store token and user data
+          localStorage.setItem(this.tokenKey, token);
+          localStorage.setItem(this.userKey, JSON.stringify(user));
+          console.log('✅ Registro exitoso - Token y usuario guardados');
+
+          return {
+            success: true,
+            token,
+            user
+          };
+        }
       }
-      
+
       throw new Error(response.message || 'Error en el registro');
     } catch (error: any) {
+      console.error('❌ Error en registro:', error);
       throw new Error(error.message || 'Error de conexión');
     }
   }
@@ -85,15 +103,14 @@ class AuthService {
   async verifyToken(token: string): Promise<any> {
     try {
       // Set token temporarily for verification
-      const originalToken = localStorage.getItem(this.tokenKey);
       localStorage.setItem(this.tokenKey, token);
-      
+
       const response = await authApi.verifyToken();
-      
+
       if (response.success) {
-        return response.data.user;
+        return (response.data as any).user;
       }
-      
+
       throw new Error('Token inválido');
     } catch (error) {
       // Restore original token on error
@@ -118,15 +135,15 @@ class AuthService {
   async adminLogin(username: string, password: string): Promise<AdminLoginResponse> {
     try {
       const response = await authApi.adminLogin(username, password);
-      
+
       if (response.success && response.data) {
         // Store admin token
-        localStorage.setItem(this.adminTokenKey, response.data.token);
-        
+        localStorage.setItem(this.adminTokenKey, (response.data as any).token);
+
         return {
           success: true,
-          token: response.data.token,
-          user: response.data.user
+          token: (response.data as any).token,
+          user: (response.data as any).user
         };
       }
       
@@ -139,15 +156,14 @@ class AuthService {
   async verifyAdminToken(token: string): Promise<any> {
     try {
       // Set admin token temporarily for verification
-      const originalToken = localStorage.getItem(this.adminTokenKey);
       localStorage.setItem(this.adminTokenKey, token);
-      
+
       const response = await authApi.verifyAdminToken();
-      
+
       if (response.success) {
-        return response.data.user;
+        return (response.data as any).user;
       }
-      
+
       throw new Error('Token de admin inválido');
     } catch (error) {
       // Restore original token on error
@@ -166,23 +182,56 @@ class AuthService {
   }
 
   // Profile Management
+  async getMe(): Promise<any> {
+    try {
+      const response = await authApi.getMe();
+      console.log('📡 Respuesta de getMe:', response);
+
+      // El backend retorna { success: true, user: {...} }
+      if (response.success) {
+        const user = response.user || (response.data as any)?.user;
+
+        if (user) {
+          // Update stored user data
+          localStorage.setItem(this.userKey, JSON.stringify(user));
+          console.log('✅ Usuario guardado en localStorage:', user);
+          return user;
+        }
+      }
+
+      throw new Error(response.message || 'Error obteniendo usuario');
+    } catch (error: any) {
+      console.error('❌ Error en getMe:', error);
+      throw new Error(error.message || 'Error de conexión');
+    }
+  }
+
   async updateProfile(userData: any): Promise<{ success: boolean; user: any; message?: string }> {
     try {
       const response = await authApi.updateProfile(userData);
-      
+
       if (response.success && response.data) {
         // Update stored user data
-        localStorage.setItem(this.userKey, JSON.stringify(response.data.user));
-        
+        localStorage.setItem(this.userKey, JSON.stringify((response.data as any).user));
+
         return {
           success: true,
-          user: response.data.user
+          user: (response.data as any).user
         };
       }
-      
+
       throw new Error(response.message || 'Error actualizando perfil');
     } catch (error: any) {
       throw new Error(error.message || 'Error de conexión');
+    }
+  }
+
+  async getMyOrders(page: number = 1, limit: number = 10): Promise<any> {
+    try {
+      const response = await authApi.getMyOrders(page, limit);
+      return response.data || response;
+    } catch (error: any) {
+      throw new Error(error.message || 'Error obteniendo órdenes');
     }
   }
 
@@ -192,7 +241,7 @@ class AuthService {
         currentPassword,
         newPassword
       });
-      
+
       return {
         success: response.success,
         message: response.message

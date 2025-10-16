@@ -46,28 +46,80 @@ model Category {
   @@map("categories")
 }
 
+model Supplier {
+  id          String  @id @default(cuid())
+  name        String  @unique // AliExpress, CJ Dropshipping, etc.
+  slug        String  @unique
+  description String?
+  website     String?
+
+  // API / Integración
+  apiKey      String? // Clave API si tiene integración
+  apiEnabled  Boolean @default(false)
+
+  // Configuración de envío
+  averageShippingDays String @default("15-30") // ej: "15-30"
+  shippingCountries   String? // JSON array de países que cubre
+
+  // Comisiones y costos
+  defaultCommission Float  @default(0) // Porcentaje de comisión
+  defaultShippingCost Float @default(0) // Costo de envío base
+
+  // Calificación
+  rating      Float?   @default(0) // 0-5
+  reliability Float?   @default(100) // 0-100 porcentaje de confiabilidad
+
+  // Contacto
+  contactEmail  String?
+  contactPhone  String?
+  contactPerson String?
+
+  // Estado
+  isActive    Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  products       Product[]
+  supplierOrders SupplierOrder[]
+
+  @@map("suppliers")
+}
+
 model Product {
   id          String  @id @default(cuid())
   name        String
   slug        String  @unique
   description String?
-  basePrice   Decimal @db.Decimal(10, 2)
-  
+  basePrice   Float
+
   // Metadatos del producto
   brand       String?
   model       String?
-  compatibility String[] // Array de modelos de iPhone compatibles
-  
+  compatibility String? // JSON string de modelos compatibles
+
+  // Dropshipping
+  supplierId        String?
+  supplierProductId String? // ID del producto en el proveedor
+  supplierUrl       String? // URL del producto en el proveedor (AliExpress, etc)
+  supplierPrice     Float?  // Precio del proveedor
+  profitMargin      Float   @default(30) // Margen de ganancia en porcentaje
+  shippingTime      String  @default("15-30 días hábiles") // Tiempo de envío
+  importedAt        DateTime? // Cuándo se importó desde el proveedor
+  lastSyncedAt      DateTime? // Última sincronización de precio/stock
+
   // Estado
   isActive    Boolean @default(true)
   isFeatured  Boolean @default(false)
   inStock     Boolean @default(true)
   stockCount  Int     @default(0)
-  
+
   // SEO
   metaTitle       String?
   metaDescription String?
-  
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -75,7 +127,9 @@ model Product {
   // Relaciones
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  
+
+  supplier   Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
   variants   ProductVariant[]
   images     ProductImage[]
   reviews    Review[]
@@ -96,15 +150,15 @@ model ProductVariant {
   material String?
   
   // Pricing y stock
-  price        Decimal @db.Decimal(10, 2)
-  comparePrice Decimal? @db.Decimal(10, 2) // Precio tachado
+  price        Float
+  comparePrice Float? // Precio tachado
   sku          String  @unique
   stockQuantity Int    @default(0)
-  
+
   // Proveedor
   supplierProductId String? // ID del producto en el proveedor
   supplierUrl       String? // URL del producto en el proveedor
-  supplierPrice     Decimal? @db.Decimal(10, 2)
+  supplierPrice     Float?
   
   // Estado
   isActive Boolean @default(true)
@@ -144,29 +198,29 @@ model ProductImage {
 model Order {
   id     String      @id @default(cuid())
   userId String?
-  
+
   // Información del pedido
   orderNumber String @unique
   status      OrderStatus @default(PENDING)
-  
+
   // Información del cliente
   customerFirstName String
   customerLastName  String
   customerEmail     String
   customerPhone     String
-  
+
   // Montos
-  subtotal     Decimal @db.Decimal(10, 2)
-  shippingCost Decimal @db.Decimal(10, 2)
-  tax          Decimal @db.Decimal(10, 2) @default(0)
-  total        Decimal @db.Decimal(10, 2)
-  
+  subtotal     Float
+  shippingCost Float
+  tax          Float @default(0)
+  total        Float
+
   // Información de pago
   paymentMethod   String?
   paymentStatus   PaymentStatus @default(PENDING)
   stripePaymentId String?
   stripeSessionId String?
-  
+
   // Información de envío
   shippingAddress    String
   shippingCity       String
@@ -174,13 +228,18 @@ model Order {
   shippingPostalCode String
   shippingCountry    String
   notes              String?
-  
+
   // Tracking
   trackingNumber String?
   trackingUrl    String?
   shippedAt      DateTime?
   deliveredAt    DateTime?
-  
+
+  // Dropshipping
+  isDropshipping Boolean @default(true) // Si es orden de dropshipping
+  supplierOrderCreated Boolean @default(false) // Si ya se creó orden con proveedor
+  estimatedDelivery String? // "15-30 días hábiles"
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -190,8 +249,52 @@ model Order {
   items          OrderItem[]
   statusHistory  OrderStatusHistory[]
   notifications  OrderNotification[]
+  supplierOrders SupplierOrder[]
 
   @@map("orders")
+}
+
+model SupplierOrder {
+  id        String  @id @default(cuid())
+  orderId   String
+  supplierId String
+
+  // Información de la orden con el proveedor
+  supplierOrderId     String? // ID de la orden en el sistema del proveedor
+  supplierOrderNumber String? // Número de orden del proveedor
+  supplierOrderUrl    String? // URL para ver la orden en el proveedor
+
+  // Estado
+  status        SupplierOrderStatus @default(PENDING)
+
+  // Montos
+  subtotal      Float
+  shippingCost  Float
+  total         Float
+
+  // Tracking
+  trackingNumber String?
+  trackingUrl    String?
+  carrier        String? // DHL, FedEx, China Post, etc.
+
+  // Fechas
+  orderedAt   DateTime?
+  shippedAt   DateTime?
+  deliveredAt DateTime?
+
+  // Notas
+  notes       String?
+  errorMessage String? // Si hubo error al crear la orden
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@map("supplier_orders")
 }
 
 model OrderItem {
@@ -205,8 +308,8 @@ model OrderItem {
   productModel String?
   productColor String?
   quantity     Int
-  price        Decimal @db.Decimal(10, 2)
-  total        Decimal @db.Decimal(10, 2)
+  price        Float
+  total        Float
   
   createdAt DateTime @default(now())
 
@@ -283,7 +386,7 @@ model Review {
   customerName  String?
   customerEmail String?
   
-  rating    Int    @db.SmallInt // 1-5
+  rating    Int // 1-5
   title     String?
   comment   String?
   
@@ -413,4 +516,15 @@ enum AnalyticsType {
   CART_ACTION
   PURCHASE
   USER_ACTION
+}
+
+enum SupplierOrderStatus {
+  PENDING     // Orden pendiente de crear con proveedor
+  PLACED      // Orden ya colocada con el proveedor
+  CONFIRMED   // Proveedor confirmó la orden
+  PROCESSING  // Proveedor está procesando
+  SHIPPED     // Proveedor envió
+  DELIVERED   // Entregado
+  CANCELLED   // Cancelado
+  FAILED      // Falló al crear orden
 }

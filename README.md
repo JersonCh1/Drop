@@ -1,310 +1,252 @@
-# 🛍️ Dropshipping iPhone Cases Store
+# 📱 Dropshipping iPhone Store
 
-Una tienda de dropshipping moderna para carcasas de iPhone construida con React y Node.js.
+Plataforma e-commerce completa para venta de carcasas y accesorios de iPhone con panel de administración integrado.
 
-## 📋 Tabla de Contenidos
-
-- [🚀 Demo](#-demo)
-- [⚡ Características](#-características)
-- [🛠️ Stack Tecnológico](#️-stack-tecnológico)
-- [📦 Instalación](#-instalación)
-- [🔧 Configuración](#-configuración)
-- [▶️ Uso](#️-uso)
-- [📁 Estructura del Proyecto](#-estructura-del-proyecto)
-- [🌐 Despliegue](#-despliegue)
-- [🤝 Contribuir](#-contribuir)
-
-## 🚀 Demo
-
-**Backend API**: http://localhost:3001
-**Frontend**: http://localhost:3000
-**Health Check**: http://localhost:3001/health
-**Test Database**: http://localhost:3001/api/test-db
-
-## ⚡ Características
-
-### ✅ Funcionalidades Implementadas
-- 🛒 Carrito de compras funcional
-- 📱 Selector de modelos iPhone (15, 14, 13)
-- 🎨 Selector de colores (Negro, Azul, Rosa, Transparente)
-- 💰 Cálculo automático de precios
-- 📊 Panel lateral del carrito
-- 📱 Diseño responsive
-- 🗄️ Base de datos en la nube (Supabase)
-- 🔌 API REST funcionando
-
-### 🔄 Próximas Funcionalidades
-- 💳 Sistema de pagos (Stripe)
-- 📧 Checkout con formulario
-- 👤 Autenticación de usuarios
-- 📈 Panel de administración
-- 📊 Analytics y reportes
-
-## 🛠️ Stack Tecnológico
-
-### Backend
-- **Framework**: Node.js + Express
-- **Base de Datos**: Supabase PostgreSQL
-- **Autenticación**: JWT (próximamente)
-- **Validación**: Joi
-- **Documentación**: Swagger (próximamente)
+## 🚀 Tecnologías
 
 ### Frontend
-- **Framework**: React 18 + TypeScript
-- **Estilos**: Tailwind CSS
-- **Estado**: React Hooks
-- **Routing**: React Router (próximamente)
-- **Formularios**: React Hook Form (próximamente)
+- **React 18** + TypeScript
+- **React Router** - Navegación
+- **TailwindCSS** - Estilos
+- **Axios** - Peticiones HTTP
+- **React Query** - Cache de datos
+- **React Hot Toast** - Notificaciones
+- **Stripe Elements** - Pagos (opcional)
 
-### DevOps
-- **Contenedores**: Docker (opcional)
-- **CI/CD**: GitHub Actions (próximamente)
-- **Hosting**: Vercel/Netlify ready
+### Backend
+- **Node.js** + Express
+- **Prisma ORM** - Base de datos
+- **SQLite** - Base de datos (desarrollo)
+- **bcryptjs** - Hash de contraseñas
 
 ## 📦 Instalación
 
-### Prerequisitos
-- Node.js 16+ 
-- npm 8+
-- Git
+### 1. Clonar e instalar dependencias
 
-### 1. Clonar el repositorio
 ```bash
-git clone https://github.com/tu-usuario/dropshipping-iphone.git
-cd dropshipping-iphone
-```
-
-### 2. Instalar dependencias del backend
-```bash
+# Backend
 cd backend
 npm install
-```
 
-### 3. Instalar dependencias del frontend
-```bash
-cd ../frontend
+# Frontend
+cd frontend
 npm install
-npm install -D tailwindcss postcss autoprefixer
-npx tailwindcss init -p
 ```
 
-## 🔧 Configuración
+### 2. Configurar base de datos
 
-### 1. Configurar Variables de Entorno
-
-**Backend (.env)**
 ```bash
-NODE_ENV=development
+cd backend
+npx prisma generate
+npx prisma db push
+node prisma/seed.js
+```
+
+### 3. Variables de entorno
+
+**Backend (.env):**
+```env
+DATABASE_URL="file:./dev.db"
 PORT=3001
-DATABASE_URL=postgresql://postgres:TU_PASSWORD@db.xxx.supabase.co:5432/postgres
-JWT_SECRET=tu-jwt-secret-muy-seguro
-FRONTEND_URL=http://localhost:3000
+NODE_ENV=development
 ```
 
-**Frontend (.env)**
-```bash
+**Frontend (.env):**
+```env
 REACT_APP_API_URL=http://localhost:3001/api
-REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_tu_stripe_key
+REACT_APP_STRIPE_PUBLISHABLE_KEY=tu_clave_stripe_opcional
 ```
 
-### 2. Configurar Supabase
+### 4. Iniciar servidores
 
-1. Ve a [supabase.com](https://supabase.com)
-2. Crea una cuenta y un nuevo proyecto
-3. Ve a Settings → Database
-4. Copia la Connection String
-5. Actualiza `DATABASE_URL` en backend/.env
-
-### 3. Configurar Tailwind CSS
-
-**tailwind.config.js**
-```javascript
-module.exports = {
-  content: ["./src/**/*.{js,jsx,ts,tsx}"],
-  theme: { extend: {} },
-  plugins: [],
-}
-```
-
-## ▶️ Uso
-
-### Desarrollo
-
-**Terminal 1 - Backend:**
 ```bash
+# Terminal 1 - Backend
 cd backend
-npm run dev
-# o
-node src/server.js
-```
+npm start
 
-**Terminal 2 - Frontend:**
-```bash
+# Terminal 2 - Frontend
 cd frontend
 npm start
 ```
 
-### Producción
+## 🔐 Acceso Admin
 
-**Backend:**
-```bash
-cd backend
-npm run build
-npm start
-```
+- **URL:** http://localhost:3000
+- **Usuario:** admin
+- **Contraseña:** admin123
 
-**Frontend:**
-```bash
-cd frontend
-npm run build
-npm run preview
-```
+## ✨ Características
+
+### Cliente
+- ✅ Catálogo de productos con filtros
+- ✅ Detalle de producto con variantes (colores)
+- ✅ Carrito de compras persistente
+- ✅ Checkout con información de envío
+- ✅ Seguimiento de órdenes por número
+- ✅ WhatsApp integrado para soporte
+- ✅ Responsive design completo
+
+### Admin Panel
+- ✅ Dashboard con estadísticas
+- ✅ Gestión de productos (CRUD completo)
+- ✅ **Upload de imágenes con Unsplash**
+- ✅ Gestión de órdenes
+- ✅ Ver detalles completos del cliente
+- ✅ Contacto directo por WhatsApp
+- ✅ UI moderna con tabs
 
 ## 📁 Estructura del Proyecto
 
 ```
 dropshipping-iphone/
 ├── backend/
-│   ├── src/
-│   │   ├── controllers/     # Controladores API
-│   │   ├── middleware/      # Middlewares
-│   │   ├── routes/          # Rutas API
-│   │   ├── services/        # Lógica de negocio
-│   │   └── server.js        # ✅ Servidor principal
 │   ├── prisma/
-│   │   └── schema.prisma    # ✅ Esquema base de datos
-│   ├── package.json         # ✅ Dependencias backend
-│   └── .env                 # ✅ Variables de entorno
-├── frontend/
-│   ├── public/
-│   │   └── index.html       # ✅ HTML principal
+│   │   ├── schema.prisma      # Schema de base de datos
+│   │   └── seed.js            # Datos de ejemplo
 │   ├── src/
-│   │   ├── components/      # Componentes React
-│   │   ├── pages/           # Páginas
-│   │   ├── hooks/           # Custom hooks
-│   │   ├── services/        # APIs
-│   │   ├── App.tsx          # ✅ Componente principal
-│   │   ├── index.tsx        # ✅ Punto de entrada
-│   │   └── index.css        # ✅ Estilos globales
-│   ├── package.json         # ✅ Dependencias frontend
-│   ├── tailwind.config.js   # ✅ Configuración Tailwind
-│   └── .env                 # Variables de entorno
-└── README.md                # ✅ Este archivo
+│   │   ├── routes/            # [No usado - TODO: limpiar]
+│   │   ├── services/          # Servicios (email, analytics)
+│   │   └── utils/
+│   └── server-simple.js       # ⭐ Servidor principal
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── admin/        # Panel admin
+│   │   │   ├── cart/         # Carrito
+│   │   │   ├── checkout/     # Checkout
+│   │   │   ├── layout/       # Header/Footer
+│   │   │   ├── products/     # Productos
+│   │   │   └── tracking/     # Seguimiento
+│   │   ├── context/          # Context API
+│   │   ├── pages/            # Páginas principales
+│   │   ├── services/         # API services
+│   │   └── App.tsx           # ⭐ App principal
+│   └── public/
+└── README.md
 ```
 
-## 🌐 Despliegue
+## 🎨 Upload de Imágenes
 
-### Vercel (Recomendado para Frontend)
+El sistema soporta 2 métodos para agregar imágenes:
 
-```bash
-# Instalar Vercel CLI
-npm i -g vercel
+1. **URL Manual** - Pega cualquier URL de imagen (Imgur, Unsplash, etc)
+2. **Unsplash Automático** - Genera imagen basada en el nombre del producto
 
-# Desplegar frontend
-cd frontend
-vercel
-
-# Configurar variables de entorno en Vercel dashboard
+### Ejemplo en Admin:
+```
+1. Click en "Crear Producto"
+2. Llenar nombre y detalles
+3. Scroll a "Imagen del Producto"
+4. Option A: Pegar URL → Click "Vista Previa"
+5. Option B: Click "Usar Unsplash Automático"
+6. Guardar producto
 ```
 
-### Railway (Recomendado para Backend)
+## 🔧 API Endpoints
 
+### Productos
+```
+GET    /api/products           # Listar productos
+GET    /api/products/:slug     # Detalle de producto
+POST   /api/products           # Crear producto (ADMIN)
+PUT    /api/products/:id       # Actualizar producto (ADMIN)
+DELETE /api/products/:id       # Desactivar producto (ADMIN)
+POST   /api/products/:id/images # Agregar imagen (ADMIN)
+DELETE /api/products/:productId/images/:imageId # Eliminar imagen (ADMIN)
+```
+
+### Órdenes
+```
+GET    /api/orders             # Listar órdenes (ADMIN)
+GET    /api/orders/:orderNumber # Tracking público
+POST   /api/orders             # Crear orden
+PUT    /api/orders/:id/status  # Actualizar estado (ADMIN)
+```
+
+### Admin
+```
+POST   /api/admin/login        # Login admin
+```
+
+## 🗄️ Modelos de Datos
+
+### Product
+- name, slug, description
+- basePrice, stockCount
+- brand, model, compatibility
+- isFeatured, isActive, inStock
+
+### ProductImage
+- url, altText, position
+- isMain (imagen principal)
+
+### ProductVariant
+- name, color, size
+- price, sku, stockQuantity
+
+### Order
+- orderNumber, status
+- customerInfo (nombre, email, teléfono)
+- shippingAddress (dirección completa)
+- paymentInfo (método, estado)
+- trackingNumber
+
+## 🚀 Despliegue
+
+### Producción
+1. Cambiar DATABASE_URL a PostgreSQL/MySQL
+2. Configurar variables de entorno
+3. Build del frontend: `npm run build`
+4. Servir con Nginx/Apache
+
+### Recomendaciones
+- Usar Railway/Vercel para backend
+- Usar Vercel/Netlify para frontend
+- Migrar a PostgreSQL en producción
+- Configurar dominio personalizado
+- Habilitar HTTPS
+
+## 🐛 Solución de Problemas
+
+### Error: EADDRINUSE Port 3001
 ```bash
-# Instalar Railway CLI
-npm install -g @railway/cli
+# Matar proceso en puerto 3001
+npx kill-port 3001
+```
 
-# Desplegar backend
+### Error: Prisma Client not generated
+```bash
 cd backend
-railway login
-railway init
-railway up
+npx prisma generate
 ```
 
-### Variables de Entorno en Producción
-
-**Vercel:**
-- `REACT_APP_API_URL=https://tu-backend.railway.app/api`
-
-**Railway:**
-- `DATABASE_URL=tu_supabase_url`
-- `NODE_ENV=production`
-- `FRONTEND_URL=https://tu-frontend.vercel.app`
-
-## 🤝 Contribuir
-
-### Guía de Contribución
-
-1. **Fork** el proyecto
-2. **Crea** una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. **Commit** tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. **Push** a la rama (`git push origin feature/AmazingFeature`)
-5. **Abre** un Pull Request
-
-### Roadmap
-
-#### 🎯 Próximas Funcionalidades
-- [ ] Sistema de pagos con Stripe
-- [ ] Autenticación de usuarios
-- [ ] Panel de administración
-- [ ] Integración con proveedores
-- [ ] Sistema de tracking
-- [ ] Emails automáticos
-- [ ] Analytics avanzados
-
-#### 🐛 Bugs Conocidos
-- [ ] Warnings de deprecación en desarrollo (no afectan funcionamiento)
-- [ ] Tailwind warnings en VS Code (visual, no funcional)
-
-## 📞 Soporte
-
-Si tienes problemas:
-
-1. **Revisa** que todos los archivos estén creados según la estructura
-2. **Verifica** que las dependencias estén instaladas
-3. **Confirma** que Supabase esté configurado correctamente
-4. **Chequea** que ambos servidores (3000 y 3001) estén corriendo
-
-### Comandos de Diagnóstico
-
+### Error: Foreign key constraint
 ```bash
-# Verificar que el backend funciona
-curl http://localhost:3001/health
-
-# Verificar que la base de datos funciona
-curl http://localhost:3001/api/test-db
-
-# Verificar dependencias del frontend
-cd frontend && npm ls
-
-# Verificar dependencias del backend
-cd backend && npm ls
+cd backend
+npx prisma db push --force-reset
+node prisma/seed.js
 ```
+
+## 📈 Mejoras Futuras
+
+- [ ] Sistema de cupones/descuentos
+- [ ] Reviews y ratings de productos
+- [ ] Múltiples imágenes por producto
+- [ ] Integración completa con Stripe
+- [ ] Notificaciones por email
+- [ ] Panel de analytics avanzado
+- [ ] Exportar órdenes a CSV/Excel
+- [ ] Sistema de inventario con alertas
+- [ ] Búsqueda avanzada con Elasticsearch
 
 ## 📄 Licencia
 
-Este proyecto está bajo la licencia MIT. Ver el archivo `LICENSE` para más detalles.
+MIT
 
-## 👨‍💻 Autor
+## 👨‍💻 Desarrollador
 
-**Tu Nombre**
-- GitHub: [@tu-usuario](https://github.com/tu-usuario)
-- Email: tu-email@ejemplo.com
+Proyecto desarrollado para dropshipping de accesorios iPhone.
 
 ---
 
-⭐ ¡Dale una estrella al proyecto si te ha sido útil!
-
-## 🔗 Enlaces Útiles
-
-- [Documentación de React](https://reactjs.org/)
-- [Documentación de Tailwind CSS](https://tailwindcss.com/)
-- [Documentación de Supabase](https://supabase.com/docs)
-- [Documentación de Express](https://expressjs.com/)
-
----
-
-**Estado del Proyecto**: 🟢 En desarrollo activo
-
-**Versión**: 1.0.0
-
-**Última actualización**: Julio 2025
+**Última actualización:** Octubre 2025

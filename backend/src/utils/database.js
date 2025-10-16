@@ -10,6 +10,11 @@ class DatabaseService {
   }
 
   async getClient() {
+    // Check if it's a SQLite connection string
+    if (this.connectionString && this.connectionString.startsWith('file:')) {
+      throw new Error('SQLite detected. Use Prisma Client instead of pg Client.');
+    }
+
     const client = new Client({
       connectionString: this.connectionString,
       ssl: this.sslConfig

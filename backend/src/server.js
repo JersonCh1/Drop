@@ -24,6 +24,7 @@ const emailService = require('./services/emailService');
 const stripeService = require('./services/stripeService');
 const analyticsService = require('./services/analyticsService');
 const notificationService = require('./services/notificationService');
+const cloudinaryService = require('./services/cloudinaryService');
 
 // =================== MIDDLEWARES ===================
 app.use(helmet({
@@ -38,7 +39,21 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function(origin, callback) {
+    // Permitir requests sin origin (como Postman) o desde localhost
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:3002',
+      process.env.FRONTEND_URL
+    ].filter(Boolean);
+
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(null, true); // En desarrollo, permitir todos
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Session-Id', 'X-Request-Time']
@@ -64,18 +79,39 @@ if (process.env.NODE_ENV === 'development') {
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // =================== MIDDLEWARE PARA VERIFICAR ADMIN ===================
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'dropshipping-super-secret-key-2024';
+
 function verifyAdminToken(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  
-  if (!token || !token.startsWith('admin_')) {
+
+  if (!token) {
     return res.status(401).json({
       success: false,
-      message: 'Token de admin requerido'
+      message: 'Token requerido'
     });
   }
-  
-  req.adminToken = token;
-  next();
+
+  try {
+    // Verificar JWT
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    // Verificar que el usuario sea ADMIN
+    if (decoded.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'Acceso denegado. Se requieren permisos de administrador.'
+      });
+    }
+
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: 'Token inválido'
+    });
+  }
 }
 
 // =================== RUTAS BÁSICAS ===================
@@ -164,17 +200,26 @@ app.post('/api/admin/login', async (req, res) => {
     const ADMIN_PASSWORD = 'admin123';
 
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      const token = `admin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      console.log('✅ Login exitoso, token generado');
-      
+      // Generar JWT válido
+      const token = jwt.sign(
+        {
+          username: 'admin',
+          role: 'ADMIN',
+          userId: 'admin-1'
+        },
+        JWT_SECRET,
+        { expiresIn: '7d' } // Token válido por 7 días
+      );
+
+      console.log('✅ Login exitoso, token JWT generado');
+
       res.json({
         success: true,
         message: 'Login exitoso',
         token,
         user: {
           username: 'admin',
-          role: 'administrator'
+          role: 'ADMIN'
         }
       });
     } else {
@@ -207,10 +252,12 @@ app.get('/api/admin/verify', verifyAdminToken, (req, res) => {
 });
 
 // =================== RUTAS DE ÓRDENES (INTEGRADAS) ===================
+// COMENTADO - Migrado a orders-prisma.js usando Prisma/SQLite
 
 // POST /api/orders - Crear nueva orden
 // backend/src/server.js - Reemplaza la función POST /api/orders (alrededor de línea 240)
 
+/* COMENTADO - Migrado a orders-prisma.js
 // POST /api/orders - Crear nueva orden
 app.post('/api/orders', async (req, res) => {
   try {
@@ -280,12 +327,14 @@ app.post('/api/orders', async (req, res) => {
     const orderId = orderResult.rows[0].id;
 
     // Insertar items de la orden
+    const insertedItems = [];
     for (const item of items) {
-      await client.query(`
+      const itemResult = await client.query(`
         INSERT INTO order_items (
-          order_id, product_id, product_name, product_model, product_color, 
+          order_id, product_id, product_name, product_model, product_color,
           quantity, price, total
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING *
       `, [
         orderId,
         item.productId || 1,
@@ -296,12 +345,17 @@ app.post('/api/orders', async (req, res) => {
         item.price,
         item.price * item.quantity
       ]);
+      insertedItems.push(itemResult.rows[0]);
     }
+
+    // Obtener orden completa para enviar emails
+    const fullOrderResult = await client.query('SELECT * FROM orders WHERE id = $1', [orderId]);
+    const fullOrder = fullOrderResult.rows[0];
 
     await client.end();
 
     // Generar URL de WhatsApp para el pago
-    const whatsappNumber = process.env.WHATSAPP_NUMBER || '51917780708'; // Tu número de WhatsApp
+    const whatsappNumber = process.env.WHATSAPP_NUMBER || '51917780708';
     const message = encodeURIComponent(
       `¡Hola! 🛍️\n\n` +
       `Acabo de realizar una orden:\n` +
@@ -321,7 +375,6 @@ app.post('/api/orders', async (req, res) => {
         total,
         createdAt: orderResult.rows[0].created_at,
         status: 'pending',
-        // Información de pago
         paymentMethod: paymentMethod,
         paymentUrl: whatsappUrl,
         paymentInstructions: 'Te contactaremos por WhatsApp para coordinar el pago y envío. También puedes escribirnos directamente.'
@@ -329,6 +382,25 @@ app.post('/api/orders', async (req, res) => {
     };
 
     console.log(`✅ Orden creada: ${orderResult.rows[0].order_number} - $${total}`);
+
+    // Enviar emails de forma asíncrona (no bloquear respuesta)
+    setTimeout(async () => {
+      try {
+        // Email al cliente
+        await emailService.sendOrderConfirmation({
+          order: fullOrder,
+          items: insertedItems
+        });
+
+        // Email al admin
+        await emailService.sendAdminNotification({
+          order: fullOrder,
+          items: insertedItems
+        });
+      } catch (emailError) {
+        console.error('❌ Error enviando emails:', emailError);
+      }
+    }, 1000);
 
     res.status(201).json(response);
 
@@ -653,6 +725,7 @@ app.patch('/api/orders/:id/status', verifyAdminToken, async (req, res) => {
 const trackingRoutes = require('./routes/tracking');
 app.use('/api/tracking', trackingRoutes);
 });
+*/
 
 
 // =================== CRON JOBS ===================
@@ -767,23 +840,33 @@ app.get('/api/admin/stats', verifyAdminToken, async (req, res) => {
 const analyticsRoutes = require('./routes/analytics');
 app.use('/api/analytics', analyticsRoutes);
 
+// =================== RUTAS DE PRODUCTOS ===================
+const productsRoutes = require('./routes/products-prisma'); // Using Prisma for SQLite
+app.use('/api/products', productsRoutes);
 
-// =================== RUTAS HEREDADAS ===================
+// =================== RUTAS DE ÓRDENES ===================
+const ordersRoutes = require('./routes/orders-prisma'); // Using Prisma for SQLite
+app.use('/api/orders', ordersRoutes);
 
-// Rutas básicas de API (compatibilidad)
-app.use('/api/auth', (req, res) => {
-  res.json({ 
-    message: 'Rutas de autenticación - próximamente',
-    endpoints: ['/login', '/register', '/verify', '/reset-password']
-  });
-});
+// =================== RUTAS DE STRIPE ===================
+const stripeRoutes = require('./routes/stripe');
+app.use('/api/stripe', stripeRoutes);
 
-app.use('/api/products', (req, res) => {
-  res.json({ 
-    message: 'Rutas de productos - próximamente',
-    endpoints: ['/products', '/products/:slug', '/categories']
-  });
-});
+// =================== RUTAS DE MERCADOPAGO ===================
+const mercadopagoRoutes = require('./routes/mercadopago');
+app.use('/api/mercadopago', mercadopagoRoutes);
+
+// =================== RUTAS DE AUTENTICACIÓN ===================
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
+
+// =================== RUTAS DE PROVEEDORES (DROPSHIPPING) ===================
+const suppliersRoutes = require('./routes/suppliers');
+app.use('/api/suppliers', suppliersRoutes);
+
+// =================== RUTAS DE CATEGORÍAS ===================
+const categoriesRoutes = require('./routes/categories');
+app.use('/api/categories', categoriesRoutes);
 
 // =================== ERROR HANDLING ===================
 
@@ -846,18 +929,20 @@ async function startServer() {
   try {
     console.log('🚀 Iniciando servidor...');
     console.log(`📊 Entorno: ${process.env.NODE_ENV || 'development'}`);
-    
-    // Inicializar base de datos
-    await initializeDatabase();
-    
-    // Seed inicial (solo en desarrollo o si está habilitado)
-    if (process.env.NODE_ENV === 'development' || process.env.ENABLE_SEED === 'true') {
-      await seedDatabase();
-    }
-    
+    console.log('📁 Base de datos: SQLite (local)');
+
+    // Inicializar base de datos - COMENTADO para SQLite/Prisma
+    // await initializeDatabase();
+
+    // Seed inicial - COMENTADO, ya ejecutado con node prisma/seed.js
+    // if (process.env.NODE_ENV === 'development' || process.env.ENABLE_SEED === 'true') {
+    //   await seedDatabase();
+    // }
+
     // Inicializar servicios
     await emailService.initialize();
-    
+    await cloudinaryService.initialize();
+
     if (process.env.STRIPE_SECRET_KEY) {
       await stripeService.initialize();
     } else {

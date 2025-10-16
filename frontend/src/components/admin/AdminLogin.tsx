@@ -17,6 +17,10 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onClose }) => {
     setLoading(true);
     setError('');
 
+    // Limpiar token antiguo antes de hacer login
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('authToken');
+
     try {
       const response = await fetch('http://localhost:3001/api/admin/login', {
         method: 'POST',
@@ -26,10 +30,18 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onClose }) => {
         body: JSON.stringify({ username, password })
       });
 
+      if (!response.ok) {
+        const result = await response.json();
+        setError(result.message || 'Credenciales incorrectas');
+        return;
+      }
+
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success && result.token) {
+        // Guardar nuevo token JWT
         localStorage.setItem('adminToken', result.token);
+        console.log('✅ Token JWT guardado:', result.token.substring(0, 50) + '...');
         onLogin(result.token);
       } else {
         setError(result.message || 'Credenciales incorrectas');

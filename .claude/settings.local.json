@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Select-Object Id,ProcessName,StartTime)",
+      "Bash(Get-NetTCPConnection -LocalPort 3001,3000 -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object LocalPort,State,OwningProcess)",
+      "Bash(Get-Process -Id 10432 -ErrorAction SilentlyContinue)",
+      "Bash(Stop-Process -Force -ErrorAction SilentlyContinue)",
+      "Bash(Start-Sleep -Seconds 2)",
+      "Bash(npx kill-port:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

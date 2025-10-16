@@ -1,7 +1,7 @@
 // frontend/src/components/products/ProductCard.tsx
 import React, { useState } from 'react';
-import { useCart } from '../../context/CartContext.tsx';
-import { CartItem } from '../../context/CartContext.tsx';
+import { useCart } from '../../context/CartContext';
+import { CartItem } from '../../context/CartContext';
 import toast from 'react-hot-toast';
 
 interface ProductCardProps {
@@ -30,12 +30,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const handleAddToCart = async () => {
     setIsAdding(true);
-    
+
     try {
-      // Crear el item del carrito
       const item = createCartItem();
-      
-      // Verificar si ya está en el carrito
+
       if (isItemInCart(item.productId, item.variantId)) {
         toast.error('Este producto ya está en tu carrito', {
           icon: '⚠️',
@@ -44,18 +42,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
         return;
       }
 
-      // Simular delay de agregado
       await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Agregar al carrito
       addItem(item);
-      
-      // Feedback visual exitoso
+
       toast.success(`${item.name} agregado al carrito!`, {
         icon: '🛒',
         duration: 4000,
       });
-      
+
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast.error('Error agregando producto al carrito', {
@@ -73,82 +67,110 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const getColorClasses = (color: string): string => {
     const colorMap: { [key: string]: string } = {
-      'Negro': 'bg-gray-900 border-gray-700',
-      'Azul': 'bg-blue-600 border-blue-500',
-      'Rosa': 'bg-pink-400 border-pink-300',
-      'Transparente': 'bg-gray-100 border-gray-300',
-      'Verde': 'bg-green-600 border-green-500',
-      'Morado': 'bg-purple-600 border-purple-500',
-      'Rojo': 'bg-red-600 border-red-500',
-      'Amarillo': 'bg-yellow-400 border-yellow-300'
+      'Negro': 'bg-gradient-to-br from-gray-900 to-gray-700',
+      'Azul': 'bg-gradient-to-br from-blue-600 to-blue-400',
+      'Rosa': 'bg-gradient-to-br from-pink-500 to-pink-300',
+      'Transparente': 'bg-gradient-to-br from-gray-100 to-gray-50',
+      'Verde': 'bg-gradient-to-br from-green-600 to-green-400',
+      'Morado': 'bg-gradient-to-br from-purple-600 to-purple-400',
+      'Rojo': 'bg-gradient-to-br from-red-600 to-red-400',
+      'Amarillo': 'bg-gradient-to-br from-yellow-500 to-yellow-300'
     };
-    
-    return colorMap[color] || 'bg-gray-500 border-gray-400';
+
+    return colorMap[color] || 'bg-gradient-to-br from-gray-500 to-gray-400';
   };
 
-  const isInCart = isItemInCart(1); // ProductId 1 para el ejemplo
+  const isInCart = isItemInCart(1);
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl shadow-gray-200/50 p-8 border border-gray-100 hover:shadow-3xl hover:shadow-blue-200/30 transition-all duration-300">
+      {/* Decorative gradient blob */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-3xl -z-10"></div>
+
       <div className="space-y-6">
         {/* Product Title */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <div className="relative">
+          <div className="absolute -left-2 top-0 w-1 h-8 bg-gradient-to-b from-blue-600 to-purple-600 rounded-full"></div>
+          <h2 className="text-3xl font-extrabold bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 bg-clip-text text-transparent mb-3">
             Carcasa iPhone Premium
           </h2>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             <div className="flex text-yellow-400">
               {[...Array(5)].map((_, i) => (
-                <svg key={i} className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                <svg key={i} className="w-5 h-5 fill-current drop-shadow-sm" viewBox="0 0 20 20">
                   <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
                 </svg>
               ))}
             </div>
-            <span className="text-sm text-gray-600">(4.8) · 124 reseñas</span>
+            <span className="text-sm font-medium text-gray-600">(4.8) · 124 reseñas</span>
           </div>
         </div>
 
-        {/* Price */}
-        <div className="space-y-2">
-          <div className="flex items-baseline space-x-2">
-            <span className="text-3xl font-bold text-blue-600">
-              ${formatPrice(price)}
-            </span>
-            <span className="text-lg text-gray-500 line-through">
-              ${formatPrice(price * 1.4)}
-            </span>
-            <span className="bg-red-100 text-red-800 px-2 py-1 rounded-md text-sm font-medium">
-              30% OFF
-            </span>
+        {/* Price with gradient card */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-5 border border-blue-100">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-2xl"></div>
+          <div className="relative flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 mb-1">Precio especial</p>
+              <div className="flex items-baseline space-x-3">
+                <span className="text-4xl font-black bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  ${formatPrice(price)}
+                </span>
+                <span className="text-xl text-gray-400 line-through font-medium">
+                  ${formatPrice(price * 1.4)}
+                </span>
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-red-500 to-pink-500 text-white px-4 py-2 rounded-xl font-bold text-lg shadow-lg shadow-red-500/30 transform -rotate-3">
+              -30%
+            </div>
           </div>
-          <p className="text-sm text-gray-600">Envío gratis a todo el mundo</p>
+          <p className="text-sm text-blue-600 font-medium mt-3 flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            Envío gratis a todo el mundo
+          </p>
         </div>
 
-        {/* Model Selection */}
+        {/* Model Selection - Futurista */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-bold text-gray-900 flex items-center">
+            <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
             Modelo de iPhone
           </h3>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-3">
             {models.map((model) => (
               <button
                 key={model}
                 onClick={() => onModelChange(model)}
-                className={`p-3 border-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`group relative p-4 border-2 rounded-2xl text-sm font-bold transition-all duration-300 transform hover:scale-105 ${
                   selectedModel === model
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50'
+                    ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-purple-50 text-blue-700 shadow-lg shadow-blue-200/50'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:shadow-lg'
                 }`}
               >
+                {selectedModel === model && (
+                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
                 {model}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Color Selection */}
+        {/* Color Selection - Elegante */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-bold text-gray-900 flex items-center">
+            <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+            </svg>
             Color
           </h3>
           <div className="grid grid-cols-4 gap-3">
@@ -156,170 +178,155 @@ const ProductCard: React.FC<ProductCardProps> = ({
               <button
                 key={color}
                 onClick={() => onColorChange(color)}
-                className={`group relative p-3 border-2 rounded-lg transition-all duration-200 ${
+                className={`group relative p-4 border-2 rounded-2xl transition-all duration-300 transform hover:scale-105 ${
                   selectedColor === color
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-300 bg-white hover:border-gray-400'
+                    ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-purple-50 shadow-lg shadow-blue-200/50'
+                    : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-lg'
                 }`}
               >
                 <div className="flex flex-col items-center space-y-2">
-                  <div 
-                    className={`w-6 h-6 rounded-full border-2 ${getColorClasses(color)} ${
-                      color === 'Transparente' ? 'bg-gradient-to-br from-gray-100 to-gray-200' : ''
-                    }`}
-                  ></div>
-                  <span className={`text-xs font-medium ${
+                  <div className="relative">
+                    <div className={`w-10 h-10 rounded-full ${getColorClasses(color)} shadow-lg ring-2 ${
+                      selectedColor === color ? 'ring-blue-400 ring-offset-2' : 'ring-gray-200'
+                    }`}></div>
+                    {selectedColor === color && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <span className={`text-xs font-semibold ${
                     selectedColor === color ? 'text-blue-700' : 'text-gray-600'
                   }`}>
                     {color}
                   </span>
                 </div>
-                {selectedColor === color && (
-                  <div className="absolute top-1 right-1">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
-                      <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  </div>
-                )}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Features */}
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="font-medium text-gray-900 mb-3">Características:</h4>
-          <ul className="space-y-2 text-sm text-gray-600">
-            <li className="flex items-center space-x-2">
-              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+        {/* Features - Premium */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-blue-50 p-5 rounded-2xl border border-gray-200">
+          <div className="absolute bottom-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-2xl"></div>
+          <h4 className="font-bold text-gray-900 mb-4 flex items-center">
+            <span className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-2">
+              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              <span>Protección militar contra caídas</span>
-            </li>
-            <li className="flex items-center space-x-2">
-              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              <span>Compatible con carga inalámbrica</span>
-            </li>
-            <li className="flex items-center space-x-2">
-              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              <span>Acceso completo a puertos y botones</span>
-            </li>
-            <li className="flex items-center space-x-2">
-              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              <span>Garantía de satisfacción 30 días</span>
-            </li>
+            </span>
+            Características Premium
+          </h4>
+          <ul className="space-y-3 relative">
+            {[
+              'Protección militar contra caídas',
+              'Compatible con carga inalámbrica',
+              'Acceso completo a puertos y botones',
+              'Garantía de satisfacción 30 días'
+            ].map((feature, i) => (
+              <li key={i} className="flex items-center space-x-3">
+                <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md">
+                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-gray-700">{feature}</span>
+              </li>
+            ))}
           </ul>
         </div>
 
         {/* Stock Status */}
-        <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-          <span className="text-sm text-green-700 font-medium">En stock · Listo para enviar</span>
-        </div>
-
-        {/* Shipping Info */}
-        <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-          <div className="flex items-start space-x-3">
-            <div className="bg-blue-100 p-2 rounded-lg">
-              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
+        <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-200">
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
             </div>
-            <div>
-              <h4 className="font-medium text-blue-900">Envío Gratis Mundial</h4>
-              <p className="text-sm text-blue-700 mt-1">
-                📦 Tiempo estimado: 5-10 días hábiles<br/>
-                🚚 Tracking incluido · 📱 Soporte 24/7
-              </p>
-            </div>
+            <span className="text-sm text-green-700 font-bold">En stock · Listo para enviar</span>
           </div>
+          <span className="text-xs text-green-600 font-medium">⚡ Envío inmediato</span>
         </div>
 
-        {/* Add to Cart Button */}
+        {/* Add to Cart Button - Futurista */}
         <div className="space-y-3">
           <button
             onClick={handleAddToCart}
             disabled={isAdding || isInCart}
-            className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-200 ${
+            className={`relative w-full group overflow-hidden py-5 px-6 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105 ${
               isInCart
-                ? 'bg-green-100 text-green-800 cursor-not-allowed'
+                ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white cursor-not-allowed'
                 : isAdding
-                ? 'bg-blue-400 text-white cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700 active:transform active:scale-98'
-            } shadow-lg hover:shadow-xl`}
+                ? 'bg-gradient-to-r from-blue-400 to-purple-400 text-white cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
+            } shadow-2xl ${isInCart ? 'shadow-green-500/50' : 'shadow-blue-500/50'}`}
           >
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 group-hover:translate-x-full transition-transform duration-1000"></div>
             {isAdding ? (
-              <div className="flex items-center justify-center space-x-2">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              <div className="relative flex items-center justify-center space-x-3">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
                 <span>Agregando...</span>
               </div>
             ) : isInCart ? (
-              <div className="flex items-center justify-center space-x-2">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <div className="relative flex items-center justify-center space-x-2">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-                <span>En tu carrito</span>
+                <span>Ya en tu carrito</span>
               </div>
             ) : (
-              <div className="flex items-center justify-center space-x-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6H19" />
+              <div className="relative flex items-center justify-center space-x-3">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
-                <span>Agregar al Carrito · ${formatPrice(price)}</span>
+                <span>Agregar al Carrito</span>
+                <span className="bg-white/20 px-2 py-1 rounded-lg text-sm">${formatPrice(price)}</span>
               </div>
             )}
           </button>
 
-          <div className="text-center">
-            <p className="text-xs text-gray-500">
-              🔒 Compra segura · 💳 Pago al recibir · 📞 Soporte 24/7
+          <div className="text-center space-y-2">
+            <p className="text-xs text-gray-500 flex items-center justify-center space-x-4">
+              <span className="flex items-center">🔒 Compra segura</span>
+              <span className="flex items-center">💳 Múltiples pagos</span>
+              <span className="flex items-center">📞 Soporte 24/7</span>
             </p>
           </div>
         </div>
 
-        {/* Payment Methods */}
-        <div className="border-t pt-4">
-          <h4 className="text-sm font-medium text-gray-900 mb-3">Métodos de pago aceptados:</h4>
-          <div className="flex items-center space-x-3">
-            <div className="bg-gray-100 p-2 rounded border text-xs font-medium text-gray-700">
-              💳 Tarjetas
-            </div>
-            <div className="bg-gray-100 p-2 rounded border text-xs font-medium text-gray-700">
-              🏦 Transferencia
-            </div>
-            <div className="bg-gray-100 p-2 rounded border text-xs font-medium text-gray-700">
-              📱 PayPal
-            </div>
-            <div className="bg-gray-100 p-2 rounded border text-xs font-medium text-gray-700">
-              💵 Efectivo
-            </div>
+        {/* Payment Methods - Elegante */}
+        <div className="bg-gradient-to-br from-gray-50 to-white p-5 rounded-2xl border border-gray-200">
+          <h4 className="text-sm font-bold text-gray-900 mb-4">Métodos de pago aceptados:</h4>
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { icon: '💳', label: 'Tarjetas' },
+              { icon: '💚', label: 'Yape/Plin' },
+              { icon: '🏦', label: 'Transfer.' },
+              { icon: '📱', label: 'PayPal' }
+            ].map((method, i) => (
+              <div key={i} className="bg-white p-3 rounded-xl border border-gray-200 text-center hover:border-blue-300 hover:shadow-md transition-all duration-200">
+                <div className="text-2xl mb-1">{method.icon}</div>
+                <p className="text-xs font-semibold text-gray-700">{method.label}</p>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Trust Indicators */}
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl mb-1">🛡️</div>
-              <p className="text-xs text-gray-600 font-medium">Compra Protegida</p>
+        {/* Trust Indicators - Premium */}
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { icon: '🛡️', title: 'Compra', subtitle: 'Protegida' },
+            { icon: '📦', title: 'Envío', subtitle: 'Gratis' },
+            { icon: '↩️', title: '30 días', subtitle: 'Garantía' }
+          ].map((item, i) => (
+            <div key={i} className="bg-gradient-to-br from-gray-50 to-white p-4 rounded-xl border border-gray-200 text-center hover:shadow-lg transition-all duration-200">
+              <div className="text-3xl mb-2">{item.icon}</div>
+              <p className="text-xs font-bold text-gray-900">{item.title}</p>
+              <p className="text-xs text-gray-600">{item.subtitle}</p>
             </div>
-            <div>
-              <div className="text-2xl mb-1">📦</div>
-              <p className="text-xs text-gray-600 font-medium">Envío Gratis</p>
-            </div>
-            <div>
-              <div className="text-2xl mb-1">↩️</div>
-              <p className="text-xs text-gray-600 font-medium">30 días garantía</p>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>
