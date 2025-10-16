@@ -116,8 +116,17 @@ function verifyAdminToken(req, res, next) {
 
 // =================== RUTAS BÁSICAS ===================
 
-// Health check mejorado
-app.get('/health', async (req, res) => {
+// Health check SIMPLE para Railway (muy rápido)
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// Health check COMPLETO (con verificación de servicios)
+app.get('/health/full', async (req, res) => {
   const healthCheck = {
     status: 'OK',
     timestamp: new Date().toISOString(),
@@ -145,7 +154,7 @@ app.get('/health', async (req, res) => {
     healthCheck.services.database = 'error';
   }
 
-  const statusCode = Object.values(healthCheck.services).every(status => 
+  const statusCode = Object.values(healthCheck.services).every(status =>
     status === 'connected' || status === true || status === 'checking...'
   ) ? 200 : 503;
 
