@@ -216,12 +216,12 @@ class NotificationService {
 
       // Obtener notificaciones pendientes
       const pendingNotifications = await client.query(`
-        SELECT n.*, o.customer_email, o.order_number
+        SELECT n.*, o."customerEmail", o."orderNumber"
         FROM order_notifications n
-        JOIN orders o ON n.order_id = o.id
-        WHERE n.status = 'PENDING' 
-          AND n.retry_count < $1
-        ORDER BY n.created_at ASC
+        JOIN orders o ON n."orderId" = o.id
+        WHERE n.status = 'PENDING'
+          AND n."retryCount" < $1
+        ORDER BY n."createdAt" ASC
         LIMIT 10
       `, [this.maxRetries]);
 

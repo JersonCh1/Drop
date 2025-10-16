@@ -750,8 +750,8 @@ if (process.env.NODE_ENV === 'production' || process.env.ENABLE_CRON === 'true')
       await client.connect();
       
       const result = await client.query(`
-        DELETE FROM cart_items 
-        WHERE created_at < NOW() - INTERVAL '7 days'
+        DELETE FROM cart_items
+        WHERE "createdAt" < NOW() - INTERVAL '7 days'
         RETURNING *
       `);
       
