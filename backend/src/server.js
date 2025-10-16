@@ -950,9 +950,9 @@ async function startServer() {
     }
     
     // Iniciar servidor
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log('\n🎉 ¡Servidor iniciado correctamente!\n');
-      console.log(`🌐 Servidor: http://localhost:${PORT}`);
+      console.log(`🌐 Servidor: http://0.0.0.0:${PORT}`);
       console.log(`🏥 Health: http://localhost:${PORT}/health`);
       console.log(`🗄️  DB Test: http://localhost:${PORT}/api/test-db`);
       console.log(`📦 Orders: http://localhost:${PORT}/api/orders`);
