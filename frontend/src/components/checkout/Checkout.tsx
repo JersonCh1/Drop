@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useCart } from '../../context/CartContext';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { QRCodeSVG } from 'qrcode.react';
+import { useCulqi } from '../../hooks/useCulqi';
+import PaymentMethodSelector from './PaymentMethodSelector';
 
 interface CheckoutFormData {
   firstName: string;
@@ -21,7 +23,7 @@ interface CheckoutProps {
   onOrderComplete: () => void;
 }
 
-type PaymentMethod = 'stripe' | 'mercadopago' | 'yape' | 'plin';
+type PaymentMethod = 'niubiz' | 'pagoefectivo' | 'safetypay' | 'yape' | 'plin' | 'stripe' | 'mercadopago' | 'culqi';
 
 const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
   const { items: cart, totalPrice, shippingCost, finalTotal, clearCart } = useCart();
@@ -33,7 +35,10 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
   // Verificar si Stripe está disponible después de llamar los hooks
   const hasStripe = !!process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
 
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(hasStripe ? 'stripe' : 'mercadopago');
+  // Determinar método de pago por defecto (priorizar los gratuitos/baratos)
+  const defaultPaymentMethod: PaymentMethod = 'yape'; // Yape es gratis
+
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(defaultPaymentMethod);
   const [formData, setFormData] = useState<CheckoutFormData>({
     firstName: '',
     lastName: '',
@@ -54,9 +59,85 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
   const [operationCode, setOperationCode] = useState('');
   const [pendingOrderData, setPendingOrderData] = useState<any>(null);
 
-  // Cálculos de precios
+  // Cálculos de precios (necesarios para Culqi)
   const subtotal = totalPrice;
   const total = finalTotal;
+
+  // Inicializar Culqi
+  const { openCulqi } = useCulqi({
+    publicKey: process.env.REACT_APP_CULQI_PUBLIC_KEY,
+    title: 'Pago de Orden',
+    currency: 'PEN',
+    description: `Orden por S/ ${(total * 3.7).toFixed(2)}`, // Conversión aproximada USD a PEN
+    amount: Math.round(total * 370), // Convertir USD a PEN (centavos)
+    onToken: async (token) => {
+      console.log('Token de Culqi recibido:', token.id);
+      setIsSubmitting(true);
+
+      try {
+        // Crear orden primero
+        const orderResponse = await fetch('http://localhost:3001/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerInfo: formData,
+            items: cart.map(item => ({
+              name: item.name,
+              model: item.model || '',
+              color: item.color || '',
+              quantity: item.quantity,
+              price: item.price
+            })),
+            subtotal,
+            shippingCost,
+            total,
+            paymentMethod: 'culqi',
+            orderDate: new Date().toISOString()
+          })
+        });
+
+        if (!orderResponse.ok) throw new Error('Error al crear la orden');
+
+        const orderResult = await orderResponse.json();
+        const orderId = orderResult.data?.id;
+
+        // Procesar pago con Culqi
+        const chargeResponse = await fetch('http://localhost:3001/api/culqi/create-charge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: token.id,
+            amount: total,
+            email: formData.email,
+            orderId
+          })
+        });
+
+        if (!chargeResponse.ok) throw new Error('Error al procesar el pago');
+
+        const chargeResult = await chargeResponse.json();
+
+        if (chargeResult.success) {
+          clearCart();
+          alert('¡Pago exitoso! Tu orden ha sido procesada.');
+          onOrderComplete();
+        } else {
+          throw new Error(chargeResult.message || 'Error al procesar el pago');
+        }
+
+      } catch (error: any) {
+        console.error('Error:', error);
+        alert('Hubo un error al procesar tu pago. Por favor intenta de nuevo.');
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    onError: (error) => {
+      console.error('Error de Culqi:', error);
+      alert('Hubo un error al procesar el pago con Culqi.');
+      setIsSubmitting(false);
+    }
+  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -244,6 +325,19 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
           alert('¡Pago exitoso! Tu orden ha sido procesada.');
           onOrderComplete();
         }
+
+      } else if (paymentMethod === 'culqi') {
+        // Validar formulario antes de abrir Culqi
+        if (!validateForm()) {
+          alert('Por favor completa todos los campos requeridos');
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Abrir el checkout de Culqi
+        openCulqi();
+        setIsSubmitting(false);
+        return;
 
       } else if (paymentMethod === 'mercadopago') {
         // Crear preferencia de MercadoPago
@@ -517,152 +611,11 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
                   Transacciones 100% seguras y protegidas
                 </p>
 
-                {/* Payment Method Selection - Betano Style */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                  {/* Tarjeta */}
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('stripe')}
-                    className={`relative group p-4 rounded-xl transition-all duration-300 ${
-                      paymentMethod === 'stripe'
-                        ? 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-xl scale-105 ring-4 ring-purple-200'
-                        : 'bg-white border-2 border-gray-200 hover:border-indigo-300 hover:shadow-lg'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center space-y-2">
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
-                        paymentMethod === 'stripe'
-                          ? 'bg-white/20'
-                          : 'bg-gradient-to-br from-indigo-50 to-purple-50'
-                      }`}>
-                        <svg className={`w-7 h-7 ${paymentMethod === 'stripe' ? 'text-white' : 'text-indigo-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                        </svg>
-                      </div>
-                      <span className={`text-xs font-bold text-center ${paymentMethod === 'stripe' ? 'text-white' : 'text-gray-900'}`}>
-                        Tarjeta
-                      </span>
-                      <span className={`text-[10px] text-center ${paymentMethod === 'stripe' ? 'text-white/80' : 'text-gray-500'}`}>
-                        Visa, Mastercard
-                      </span>
-                    </div>
-                    {paymentMethod === 'stripe' && (
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg">
-                        <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-
-                  {/* MercadoPago */}
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('mercadopago')}
-                    className={`relative group p-4 rounded-xl transition-all duration-300 ${
-                      paymentMethod === 'mercadopago'
-                        ? 'bg-gradient-to-br from-blue-500 to-cyan-600 shadow-xl scale-105 ring-4 ring-blue-200'
-                        : 'bg-white border-2 border-gray-200 hover:border-blue-300 hover:shadow-lg'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center space-y-2">
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
-                        paymentMethod === 'mercadopago'
-                          ? 'bg-white/20'
-                          : 'bg-gradient-to-br from-blue-50 to-cyan-50'
-                      }`}>
-                        <svg className={`w-7 h-7 ${paymentMethod === 'mercadopago' ? 'text-white' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <span className={`text-xs font-bold text-center ${paymentMethod === 'mercadopago' ? 'text-white' : 'text-gray-900'}`}>
-                        MercadoPago
-                      </span>
-                      <span className={`text-[10px] text-center ${paymentMethod === 'mercadopago' ? 'text-white/80' : 'text-gray-500'}`}>
-                        Pago local
-                      </span>
-                    </div>
-                    {paymentMethod === 'mercadopago' && (
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg">
-                        <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-
-                  {/* Yape */}
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('yape')}
-                    className={`relative group p-4 rounded-xl transition-all duration-300 ${
-                      paymentMethod === 'yape'
-                        ? 'bg-gradient-to-br from-purple-600 to-pink-600 shadow-xl scale-105 ring-4 ring-purple-200'
-                        : 'bg-white border-2 border-gray-200 hover:border-purple-300 hover:shadow-lg'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center space-y-2">
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
-                        paymentMethod === 'yape'
-                          ? 'bg-white/20'
-                          : 'bg-gradient-to-br from-purple-50 to-pink-50'
-                      }`}>
-                        <svg className={`w-7 h-7 ${paymentMethod === 'yape' ? 'text-white' : 'text-purple-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <span className={`text-xs font-bold text-center ${paymentMethod === 'yape' ? 'text-white' : 'text-gray-900'}`}>
-                        Yape
-                      </span>
-                      <span className={`text-[10px] text-center ${paymentMethod === 'yape' ? 'text-white/80' : 'text-gray-500'}`}>
-                        Perú
-                      </span>
-                    </div>
-                    {paymentMethod === 'yape' && (
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg">
-                        <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-
-                  {/* Plin */}
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('plin')}
-                    className={`relative group p-4 rounded-xl transition-all duration-300 ${
-                      paymentMethod === 'plin'
-                        ? 'bg-gradient-to-br from-green-500 to-emerald-600 shadow-xl scale-105 ring-4 ring-green-200'
-                        : 'bg-white border-2 border-gray-200 hover:border-green-300 hover:shadow-lg'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center space-y-2">
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
-                        paymentMethod === 'plin'
-                          ? 'bg-white/20'
-                          : 'bg-gradient-to-br from-green-50 to-emerald-50'
-                      }`}>
-                        <svg className={`w-7 h-7 ${paymentMethod === 'plin' ? 'text-white' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                        </svg>
-                      </div>
-                      <span className={`text-xs font-bold text-center ${paymentMethod === 'plin' ? 'text-white' : 'text-gray-900'}`}>
-                        Plin
-                      </span>
-                      <span className={`text-[10px] text-center ${paymentMethod === 'plin' ? 'text-white/80' : 'text-gray-500'}`}>
-                        Perú
-                      </span>
-                    </div>
-                    {paymentMethod === 'plin' && (
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg">
-                        <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-                </div>
+                {/* Payment Method Selection - Modern Futuristic Style */}
+                <PaymentMethodSelector
+                  selectedMethod={paymentMethod}
+                  onSelectMethod={(method) => setPaymentMethod(method as PaymentMethod)}
+                />
 
                 {/* Stripe Card Form */}
                 {paymentMethod === 'stripe' && (
@@ -735,6 +688,36 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
                   </div>
                 )}
 
+                {/* Culqi Info */}
+                {paymentMethod === 'culqi' && (
+                  <div className="mt-6 p-6 bg-gradient-to-br from-red-50 to-orange-50 rounded-xl border border-red-200">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 mb-2">Pago con Culqi</h4>
+                        <p className="text-sm text-gray-600 mb-3">
+                          Se abrirá una ventana segura de Culqi para ingresar los datos de tu tarjeta.
+                          Acepta Visa, Mastercard, Amex y Diners (emitidas en Perú).
+                        </p>
+                        <div className="bg-white/60 p-3 rounded-lg">
+                          <p className="text-xs text-gray-700 font-medium">
+                            ✓ Procesamiento en Soles (PEN)<br/>
+                            ✓ Pago 100% seguro<br/>
+                            ✓ Confirmación inmediata
+                          </p>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-2">
+                          Monto aprox: S/ {(total * 3.7).toFixed(2)} PEN
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* MercadoPago Info */}
                 {paymentMethod === 'mercadopago' && (
                   <div className="mt-6 p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-200">
@@ -798,6 +781,85 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
                             ✓ Transferencia inmediata<br/>
                             ✓ Compatible con todos los bancos<br/>
                             ✓ Sin costo adicional
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Niubiz Info */}
+                {paymentMethod === 'niubiz' && (
+                  <div className="mt-6 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 mb-2">Pago con Niubiz (Visanet)</h4>
+                        <p className="text-sm text-gray-600 mb-3">
+                          Pasarela oficial de Visa Perú. Se abrirá una ventana segura para ingresar los datos de tu tarjeta.
+                          Acepta Visa, Mastercard, American Express y Diners Club.
+                        </p>
+                        <div className="bg-white/60 p-3 rounded-lg">
+                          <p className="text-xs text-gray-700 font-medium">
+                            ✓ Procesamiento seguro PCI-DSS<br/>
+                            ✓ Aceptación instantánea<br/>
+                            ✓ Comisión 2.5%
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* PagoEfectivo Info */}
+                {paymentMethod === 'pagoefectivo' && (
+                  <div className="mt-6 p-6 bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border border-emerald-200">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <span className="text-2xl">🏪</span>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 mb-2">Pago con PagoEfectivo</h4>
+                        <p className="text-sm text-gray-600 mb-3">
+                          Genera un código CIP para pagar en efectivo en más de 100,000 puntos en todo Perú:
+                          bancos, agentes, bodegas, farmacias y más.
+                        </p>
+                        <div className="bg-white/60 p-3 rounded-lg">
+                          <p className="text-xs text-gray-700 font-medium">
+                            ✓ +100,000 puntos de pago<br/>
+                            ✓ Código válido por 48 horas<br/>
+                            ✓ Comisión 2.89%
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* SafetyPay Info */}
+                {paymentMethod === 'safetypay' && (
+                  <div className="mt-6 p-6 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border border-orange-200">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 mb-2">Pago con SafetyPay</h4>
+                        <p className="text-sm text-gray-600 mb-3">
+                          Transferencia bancaria online segura. Serás redirigido al portal de tu banco
+                          para completar el pago. Compatible con todos los bancos peruanos.
+                        </p>
+                        <div className="bg-white/60 p-3 rounded-lg">
+                          <p className="text-xs text-gray-700 font-medium">
+                            ✓ Todos los bancos peruanos<br/>
+                            ✓ Transferencia segura<br/>
+                            ✓ Comisión 2.5%
                           </p>
                         </div>
                       </div>

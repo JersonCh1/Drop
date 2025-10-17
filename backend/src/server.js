@@ -865,6 +865,22 @@ app.use('/api/stripe', stripeRoutes);
 const mercadopagoRoutes = require('./routes/mercadopago');
 app.use('/api/mercadopago', mercadopagoRoutes);
 
+// =================== RUTAS DE CULQI ===================
+const culqiRoutes = require('./routes/culqi');
+app.use('/api/culqi', culqiRoutes);
+
+// =================== RUTAS DE NIUBIZ (VISANET) ===================
+const niubizRoutes = require('./routes/niubiz');
+app.use('/api/niubiz', niubizRoutes);
+
+// =================== RUTAS DE PAGOEFECTIVO ===================
+const pagoefectivoRoutes = require('./routes/pagoefectivo');
+app.use('/api/pagoefectivo', pagoefectivoRoutes);
+
+// =================== RUTAS DE SAFETYPAY ===================
+const safetypayRoutes = require('./routes/safetypay');
+app.use('/api/safetypay', safetypayRoutes);
+
 // =================== RUTAS DE AUTENTICACIÓN ===================
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
