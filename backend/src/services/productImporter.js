@@ -1,27 +1,16 @@
 // backend/src/services/productImporter.js
 const { calculateSalePrice } = require('../utils/pricing');
+const scraperAdvanced = require('./productScraperAdvanced');
 
 /**
- * Parsea URL de producto de diferentes plataformas
+ * Parsea URL de producto de diferentes plataformas usando el scraper avanzado
  * @param {string} url - URL del producto
  * @returns {object} Información del producto extraída
  */
 async function parseProductUrl(url) {
   try {
-    const urlObj = new URL(url);
-    const hostname = urlObj.hostname.toLowerCase();
-
-    // Detectar plataforma
-    if (hostname.includes('aliexpress')) {
-      return await parseAliExpressProduct(url);
-    } else if (hostname.includes('cjdropshipping')) {
-      return await parseCJProduct(url);
-    } else if (hostname.includes('amazon')) {
-      return await parseAmazonProduct(url);
-    } else {
-      // Parser genérico
-      return await parseGenericProduct(url);
-    }
+    // Usar el scraper avanzado que hace scraping REAL
+    return await scraperAdvanced.parseProductUrl(url);
   } catch (error) {
     console.error('Error parseando URL:', error);
     throw new Error(`Error al parsear URL: ${error.message}`);

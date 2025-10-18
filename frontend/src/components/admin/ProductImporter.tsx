@@ -50,9 +50,11 @@ const ProductImporter: React.FC = () => {
     loadCategories();
   }, []);
 
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
   const loadSuppliers = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/suppliers?active=true', {
+      const response = await fetch(`${API_URL}/suppliers?active=true`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -70,7 +72,7 @@ const ProductImporter: React.FC = () => {
 
   const loadCategories = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/categories', {
+      const response = await fetch(`${API_URL}/categories`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -107,7 +109,7 @@ const ProductImporter: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3001/api/suppliers/import-product', {
+      const response = await fetch(`${API_URL}/suppliers/import-product`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,7 +150,7 @@ const ProductImporter: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3001/api/products', {
+      const response = await fetch(`${API_URL}/products`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -299,6 +301,38 @@ const ProductImporter: React.FC = () => {
               </span>
             )}
           </div>
+
+          {/* Imágenes importadas */}
+          {importedProduct.images && importedProduct.images.length > 0 && (
+            <div className="mb-6">
+              <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                </svg>
+                {importedProduct.images.length} Imágenes Importadas Automáticamente
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {importedProduct.images.map((imageUrl, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={imageUrl}
+                      alt={`Producto ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-all shadow-sm"
+                      onError={(e) => {
+                        e.currentTarget.src = 'https://via.placeholder.com/150?text=Error';
+                      }}
+                    />
+                    <div className="absolute top-1 right-1 bg-blue-600 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      #{index + 1}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                ✅ Las imágenes se importaron automáticamente desde {importedProduct.platform}
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left Column - Product Info */}
