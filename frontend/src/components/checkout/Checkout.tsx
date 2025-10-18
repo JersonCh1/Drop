@@ -76,7 +76,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
 
       try {
         // Crear orden primero
-        const orderResponse = await fetch('http://localhost:3001/api/orders', {
+        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+        const orderResponse = await fetch(`${API_URL}/orders`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -102,7 +103,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
         const orderId = orderResult.data?.id;
 
         // Procesar pago con Culqi
-        const chargeResponse = await fetch('http://localhost:3001/api/culqi/create-charge', {
+        const chargeResponse = await fetch(`${API_URL}/culqi/create-charge`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -179,7 +180,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('http://localhost:3001/api/orders', {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+      const response = await fetch(`${API_URL}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -232,6 +234,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
     setIsSubmitting(true);
 
     try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
       if (paymentMethod === 'stripe') {
         // Validar que Stripe y elementos estén disponibles
         if (!stripe || !elements) {
@@ -246,7 +250,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
         }
 
         // Crear orden primero
-        const orderResponse = await fetch('http://localhost:3001/api/orders', {
+        const orderResponse = await fetch(`${API_URL}/orders`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -276,7 +280,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
         const orderId = orderResult.data?.id;
 
         // Crear payment intent
-        const paymentResponse = await fetch('http://localhost:3001/api/stripe/create-payment-intent', {
+        const paymentResponse = await fetch(`${API_URL}/stripe/create-payment-intent`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -341,7 +345,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
 
       } else if (paymentMethod === 'mercadopago') {
         // Crear preferencia de MercadoPago
-        const response = await fetch('http://localhost:3001/api/mercadopago/create-preference', {
+        const response = await fetch(`${API_URL}/mercadopago/create-preference`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -383,6 +387,24 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
         } else {
           throw new Error('Error al crear la preferencia de MercadoPago');
         }
+      } else if (paymentMethod === 'niubiz') {
+        // Niubiz (Visanet) - Procesamiento de tarjetas
+        alert('Niubiz: Por el momento este método requiere configuración de credenciales. Usa Yape o Plin (GRATIS) o MercadoPago como alternativa.');
+        setIsSubmitting(false);
+        return;
+
+      } else if (paymentMethod === 'pagoefectivo') {
+        // PagoEfectivo - Generar código CIP
+        alert('PagoEfectivo: Por el momento este método requiere configuración de credenciales. Usa Yape o Plin (GRATIS) como alternativa.');
+        setIsSubmitting(false);
+        return;
+
+      } else if (paymentMethod === 'safetypay') {
+        // SafetyPay - Transferencia bancaria
+        alert('SafetyPay: Por el momento este método requiere configuración de credenciales. Usa Yape o Plin (GRATIS) o MercadoPago como alternativa.');
+        setIsSubmitting(false);
+        return;
+
       } else if (paymentMethod === 'yape' || paymentMethod === 'plin') {
         // Mostrar pantalla de confirmación de pago
         setPendingOrderData({
