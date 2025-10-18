@@ -10,7 +10,19 @@
       "Bash(npx kill-port:*)",
       "Bash(npx prisma generate:*)",
       "Bash(git log:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(ping:*)",
+      "Bash(npx prisma migrate:*)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:zwfHcUfTAZoQMZNbvuSDJiBFWYzesYkk@shinkansen.proxy.rlwy.net:47497/railway\" npx prisma migrate dev:*)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:zwfHcUfTAZoQMZNbvuSDJiBFWYzesYkk@shinkansen.proxy.rlwy.net:47497/railway\" npx prisma migrate resolve:*)",
+      "WebFetch(domain:www.betano.com)",
+      "WebSearch",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(timeout 10 bash:*)"
     ],
     "deny": [],
     "ask": []
