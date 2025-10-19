@@ -901,6 +901,18 @@ app.use('/api/coupons', couponsRoutes);
 const reviewsRoutes = require('./routes/reviews');
 app.use('/api/reviews', reviewsRoutes);
 
+// =================== RUTAS DE WHATSAPP ===================
+const whatsappRoutes = require('./routes/whatsapp');
+app.use('/api/whatsapp', whatsappRoutes);
+
+// =================== RUTAS DE WEBHOOKS ===================
+const webhooksRoutes = require('./routes/webhooks');
+app.use('/api/webhooks', webhooksRoutes);
+
+// =================== RUTAS DE CJ DROPSHIPPING ===================
+const cjDropshippingRoutes = require('./routes/cjDropshipping');
+app.use('/api/cj', cjDropshippingRoutes);
+
 // =================== ERROR HANDLING ===================
 
 // Error handler

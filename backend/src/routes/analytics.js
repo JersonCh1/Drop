@@ -131,8 +131,8 @@ router.post('/batch', async (req, res) => {
 // GET /api/analytics/dashboard - Estadísticas del dashboard (admin)
 router.get('/dashboard', verifyAdminToken, async (req, res) => {
   try {
-    const { dateRange = '30d' } = req.query;
-    const stats = await analyticsService.getDashboardStats(dateRange);
+    const { range = 'month' } = req.query;
+    const stats = await analyticsService.getDashboardStats(range);
 
     res.json({
       success: true,

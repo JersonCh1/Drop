@@ -103,78 +103,175 @@ class AnalyticsService {
     });
   }
 
-  async getDashboardStats(dateRange = '30d') {
+  async getDashboardStats(dateRange = 'month') {
     try {
-      // Calculate date threshold
-      const daysAgo = dateRange === '7d' ? 7 : dateRange === '90d' ? 90 : 30;
-      const dateThreshold = new Date();
-      dateThreshold.setDate(dateThreshold.getDate() - daysAgo);
+      // Calculate date threshold based on range
+      const now = new Date();
+      let startDate = new Date();
 
-      // Métricas de ventas con Prisma
-      const totalOrders = await prisma.order.count({
-        where: { createdAt: { gte: dateThreshold } }
-      });
+      switch (dateRange) {
+        case 'today':
+          startDate.setHours(0, 0, 0, 0);
+          break;
+        case 'week':
+          startDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          startDate.setMonth(now.getMonth() - 1);
+          break;
+        case 'year':
+          startDate.setFullYear(now.getFullYear() - 1);
+          break;
+        default:
+          startDate.setMonth(now.getMonth() - 1);
+      }
 
-      const orders = await prisma.order.findMany({
-        where: { createdAt: { gte: dateThreshold } },
-        select: { total: true, status: true }
-      });
-
-      const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-      const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-      const deliveredOrders = orders.filter(o => o.status === 'DELIVERED').length;
-
-      // Eventos de analytics
-      const pageViews = await prisma.analytics.count({
-        where: {
-          type: 'PAGE_VIEW',
-          createdAt: { gte: dateThreshold }
+      // Obtener todas las órdenes con items
+      const allOrders = await prisma.order.findMany({
+        include: {
+          items: {
+            include: {
+              product: true
+            }
+          }
         }
       });
 
-      const productViews = await prisma.analytics.count({
-        where: {
-          type: 'PRODUCT_VIEW',
-          createdAt: { gte: dateThreshold }
-        }
-      });
+      // Filtrar órdenes por rango de fecha
+      const rangeOrders = allOrders.filter(order =>
+        new Date(order.createdAt) >= startDate
+      );
 
-      // Conversión
-      const checkoutsStarted = await prisma.analytics.count({
-        where: {
-          type: 'CART_ACTION',
-          event: 'checkout_started',
-          createdAt: { gte: dateThreshold }
-        }
-      });
+      // Órdenes pagadas en el rango
+      const paidOrders = rangeOrders.filter(order =>
+        order.paymentStatus === 'PAID'
+      );
 
-      const purchasesCompleted = await prisma.analytics.count({
-        where: {
-          type: 'PURCHASE',
-          createdAt: { gte: dateThreshold }
-        }
-      });
+      // 1️⃣ ESTADÍSTICAS PRINCIPALES
+      const totalOrders = paidOrders.length;
+      const totalRevenue = paidOrders.reduce((sum, order) =>
+        sum + parseFloat(order.total), 0
+      );
 
-      const conversionRate = checkoutsStarted > 0
-        ? (purchasesCompleted / checkoutsStarted * 100).toFixed(2)
+      // Clientes únicos (por email)
+      const uniqueCustomers = new Set(
+        paidOrders.map(order => order.customerEmail)
+      );
+      const totalCustomers = uniqueCustomers.size;
+
+      // Ticket promedio
+      const averageOrderValue = totalOrders > 0
+        ? totalRevenue / totalOrders
         : 0;
 
+      // Órdenes hoy
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const ordersToday = paidOrders.filter(order =>
+        new Date(order.createdAt) >= todayStart
+      ).length;
+
+      const revenueToday = paidOrders
+        .filter(order => new Date(order.createdAt) >= todayStart)
+        .reduce((sum, order) => sum + parseFloat(order.total), 0);
+
+      // Tasa de conversión (órdenes pagadas / total órdenes)
+      const conversionRate = rangeOrders.length > 0
+        ? (paidOrders.length / rangeOrders.length) * 100
+        : 0;
+
+      // 2️⃣ PRODUCTOS MÁS VENDIDOS
+      const productSales = {};
+
+      paidOrders.forEach(order => {
+        order.items.forEach(item => {
+          if (!productSales[item.productId]) {
+            productSales[item.productId] = {
+              id: item.productId,
+              name: item.productName,
+              sales: 0,
+              revenue: 0
+            };
+          }
+          productSales[item.productId].sales += item.quantity;
+          productSales[item.productId].revenue += parseFloat(item.price) * item.quantity;
+        });
+      });
+
+      const topProducts = Object.values(productSales)
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5);
+
+      // 3️⃣ ÓRDENES RECIENTES
+      const recentOrders = allOrders
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 10)
+        .map(order => ({
+          id: order.id,
+          orderNumber: order.orderNumber,
+          customerName: `${order.customerFirstName} ${order.customerLastName}`,
+          total: parseFloat(order.total),
+          status: order.status,
+          createdAt: order.createdAt.toISOString()
+        }));
+
+      // 4️⃣ VENTAS POR MES
+      const salesByMonth = {};
+
+      paidOrders.forEach(order => {
+        const date = new Date(order.createdAt);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const monthLabel = date.toLocaleDateString('es-PE', { month: 'short', year: 'numeric' });
+
+        if (!salesByMonth[monthKey]) {
+          salesByMonth[monthKey] = {
+            month: monthLabel,
+            sales: 0,
+            revenue: 0
+          };
+        }
+
+        salesByMonth[monthKey].sales += 1;
+        salesByMonth[monthKey].revenue += parseFloat(order.total);
+      });
+
+      // Ordenar por fecha y tomar últimos 6 meses
+      const salesByMonthArray = Object.entries(salesByMonth)
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([key, value]) => value)
+        .slice(-6);
+
+      // 5️⃣ ÓRDENES POR ESTADO
+      const ordersByStatus = {};
+
+      rangeOrders.forEach(order => {
+        const status = order.status || 'PENDING';
+        if (!ordersByStatus[status]) {
+          ordersByStatus[status] = {
+            status: status,
+            count: 0
+          };
+        }
+        ordersByStatus[status].count += 1;
+      });
+
+      const ordersByStatusArray = Object.values(ordersByStatus)
+        .sort((a, b) => b.count - a.count);
+
+      // 📊 RESPUESTA FINAL
       return {
-        sales: {
-          totalOrders,
-          totalRevenue: parseFloat(totalRevenue.toFixed(2)),
-          avgOrderValue: parseFloat(avgOrderValue.toFixed(2)),
-          deliveredOrders
-        },
-        traffic: {
-          pageViews,
-          productViews,
-          conversionRate: parseFloat(conversionRate)
-        },
-        topProducts: [],
-        dailySales: [],
-        topCountries: [],
-        cartActions: {}
+        totalOrders,
+        totalRevenue,
+        totalCustomers,
+        averageOrderValue,
+        ordersToday,
+        revenueToday,
+        conversionRate,
+        topProducts,
+        recentOrders,
+        salesByMonth: salesByMonthArray,
+        ordersByStatus: ordersByStatusArray
       };
 
     } catch (error) {

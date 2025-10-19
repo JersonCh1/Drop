@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const { updateSupplierOrderTracking, syncSupplierOrderStatus } = require('../services/supplierOrderService');
+const whatsappService = require('../services/whatsappService');
 
 /**
  * Webhooks para recibir actualizaciones automáticas de proveedores
@@ -309,7 +310,7 @@ router.post('/niubiz', async (req, res) => {
 
     console.log(`✅ Orden ${order.orderNumber} pagada con Niubiz (${transactionId})`);
 
-    // 🚀 CREAR Y NOTIFICAR A PROVEEDORES
+    // 🚀 CREAR Y NOTIFICAR A PROVEEDORES + WHATSAPP AL CLIENTE
     setTimeout(async () => {
       try {
         const { createSupplierOrderFromCustomerOrder } = require('../services/supplierOrderService');
@@ -323,6 +324,34 @@ router.post('/niubiz', async (req, res) => {
           // Enviar notificaciones
           const notificationResults = await sendOrderToSuppliers(supplierResult.supplierOrders);
           console.log(`📧 Notificaciones enviadas a proveedores`);
+        }
+
+        // 📱 ENVIAR WHATSAPP AL CLIENTE
+        if (order.customerPhone) {
+          const orderData = {
+            orderNumber: order.orderNumber,
+            customerPhone: order.customerPhone,
+            customerName: `${order.customerFirstName} ${order.customerLastName}`,
+            total: parseFloat(order.total),
+            items: order.items.map(item => ({
+              productName: item.productName,
+              quantity: item.quantity,
+              price: parseFloat(item.price)
+            }))
+          };
+
+          const whatsappResult = await whatsappService.sendOrderConfirmation(orderData);
+          if (whatsappResult.success) {
+            console.log(`📱 WhatsApp de confirmación enviado a ${order.customerPhone}`);
+          }
+
+          // Notificar al admin también
+          await whatsappService.notifyAdminPaymentConfirmed({
+            orderNumber: order.orderNumber,
+            customerName: `${order.customerFirstName} ${order.customerLastName}`,
+            total: parseFloat(order.total),
+            paymentMethod: 'Niubiz'
+          });
         }
       } catch (error) {
         console.error('❌ Error creando órdenes con proveedores:', error);
@@ -403,7 +432,7 @@ router.post('/pagoefectivo', async (req, res) => {
 
     console.log(`✅ Orden ${order.orderNumber} pagada con PagoEfectivo (CIP: ${cip})`);
 
-    // 🚀 CREAR Y NOTIFICAR A PROVEEDORES
+    // 🚀 CREAR Y NOTIFICAR A PROVEEDORES + WHATSAPP AL CLIENTE
     setTimeout(async () => {
       try {
         const { createSupplierOrderFromCustomerOrder } = require('../services/supplierOrderService');
@@ -417,6 +446,34 @@ router.post('/pagoefectivo', async (req, res) => {
           // Enviar notificaciones
           const notificationResults = await sendOrderToSuppliers(supplierResult.supplierOrders);
           console.log(`📧 Notificaciones enviadas a proveedores`);
+        }
+
+        // 📱 ENVIAR WHATSAPP AL CLIENTE
+        if (order.customerPhone) {
+          const orderData = {
+            orderNumber: order.orderNumber,
+            customerPhone: order.customerPhone,
+            customerName: `${order.customerFirstName} ${order.customerLastName}`,
+            total: parseFloat(order.total),
+            items: order.items.map(item => ({
+              productName: item.productName,
+              quantity: item.quantity,
+              price: parseFloat(item.price)
+            }))
+          };
+
+          const whatsappResult = await whatsappService.sendOrderConfirmation(orderData);
+          if (whatsappResult.success) {
+            console.log(`📱 WhatsApp de confirmación enviado a ${order.customerPhone}`);
+          }
+
+          // Notificar al admin también
+          await whatsappService.notifyAdminPaymentConfirmed({
+            orderNumber: order.orderNumber,
+            customerName: `${order.customerFirstName} ${order.customerLastName}`,
+            total: parseFloat(order.total),
+            paymentMethod: 'PagoEfectivo'
+          });
         }
       } catch (error) {
         console.error('❌ Error creando órdenes con proveedores:', error);
