@@ -1,0 +1,167 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "viewDetails": "View details",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "continue": "Continue"
+  },
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "cart": "Cart",
+    "checkout": "Checkout",
+    "tracking": "Track Order",
+    "admin": "Admin"
+  },
+  "home": {
+    "hero": {
+      "title": "Premium iPhone Cases",
+      "subtitle": "Protect your iPhone in style. Free worldwide shipping.",
+      "cta": "View Collection"
+    },
+    "features": {
+      "shipping": {
+        "title": "Free Shipping",
+        "description": "Free international shipping on all orders"
+      },
+      "quality": {
+        "title": "High Quality",
+        "description": "Premium materials and perfect finishes"
+      },
+      "returns": {
+        "title": "Easy Returns",
+        "description": "30-day return guarantee"
+      },
+      "support": {
+        "title": "24/7 Support",
+        "description": "We're here to help when you need us"
+      }
+    }
+  },
+  "products": {
+    "title": "Our Products",
+    "noProducts": "No products available",
+    "outOfStock": "Out of Stock",
+    "inStock": "In Stock",
+    "addToCart": "Add to Cart",
+    "viewProduct": "View Product",
+    "priceRange": "Price Range",
+    "sortBy": "Sort By",
+    "sortOptions": {
+      "featured": "Featured",
+      "priceLowHigh": "Price: Low to High",
+      "priceHighLow": "Price: High to Low",
+      "newest": "Newest"
+    }
+  },
+  "product": {
+    "description": "Description",
+    "features": "Features",
+    "specifications": "Specifications",
+    "reviews": "Reviews",
+    "selectModel": "Select your iPhone model",
+    "selectColor": "Select a color",
+    "quantity": "Quantity",
+    "addedToCart": "Added to cart successfully",
+    "errorAdding": "Error adding to cart"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": "Your cart is empty",
+    "continueShopping": "Continue Shopping",
+    "item": "item",
+    "items": "items",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "freeShipping": "Free",
+    "total": "Total",
+    "proceedToCheckout": "Proceed to Checkout",
+    "remove": "Remove",
+    "updateQuantity": "Update quantity"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "customerInfo": "Customer Information",
+    "shippingAddress": "Shipping Address",
+    "paymentMethod": "Payment Method",
+    "orderSummary": "Order Summary",
+    "placeOrder": "Place Order",
+    "fields": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "city": "City",
+      "state": "State/Province",
+      "postalCode": "Postal Code",
+      "country": "Country",
+      "notes": "Notes (optional)"
+    },
+    "paymentMethods": {
+      "card": "Credit/Debit Card",
+      "yape": "Yape",
+      "plin": "Plin",
+      "pagoEfectivo": "PagoEfectivo",
+      "cash": "Cash/Bank Transfer"
+    },
+    "orderSuccess": "Order placed successfully!",
+    "orderError": "Error processing order"
+  },
+  "tracking": {
+    "title": "Track Order",
+    "enterOrder": "Enter your order number",
+    "orderNumber": "Order Number",
+    "email": "Email (optional)",
+    "trackButton": "Track",
+    "orderStatus": "Order Status",
+    "trackingNumber": "Tracking Number",
+    "estimatedDelivery": "Estimated Delivery",
+    "statuses": {
+      "PENDING": "Pending",
+      "CONFIRMED": "Confirmed",
+      "PROCESSING": "Processing",
+      "SHIPPED": "Shipped",
+      "DELIVERED": "Delivered",
+      "CANCELLED": "Cancelled"
+    }
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "dashboard": "Dashboard",
+    "analytics": "Analytics",
+    "orders": "Orders",
+    "products": "Products",
+    "suppliers": "Suppliers",
+    "import": "Import",
+    "logout": "Logout",
+    "stats": {
+      "totalOrders": "Total Orders",
+      "totalRevenue": "Total Revenue",
+      "totalCustomers": "Customers",
+      "averageOrder": "Average Order",
+      "ordersToday": "Orders Today",
+      "revenueToday": "Revenue Today"
+    }
+  },
+  "footer": {
+    "about": "About",
+    "contact": "Contact",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "allRightsReserved": "All rights reserved"
+  }
+}

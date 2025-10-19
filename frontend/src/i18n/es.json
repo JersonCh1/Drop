@@ -1,0 +1,167 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Agregar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "viewDetails": "Ver detalles",
+    "close": "Cerrar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "continue": "Continuar"
+  },
+  "nav": {
+    "home": "Inicio",
+    "products": "Productos",
+    "cart": "Carrito",
+    "checkout": "Pagar",
+    "tracking": "Rastrear Pedido",
+    "admin": "Admin"
+  },
+  "home": {
+    "hero": {
+      "title": "Fundas Premium para iPhone",
+      "subtitle": "Protege tu iPhone con estilo. Envío gratis a todo el mundo.",
+      "cta": "Ver Colección"
+    },
+    "features": {
+      "shipping": {
+        "title": "Envío Gratis",
+        "description": "Envío internacional gratis en todos los pedidos"
+      },
+      "quality": {
+        "title": "Alta Calidad",
+        "description": "Materiales premium y acabados perfectos"
+      },
+      "returns": {
+        "title": "Devoluciones Fáciles",
+        "description": "30 días de garantía de devolución"
+      },
+      "support": {
+        "title": "Soporte 24/7",
+        "description": "Estamos aquí para ayudarte cuando lo necesites"
+      }
+    }
+  },
+  "products": {
+    "title": "Nuestros Productos",
+    "noProducts": "No hay productos disponibles",
+    "outOfStock": "Agotado",
+    "inStock": "En stock",
+    "addToCart": "Agregar al carrito",
+    "viewProduct": "Ver producto",
+    "priceRange": "Rango de precio",
+    "sortBy": "Ordenar por",
+    "sortOptions": {
+      "featured": "Destacados",
+      "priceLowHigh": "Precio: Menor a Mayor",
+      "priceHighLow": "Precio: Mayor a Menor",
+      "newest": "Más Recientes"
+    }
+  },
+  "product": {
+    "description": "Descripción",
+    "features": "Características",
+    "specifications": "Especificaciones",
+    "reviews": "Reseñas",
+    "selectModel": "Selecciona tu modelo de iPhone",
+    "selectColor": "Selecciona un color",
+    "quantity": "Cantidad",
+    "addedToCart": "Agregado al carrito exitosamente",
+    "errorAdding": "Error al agregar al carrito"
+  },
+  "cart": {
+    "title": "Carrito de Compras",
+    "empty": "Tu carrito está vacío",
+    "continueShopping": "Continuar Comprando",
+    "item": "producto",
+    "items": "productos",
+    "subtotal": "Subtotal",
+    "shipping": "Envío",
+    "freeShipping": "Gratis",
+    "total": "Total",
+    "proceedToCheckout": "Proceder al Pago",
+    "remove": "Eliminar",
+    "updateQuantity": "Actualizar cantidad"
+  },
+  "checkout": {
+    "title": "Finalizar Compra",
+    "customerInfo": "Información del Cliente",
+    "shippingAddress": "Dirección de Envío",
+    "paymentMethod": "Método de Pago",
+    "orderSummary": "Resumen del Pedido",
+    "placeOrder": "Realizar Pedido",
+    "fields": {
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "email": "Email",
+      "phone": "Teléfono",
+      "address": "Dirección",
+      "city": "Ciudad",
+      "state": "Estado/Provincia",
+      "postalCode": "Código Postal",
+      "country": "País",
+      "notes": "Notas (opcional)"
+    },
+    "paymentMethods": {
+      "card": "Tarjeta de Crédito/Débito",
+      "yape": "Yape",
+      "plin": "Plin",
+      "pagoEfectivo": "PagoEfectivo",
+      "cash": "Efectivo/Transferencia"
+    },
+    "orderSuccess": "¡Pedido realizado exitosamente!",
+    "orderError": "Error al procesar el pedido"
+  },
+  "tracking": {
+    "title": "Rastrear Pedido",
+    "enterOrder": "Ingresa tu número de pedido",
+    "orderNumber": "Número de Pedido",
+    "email": "Email (opcional)",
+    "trackButton": "Rastrear",
+    "orderStatus": "Estado del Pedido",
+    "trackingNumber": "Número de Rastreo",
+    "estimatedDelivery": "Entrega Estimada",
+    "statuses": {
+      "PENDING": "Pendiente",
+      "CONFIRMED": "Confirmado",
+      "PROCESSING": "En Proceso",
+      "SHIPPED": "Enviado",
+      "DELIVERED": "Entregado",
+      "CANCELLED": "Cancelado"
+    }
+  },
+  "admin": {
+    "title": "Panel de Administración",
+    "dashboard": "Dashboard",
+    "analytics": "Analytics",
+    "orders": "Pedidos",
+    "products": "Productos",
+    "suppliers": "Proveedores",
+    "import": "Importar",
+    "logout": "Cerrar Sesión",
+    "stats": {
+      "totalOrders": "Pedidos Totales",
+      "totalRevenue": "Ingresos Totales",
+      "totalCustomers": "Clientes",
+      "averageOrder": "Ticket Promedio",
+      "ordersToday": "Pedidos Hoy",
+      "revenueToday": "Ingresos Hoy"
+    }
+  },
+  "footer": {
+    "about": "Acerca de",
+    "contact": "Contacto",
+    "privacy": "Privacidad",
+    "terms": "Términos",
+    "allRightsReserved": "Todos los derechos reservados"
+  }
+}

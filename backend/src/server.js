@@ -913,6 +913,10 @@ app.use('/api/webhooks', webhooksRoutes);
 const cjDropshippingRoutes = require('./routes/cjDropshipping');
 app.use('/api/cj', cjDropshippingRoutes);
 
+// =================== RUTAS DE REFERIDOS ===================
+const referralsRoutes = require('./routes/referrals');
+app.use('/api/referrals', referralsRoutes);
+
 // =================== ERROR HANDLING ===================
 
 // Error handler
