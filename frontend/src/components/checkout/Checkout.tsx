@@ -59,9 +59,16 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
   const [operationCode, setOperationCode] = useState('');
   const [pendingOrderData, setPendingOrderData] = useState<any>(null);
 
+  // Estado del cupón
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponError, setCouponError] = useState('');
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+
   // Cálculos de precios (necesarios para Culqi)
   const subtotal = totalPrice;
-  const total = finalTotal;
+  const discountAmount = appliedCoupon?.discountAmount || 0;
+  const total = appliedCoupon ? appliedCoupon.newTotal + shippingCost : finalTotal;
 
   // Inicializar Culqi
   const { openCulqi } = useCulqi({
@@ -164,6 +171,53 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('Ingresa un código de cupón');
+      return;
+    }
+
+    setIsValidatingCoupon(true);
+    setCouponError('');
+
+    try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+      const response = await fetch(`${API_URL}/coupons/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: couponCode.trim().toUpperCase(),
+          subtotal: totalPrice,
+          userId: null // Por ahora sin usuario
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setAppliedCoupon(result.data);
+        setCouponError('');
+      } else {
+        setCouponError(result.message || 'Cupón no válido');
+        setAppliedCoupon(null);
+      }
+    } catch (error) {
+      console.error('Error validando cupón:', error);
+      setCouponError('Error al validar el cupón. Intenta de nuevo.');
+      setAppliedCoupon(null);
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setCouponError('');
   };
 
   const handleConfirmPayment = async () => {
@@ -890,6 +944,106 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
                 )}
               </div>
 
+              {/* Sección de Cupón de Descuento */}
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center">
+                  <span className="w-8 h-8 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg flex items-center justify-center text-white text-sm font-bold mr-3">3</span>
+                  Cupón de Descuento
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  ¿Tienes un cupón? Ingrésalo aquí para obtener tu descuento
+                </p>
+
+                {!appliedCoupon ? (
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => {
+                        setCouponCode(e.target.value.toUpperCase());
+                        setCouponError('');
+                      }}
+                      placeholder="Ej: VERANO20"
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all uppercase font-mono tracking-wide"
+                      disabled={isValidatingCoupon}
+                      maxLength={20}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={isValidatingCoupon || !couponCode.trim()}
+                      className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center space-x-2"
+                    >
+                      {isValidatingCoupon ? (
+                        <>
+                          <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Validando...</span>
+                        </>
+                      ) : (
+                        <span>Aplicar</span>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-900 text-lg">
+                            {appliedCoupon.code}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {appliedCoupon.description || `Descuento de ${appliedCoupon.discountType === 'PERCENTAGE' ? `${appliedCoupon.discountValue}%` : `S/ ${appliedCoupon.discountValue}`} aplicado`}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-green-600">
+                          -${discountAmount.toFixed(2)}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleRemoveCoupon}
+                          className="text-sm text-red-600 hover:text-red-700 font-semibold mt-1 flex items-center"
+                        >
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          Quitar cupón
+                        </button>
+                      </div>
+                    </div>
+                    {appliedCoupon.freeShipping && (
+                      <div className="mt-3 pt-3 border-t border-green-200">
+                        <p className="text-sm text-green-700 font-semibold flex items-center">
+                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                          </svg>
+                          ¡Envío GRATIS incluido!
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {couponError && (
+                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start">
+                    <svg className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    <p className="text-sm text-red-700 font-medium">{couponError}</p>
+                  </div>
+                )}
+              </div>
+
               {/* Resumen de Orden */}
               <div className="bg-gradient-to-br from-blue-600 to-purple-600 text-white rounded-2xl shadow-xl p-6">
                 <h3 className="text-xl font-bold mb-4">Resumen de tu Orden</h3>
@@ -911,14 +1065,38 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
                     <span className="text-blue-100">Subtotal:</span>
                     <span className="font-semibold">${subtotal.toFixed(2)}</span>
                   </div>
+                  {appliedCoupon && discountAmount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-green-300 font-semibold flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        Descuento ({appliedCoupon.code}):
+                      </span>
+                      <span className="font-bold text-green-300">-${discountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
                     <span className="text-blue-100">Envío:</span>
-                    <span className="font-semibold">${shippingCost.toFixed(2)}</span>
+                    <span className="font-semibold">
+                      {appliedCoupon?.freeShipping ? (
+                        <span className="text-green-300 font-bold">GRATIS</span>
+                      ) : (
+                        `$${shippingCost.toFixed(2)}`
+                      )}
+                    </span>
                   </div>
                   <div className="flex justify-between text-xl font-extrabold border-t border-white/20 pt-3 mt-3">
                     <span>Total:</span>
                     <span>${total.toFixed(2)}</span>
                   </div>
+                  {appliedCoupon && (
+                    <div className="text-center pt-2">
+                      <p className="text-sm text-green-300 font-semibold">
+                        ¡Ahorraste ${(discountAmount + (appliedCoupon.freeShipping ? shippingCost : 0)).toFixed(2)}!
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

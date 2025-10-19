@@ -20,7 +20,7 @@ import Checkout from './components/checkout/Checkout';
 // Pages
 import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
-import OrderTrackingPage from './pages/OrderTrackingPage';
+import TrackingPage from './pages/TrackingPage';
 import AuthPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
 import MyOrdersPage from './pages/MyOrdersPage';
@@ -135,8 +135,8 @@ const AppContent: React.FC<{
                 {/* Rutas implementadas y funcionales */}
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/products/:slug" element={<ProductDetailPage />} />
-                <Route path="/track" element={<OrderTrackingPage />} />
-                <Route path="/track/:orderNumber" element={<OrderTrackingPage />} />
+                <Route path="/track" element={<TrackingPage />} />
+                <Route path="/track/:orderNumber" element={<TrackingPage />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/order-success" element={<OrderSuccessPage />} />

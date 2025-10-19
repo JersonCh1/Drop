@@ -893,6 +893,14 @@ app.use('/api/suppliers', suppliersRoutes);
 const categoriesRoutes = require('./routes/categories');
 app.use('/api/categories', categoriesRoutes);
 
+// =================== RUTAS DE CUPONES ===================
+const couponsRoutes = require('./routes/coupons');
+app.use('/api/coupons', couponsRoutes);
+
+// =================== RUTAS DE REVIEWS ===================
+const reviewsRoutes = require('./routes/reviews');
+app.use('/api/reviews', reviewsRoutes);
+
 // =================== ERROR HANDLING ===================
 
 // Error handler

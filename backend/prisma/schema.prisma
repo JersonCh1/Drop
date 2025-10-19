@@ -406,7 +406,7 @@ model Review {
 model Address {
   id         String  @id @default(cuid())
   userId     String
-  
+
   firstName  String
   lastName   String
   company    String?
@@ -417,9 +417,9 @@ model Address {
   postalCode String
   country    String
   phone      String?
-  
+
   isDefault  Boolean @default(false)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -427,6 +427,45 @@ model Address {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("addresses")
+}
+
+model Coupon {
+  id    String @id @default(cuid())
+  code  String @unique // Código del cupón (ej: VERANO20)
+
+  // Tipo de descuento
+  discountType    DiscountType // PERCENTAGE o FIXED
+  discountValue   Float // 20 (para 20%) o 10 (para S/ 10 off)
+
+  // Límites
+  minPurchase     Float?  @default(0) // Compra mínima requerida
+  maxDiscount     Float? // Descuento máximo (para porcentajes)
+  usageLimit      Int?  // Límite total de usos (null = ilimitado)
+  usageCount      Int    @default(0) // Cuántas veces se ha usado
+  perUserLimit    Int?   @default(1) // Límite por usuario
+
+  // Validez
+  startDate       DateTime @default(now())
+  endDate         DateTime?
+  isActive        Boolean  @default(true)
+
+  // Descripción
+  description     String?
+
+  // Tipos especiales
+  freeShipping    Boolean  @default(false)
+  firstOrderOnly  Boolean  @default(false)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("coupons")
+}
+
+enum DiscountType {
+  PERCENTAGE // Descuento porcentual (ej: 20%)
+  FIXED      // Descuento fijo (ej: S/ 10)
 }
 
 model Setting {

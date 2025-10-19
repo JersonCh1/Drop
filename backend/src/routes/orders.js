@@ -3,6 +3,145 @@ const express = require('express');
 const router = express.Router();
 const { getDbClient } = require('../utils/database');
 
+// GET /api/orders/track - Rastrear orden pública
+router.get('/track', async (req, res) => {
+  const client = await getDbClient();
+
+  try {
+    const { orderNumber, email } = req.query;
+
+    if (!orderNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'Número de orden es requerido'
+      });
+    }
+
+    await client.connect();
+
+    // Buscar orden con email opcional para seguridad
+    let query = `
+      SELECT
+        id,
+        order_number,
+        status,
+        payment_status,
+        customer_first_name,
+        customer_last_name,
+        customer_email,
+        customer_phone,
+        shipping_address,
+        shipping_city,
+        shipping_state,
+        shipping_postal_code,
+        shipping_country,
+        subtotal,
+        shipping_cost,
+        tax,
+        total,
+        tracking_number,
+        tracking_url,
+        shipped_at,
+        delivered_at,
+        estimated_delivery,
+        created_at,
+        notes
+      FROM orders
+      WHERE UPPER(order_number) = UPPER($1)
+    `;
+
+    const params = [orderNumber];
+
+    // Si se proporciona email, usarlo para validar
+    if (email) {
+      query += ' AND LOWER(customer_email) = LOWER($2)';
+      params.push(email);
+    }
+
+    const orderResult = await client.query(query, params);
+
+    if (orderResult.rows.length === 0) {
+      await client.end();
+      return res.status(404).json({
+        success: false,
+        message: 'No se encontró la orden con el número proporcionado'
+      });
+    }
+
+    const order = orderResult.rows[0];
+
+    // Obtener items de la orden
+    const itemsResult = await client.query(`
+      SELECT
+        product_name,
+        product_model,
+        product_color,
+        quantity,
+        price,
+        total
+      FROM order_items
+      WHERE order_id = $1
+    `, [order.id]);
+
+    await client.end();
+
+    // Formatear respuesta
+    const response = {
+      success: true,
+      data: {
+        id: order.id,
+        orderNumber: order.order_number,
+        status: order.status.toUpperCase(),
+        paymentStatus: order.payment_status.toUpperCase(),
+        createdAt: order.created_at,
+        total: parseFloat(order.total),
+        subtotal: parseFloat(order.subtotal),
+        shippingCost: parseFloat(order.shipping_cost),
+        tax: parseFloat(order.tax || 0),
+        trackingNumber: order.tracking_number,
+        trackingUrl: order.tracking_url,
+        shippedAt: order.shipped_at,
+        deliveredAt: order.delivered_at,
+        estimatedDelivery: order.estimated_delivery,
+        items: itemsResult.rows.map(item => ({
+          productName: item.product_name,
+          productModel: item.product_model,
+          productColor: item.product_color,
+          quantity: item.quantity,
+          price: parseFloat(item.price),
+          total: parseFloat(item.total)
+        })),
+        shippingAddress: order.shipping_address,
+        shippingCity: order.shipping_city,
+        shippingState: order.shipping_state,
+        shippingPostalCode: order.shipping_postal_code,
+        shippingCountry: order.shipping_country,
+        customerEmail: order.customer_email,
+        notes: order.notes
+      }
+    };
+
+    console.log(`🔍 Orden rastreada: ${order.order_number} - Estado: ${order.status}`);
+
+    res.json(response);
+
+  } catch (error) {
+    console.error('❌ Error al rastrear orden:', error);
+
+    try {
+      await client.end();
+    } catch (closeError) {
+      console.error('Error cerrando conexión:', closeError);
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error al buscar la orden',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 // POST /api/orders - Crear nueva orden
 router.post('/', async (req, res) => {
   const client = await getDbClient();
