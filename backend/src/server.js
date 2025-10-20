@@ -917,6 +917,14 @@ app.use('/api/cj', cjDropshippingRoutes);
 const referralsRoutes = require('./routes/referrals');
 app.use('/api/referrals', referralsRoutes);
 
+// =================== RUTAS DE EMAIL MARKETING ===================
+const emailRoutes = require('./routes/email');
+app.use('/api/email', emailRoutes);
+
+// =================== RUTAS DE SITEMAP (SEO) ===================
+const sitemapRoutes = require('./routes/sitemap');
+app.use('/api', sitemapRoutes);
+
 // =================== ERROR HANDLING ===================
 
 // Error handler

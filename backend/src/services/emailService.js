@@ -650,6 +650,183 @@ class EmailService {
     }
   }
 
+  // Método para enviar formulario de contacto
+  async sendContactFormEmail(contactData) {
+    try {
+      if (!this.isConfigured) {
+        console.log('📧 Email no configurado, saltando envío de formulario de contacto');
+        return {
+          success: false,
+          message: 'Servicio de email no configurado'
+        };
+      }
+
+      const { name, email, phone, subject, message } = contactData;
+      const adminEmail = process.env.ADMIN_EMAIL || process.env.SUPPORT_EMAIL || process.env.EMAIL_USER;
+
+      // Email para el admin
+      const adminHtml = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Nuevo Mensaje de Contacto</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb;">
+          <div style="max-width: 600px; margin: 0 auto; background: white;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: 700;">📧 Nuevo Mensaje de Contacto</h1>
+            </div>
+
+            <div style="padding: 30px 20px;">
+              <div style="background: #dbeafe; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                <h3 style="margin: 0 0 10px 0; color: #1e40af;">Asunto: ${subject}</h3>
+                <p style="margin: 0; color: #1e40af; font-size: 14px;">
+                  Recibido: ${new Date().toLocaleString('es-ES')}
+                </p>
+              </div>
+
+              <div style="background: #fefefe; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
+                <h4 style="margin: 0 0 15px 0; color: #1f2937;">Información del Cliente</h4>
+                <table style="width: 100%;">
+                  <tr>
+                    <td style="padding: 5px 0; color: #6b7280; font-weight: 600;">Nombre:</td>
+                    <td style="padding: 5px 0; color: #1f2937;">${name}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0; color: #6b7280; font-weight: 600;">Email:</td>
+                    <td style="padding: 5px 0;"><a href="mailto:${email}" style="color: #3b82f6; text-decoration: none;">${email}</a></td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0; color: #6b7280; font-weight: 600;">Teléfono:</td>
+                    <td style="padding: 5px 0; color: #1f2937;">${phone}</td>
+                  </tr>
+                </table>
+              </div>
+
+              <div style="background: #fefefe; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                <h4 style="margin: 0 0 15px 0; color: #1f2937;">Mensaje</h4>
+                <div style="color: #374151; line-height: 1.6; white-space: pre-wrap;">${message}</div>
+              </div>
+
+              <div style="margin-top: 25px; padding: 20px; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                <p style="margin: 0; color: #92400e; font-size: 14px;">
+                  <strong>⚡ Acción requerida:</strong> Responde a este cliente lo antes posible para mantener un buen servicio al cliente.
+                </p>
+              </div>
+
+              <div style="text-align: center; margin-top: 25px;">
+                <a href="mailto:${email}?subject=Re: ${encodeURIComponent(subject)}"
+                   style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">
+                  📧 Responder al Cliente
+                </a>
+              </div>
+
+              <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
+                <p style="margin: 0;">© ${new Date().getFullYear()} iPhone Cases Store</p>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Email de confirmación para el cliente
+      const clientHtml = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Mensaje Recibido</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb;">
+          <div style="max-width: 600px; margin: 0 auto; background: white;">
+            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px 20px; text-align: center;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: 700;">✅ Mensaje Recibido</h1>
+              <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">¡Gracias por contactarnos!</p>
+            </div>
+
+            <div style="padding: 30px 20px;">
+              <div style="background: #d1fae5; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
+                <p style="margin: 0; color: #065f46; font-size: 16px; line-height: 1.6;">
+                  Hola <strong>${name}</strong>, hemos recibido tu mensaje y te responderemos lo antes posible, generalmente en menos de 24 horas.
+                </p>
+              </div>
+
+              <div style="background: #fefefe; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
+                <h4 style="margin: 0 0 15px 0; color: #1f2937;">Resumen de tu Mensaje</h4>
+                <table style="width: 100%;">
+                  <tr>
+                    <td style="padding: 5px 0; color: #6b7280; font-weight: 600;">Asunto:</td>
+                    <td style="padding: 5px 0; color: #1f2937;">${subject}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 5px 0; color: #6b7280; font-weight: 600;">Fecha:</td>
+                    <td style="padding: 5px 0; color: #1f2937;">${new Date().toLocaleString('es-ES')}</td>
+                  </tr>
+                </table>
+                <div style="margin-top: 15px; padding: 15px; background: #f8fafc; border-radius: 6px;">
+                  <p style="margin: 0; color: #374151; font-size: 14px; white-space: pre-wrap;">${message}</p>
+                </div>
+              </div>
+
+              <div style="background: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                <h4 style="margin: 0 0 10px 0; color: #92400e;">Mientras tanto...</h4>
+                <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
+                  Revisa nuestras <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/faq" style="color: #f59e0b; text-decoration: underline;">Preguntas Frecuentes</a>, puede que encuentres la respuesta que buscas de inmediato.
+                </p>
+              </div>
+
+              <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
+                <p style="margin: 0 0 10px 0;">Gracias por elegir <strong style="color: #1f2937;">iPhone Cases Store</strong></p>
+                <p style="margin: 0;">© ${new Date().getFullYear()} iPhone Cases Store. Todos los derechos reservados.</p>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Enviar email al admin
+      const adminMailOptions = {
+        from: `"iPhone Cases Store" <${process.env.EMAIL_USER}>`,
+        to: adminEmail,
+        replyTo: email,
+        subject: `📧 Nuevo Mensaje de Contacto: ${subject}`,
+        html: adminHtml
+      };
+
+      // Enviar email de confirmación al cliente
+      const clientMailOptions = {
+        from: `"iPhone Cases Store" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: '✅ Hemos recibido tu mensaje - iPhone Cases Store',
+        html: clientHtml
+      };
+
+      await this.transporter.sendMail(adminMailOptions);
+      console.log(`✅ Formulario de contacto enviado al admin desde ${email}`);
+
+      await this.transporter.sendMail(clientMailOptions);
+      console.log(`✅ Confirmación enviada a ${email}`);
+
+      return {
+        success: true,
+        message: 'Mensaje enviado correctamente'
+      };
+
+    } catch (error) {
+      console.error('❌ Error enviando formulario de contacto:', error);
+      return {
+        success: false,
+        message: 'Error enviando mensaje',
+        error: error.message
+      };
+    }
+  }
+
   // Método para obtener información del servicio
   getServiceInfo() {
     return {

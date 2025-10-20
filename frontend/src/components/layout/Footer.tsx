@@ -1,9 +1,55 @@
 // frontend/src/components/layout/Footer.tsx
-import React from 'react';
+import React, { useState } from 'react';
+import { useI18n } from '../../context/I18nContext';
+import toast from 'react-hot-toast';
 
 const Footer: React.FC = () => {
+  const { t } = useI18n();
   const currentYear = new Date().getFullYear();
   const whatsappNumber = process.env.REACT_APP_WHATSAPP_NUMBER || '51917780708';
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newsletterEmail)) {
+      toast.error('Por favor ingresa un email válido');
+      return;
+    }
+
+    setIsSubscribing(true);
+
+    try {
+      const response = await fetch(`${API_URL}/email/welcome`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: newsletterEmail.trim(),
+          firstName: 'Usuario', // Nombre genérico para footer form
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success('¡Gracias por suscribirte! 📧');
+        setNewsletterEmail('');
+        localStorage.setItem('newsletter_subscribed', 'true');
+      } else {
+        toast.error(data.message || 'Error al suscribirte');
+      }
+    } catch (error) {
+      console.error('Error subscribing:', error);
+      toast.error('Error al suscribirte');
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
 
   return (
     <footer className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
@@ -36,25 +82,25 @@ const Footer: React.FC = () => {
                 <h3 className="text-2xl font-extrabold bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
                   iPhone Cases
                 </h3>
-                <p className="text-xs text-gray-400 font-medium">Premium Quality</p>
+                <p className="text-xs text-gray-400 font-medium">{t('footer.tagline')}</p>
               </div>
             </div>
             <p className="text-gray-300 mb-6 max-w-md leading-relaxed">
-              Protege tu iPhone con estilo. Carcasas de alta calidad con envío a todo Perú.
+              {t('footer.description')}
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
             <h4 className="text-lg font-bold mb-6 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Navegación
+              {t('footer.navigation')}
             </h4>
             <ul className="space-y-3">
               {[
-                { name: 'Inicio', url: '/' },
-                { name: 'Productos', url: '/products' },
-                { name: 'Rastrear Orden', url: '/track' },
-                { name: 'Mi Cuenta', url: '/login' }
+                { nameKey: 'footer.home', url: '/' },
+                { nameKey: 'footer.products', url: '/products' },
+                { nameKey: 'footer.trackOrder', url: '/track' },
+                { nameKey: 'footer.myAccount', url: '/login' }
               ].map((item, index) => (
                 <li key={index}>
                   <a
@@ -62,7 +108,7 @@ const Footer: React.FC = () => {
                     className="text-gray-400 hover:text-white transition-all duration-200 flex items-center space-x-2 group"
                   >
                     <span className="w-1.5 h-1.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                    <span>{item.name}</span>
+                    <span>{t(item.nameKey)}</span>
                   </a>
                 </li>
               ))}
@@ -72,7 +118,7 @@ const Footer: React.FC = () => {
           {/* Contact */}
           <div>
             <h4 className="text-lg font-bold mb-6 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Contacto
+              {t('footer.contact')}
             </h4>
             <div className="space-y-4">
               <a
@@ -87,25 +133,62 @@ const Footer: React.FC = () => {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm text-white/90 font-medium">Contáctanos por WhatsApp</p>
-                  <p className="text-xs text-white/70">Respuesta rápida</p>
+                  <p className="text-sm text-white/90 font-medium">{t('footer.whatsappContact')}</p>
+                  <p className="text-xs text-white/70">{t('footer.quickResponse')}</p>
                 </div>
               </a>
               <p className="text-gray-400 text-sm">
-                Horario de atención: Lun-Sab 9am-8pm
+                {t('footer.schedule')}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Trust Badges - Simplified */}
+        {/* Newsletter Section */}
         <div className="border-t border-white/10 mt-12 pt-12">
+          <div className="max-w-2xl mx-auto text-center mb-12">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full mb-6 shadow-lg">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76" />
+              </svg>
+            </div>
+            <h3 className="text-3xl font-black bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-3">
+              ¡Obtén 10% OFF en tu primera compra!
+            </h3>
+            <p className="text-gray-400 mb-6">
+              Suscríbete para recibir ofertas exclusivas y novedades
+            </p>
+            <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <input
+                type="email"
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
+                placeholder="tu@email.com"
+                className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
+                required
+              />
+              <button
+                type="submit"
+                disabled={isSubscribing}
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                {isSubscribing ? 'Suscribiendo...' : 'Suscribirme'}
+              </button>
+            </form>
+            <p className="text-xs text-gray-500 mt-4">
+              No spam. Puedes cancelar tu suscripción en cualquier momento.
+            </p>
+          </div>
+        </div>
+
+        {/* Trust Badges - Simplified */}
+        <div className="border-t border-white/10 pt-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z', title: 'Compra Segura', desc: 'Pago protegido' },
-              { icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', title: 'Envío Rápido', desc: 'A todo Perú' },
-              { icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', title: 'Garantía', desc: 'Calidad premium' },
-              { icon: 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z', title: 'Soporte 24/7', desc: 'Estamos aquí' }
+              { icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z', titleKey: 'footer.badges.securePurchase', descKey: 'footer.badges.securePurchaseDesc' },
+              { icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', titleKey: 'footer.badges.fastShipping', descKey: 'footer.badges.fastShippingDesc' },
+              { icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', titleKey: 'footer.badges.warranty', descKey: 'footer.badges.warrantyDesc' },
+              { icon: 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z', titleKey: 'footer.badges.support', descKey: 'footer.badges.supportDesc' }
             ].map((badge, index) => (
               <div key={index} className="text-center">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3">
@@ -113,8 +196,8 @@ const Footer: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={badge.icon} />
                   </svg>
                 </div>
-                <p className="text-white font-semibold text-sm mb-1">{badge.title}</p>
-                <p className="text-gray-400 text-xs">{badge.desc}</p>
+                <p className="text-white font-semibold text-sm mb-1">{t(badge.titleKey)}</p>
+                <p className="text-gray-400 text-xs">{t(badge.descKey)}</p>
               </div>
             ))}
           </div>
@@ -123,10 +206,10 @@ const Footer: React.FC = () => {
         {/* Copyright - Clean & Simple */}
         <div className="border-t border-white/10 mt-12 pt-8 text-center">
           <p className="text-gray-400 text-sm">
-            © {currentYear} <span className="font-semibold text-gray-300">iPhone Cases Store</span>. Todos los derechos reservados.
+            © {currentYear} <span className="font-semibold text-gray-300">{t('footer.storeName')}</span>. {t('footer.allRightsReserved')}.
           </p>
           <p className="text-gray-500 text-xs mt-2">
-            Hecho con cariño en Perú 🇵🇪
+            {t('footer.madeInPeru')}
           </p>
         </div>
       </div>

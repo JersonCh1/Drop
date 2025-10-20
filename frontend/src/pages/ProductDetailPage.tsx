@@ -4,6 +4,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import productService, { Product, ProductVariant } from '../services/productService';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
+import { trackingPixels } from '../utils/trackingPixels';
+import ProductReviews from '../components/products/ProductReviews';
+import UpsellCrossSell from '../components/products/UpsellCrossSell';
 
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -29,6 +32,16 @@ const ProductDetailPage: React.FC = () => {
         if (availableVariants.length > 0) {
           setSelectedVariant(availableVariants[0]);
         }
+
+        // Track ViewContent
+        const price = productService.getLowestPrice(data);
+        trackingPixels.trackViewContent({
+          content_name: data.name,
+          content_ids: [data.id],
+          content_type: 'product',
+          value: price,
+          currency: 'USD'
+        });
       } else {
         toast.error('Producto no encontrado');
         navigate('/products');
@@ -69,7 +82,7 @@ const ProductDetailPage: React.FC = () => {
 
     const mainImage = productService.getMainImage(product);
 
-    addItem({
+    const item = {
       id: selectedVariant ? selectedVariant.id : product.id,
       productId: parseInt(product.id.replace(/[^0-9]/g, '')) || 1,
       variantId: selectedVariant ? parseInt(selectedVariant.id.replace(/[^0-9]/g, '')) : undefined,
@@ -81,6 +94,18 @@ const ProductDetailPage: React.FC = () => {
       image: mainImage,
       sku: selectedVariant?.sku || product.slug,
       maxQuantity: selectedVariant?.stockQuantity || product.stockCount
+    };
+
+    addItem(item);
+
+    // Track AddToCart
+    trackingPixels.trackAddToCart({
+      content_name: item.name,
+      content_ids: [product.id],
+      content_type: 'product',
+      value: price * quantity,
+      currency: 'USD',
+      quantity
     });
   };
 
@@ -347,6 +372,16 @@ const ProductDetailPage: React.FC = () => {
 
             </div>
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-12 bg-white rounded-lg shadow-md p-8">
+          <ProductReviews productId={product.id} />
+        </div>
+
+        {/* Upsell/Cross-sell */}
+        <div className="mt-12">
+          <UpsellCrossSell />
         </div>
 
       </div>

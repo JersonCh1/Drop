@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { QRCodeSVG } from 'qrcode.react';
 import { useCulqi } from '../../hooks/useCulqi';
 import PaymentMethodSelector from './PaymentMethodSelector';
+import { trackingPixels } from '../../utils/trackingPixels';
 
 interface CheckoutFormData {
   firstName: string;
@@ -31,6 +32,23 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
   // Siempre llamar los hooks (regla de React Hooks)
   const stripe = useStripe();
   const elements = useElements();
+
+  // Track InitiateCheckout cuando se abre el checkout
+  useEffect(() => {
+    if (cart.length > 0) {
+      trackingPixels.trackInitiateCheckout({
+        content_ids: cart.map(item => item.productId.toString()),
+        contents: cart.map(item => ({
+          id: item.productId.toString(),
+          quantity: item.quantity,
+          name: item.name
+        })),
+        value: finalTotal,
+        currency: 'USD',
+        num_items: cart.reduce((sum, item) => sum + item.quantity, 0)
+      });
+    }
+  }, []); // Solo al montar el componente
 
   // Verificar si Stripe está disponible después de llamar los hooks
   const hasStripe = !!process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
@@ -126,6 +144,19 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
         const chargeResult = await chargeResponse.json();
 
         if (chargeResult.success) {
+          // Track Purchase
+          trackingPixels.trackPurchase({
+            content_ids: cart.map(item => item.productId.toString()),
+            contents: cart.map(item => ({
+              id: item.productId.toString(),
+              quantity: item.quantity,
+              name: item.name
+            })),
+            value: total,
+            currency: 'USD',
+            transaction_id: orderId || `culqi_${Date.now()}`
+          });
+
           clearCart();
           alert('¡Pago exitoso! Tu orden ha sido procesada.');
           onOrderComplete();
@@ -265,6 +296,20 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
       const result = await response.json();
       console.log('Order created with operation code:', result);
 
+      // Track Purchase
+      const orderId = result.data?.id || result.orderNumber;
+      trackingPixels.trackPurchase({
+        content_ids: pendingOrderData.items.map((item: any) => item.productId?.toString() || '0'),
+        contents: pendingOrderData.items.map((item: any) => ({
+          id: item.productId?.toString() || '0',
+          quantity: item.quantity,
+          name: item.name
+        })),
+        value: pendingOrderData.total,
+        currency: 'USD',
+        transaction_id: orderId || `${pendingOrderData.paymentMethod}_${Date.now()}`
+      });
+
       clearCart();
       setShowPaymentConfirmation(false);
       alert('¡Pago confirmado! Tu orden ha sido registrada exitosamente. Recibirás un email de confirmación.');
@@ -379,6 +424,19 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
         }
 
         if (paymentIntent?.status === 'succeeded') {
+          // Track Purchase
+          trackingPixels.trackPurchase({
+            content_ids: cart.map(item => item.productId.toString()),
+            contents: cart.map(item => ({
+              id: item.productId.toString(),
+              quantity: item.quantity,
+              name: item.name
+            })),
+            value: total,
+            currency: 'USD',
+            transaction_id: paymentIntent.id || `stripe_${Date.now()}`
+          });
+
           clearCart();
           alert('¡Pago exitoso! Tu orden ha sido procesada.');
           onOrderComplete();
@@ -429,6 +487,19 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
         if (response.ok) {
           const result = await response.json();
           console.log('MercadoPago preference created:', result);
+
+          // Track Purchase (nota: en MercadoPago el pago se completa después del redirect, pero trackeamos la intención)
+          trackingPixels.trackPurchase({
+            content_ids: cart.map(item => item.productId.toString()),
+            contents: cart.map(item => ({
+              id: item.productId.toString(),
+              quantity: item.quantity,
+              name: item.name
+            })),
+            value: total,
+            currency: 'USD',
+            transaction_id: result.preferenceId || `mercadopago_${Date.now()}`
+          });
 
           clearCart();
 

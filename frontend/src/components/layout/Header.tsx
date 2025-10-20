@@ -2,12 +2,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import { useI18n } from '../../context/I18nContext';
 import authService from '../../services/authService';
+import LanguageSwitcher from '../LanguageSwitcher';
 
 interface HeaderProps {}
 
 const Header: React.FC<HeaderProps> = () => {
   const { totalItems, openCart } = useCart();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -82,9 +85,9 @@ const Header: React.FC<HeaderProps> = () => {
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-2xl font-extrabold bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 bg-clip-text text-transparent">
-                  iPhone Store
+                  {t('header.storeName')}
                 </h1>
-                <p className="text-xs text-gray-500 font-medium -mt-1">Premium Cases & Accessories</p>
+                <p className="text-xs text-gray-500 font-medium -mt-1">{t('header.storeTagline')}</p>
               </div>
             </a>
           </div>
@@ -92,9 +95,9 @@ const Header: React.FC<HeaderProps> = () => {
           {/* Navigation - Más Moderno */}
           <nav className="hidden md:flex items-center space-x-1">
             {[
-              { href: '/', label: 'Inicio', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
-              { href: '/products', label: 'Productos', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' },
-              { href: '/track', label: 'Rastrear', icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7' }
+              { href: '/', labelKey: 'nav.home', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+              { href: '/products', labelKey: 'nav.products', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' },
+              { href: '/track', labelKey: 'nav.track', icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7' }
             ].map((item) => (
               <a
                 key={item.href}
@@ -104,7 +107,7 @@ const Header: React.FC<HeaderProps> = () => {
                 <svg className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                 </svg>
-                <span className="font-medium">{item.label}</span>
+                <span className="font-medium">{t(item.labelKey)}</span>
               </a>
             ))}
           </nav>
@@ -148,7 +151,7 @@ const Header: React.FC<HeaderProps> = () => {
                           <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                           </svg>
-                          Administrador
+                          {t('header.administrator')}
                         </span>
                       )}
                     </div>
@@ -164,7 +167,7 @@ const Header: React.FC<HeaderProps> = () => {
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
-                        <span>Panel Admin</span>
+                        <span>{t('header.adminPanel')}</span>
                       </button>
                     )}
 
@@ -178,7 +181,7 @@ const Header: React.FC<HeaderProps> = () => {
                       <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
-                      <span>Mi Perfil</span>
+                      <span>{t('header.myProfile')}</span>
                     </button>
                     <button
                       onClick={() => {
@@ -190,7 +193,7 @@ const Header: React.FC<HeaderProps> = () => {
                       <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                       </svg>
-                      <span>Mis Órdenes</span>
+                      <span>{t('header.myOrders')}</span>
                     </button>
                     <div className="border-t border-gray-100 my-1"></div>
                     <button
@@ -200,7 +203,7 @@ const Header: React.FC<HeaderProps> = () => {
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
-                      <span>Cerrar Sesión</span>
+                      <span>{t('admin.logout')}</span>
                     </button>
                   </div>
                 )}
@@ -209,14 +212,17 @@ const Header: React.FC<HeaderProps> = () => {
               <button
                 onClick={() => navigate('/login')}
                 className="hidden sm:flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 font-medium"
-                title="Iniciar Sesión"
+                title={t('header.loginTitle')}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                <span>Ingresar</span>
+                <span>{t('header.login')}</span>
               </button>
             )}
+
+            {/* Language Switcher */}
+            <LanguageSwitcher />
 
             {/* Cart Button - Premium */}
             <button

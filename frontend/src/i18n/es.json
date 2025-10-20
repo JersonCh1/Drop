@@ -24,7 +24,18 @@
     "cart": "Carrito",
     "checkout": "Pagar",
     "tracking": "Rastrear Pedido",
+    "track": "Rastrear",
     "admin": "Admin"
+  },
+  "header": {
+    "storeName": "iPhone Store",
+    "storeTagline": "Premium Cases & Accessories",
+    "adminPanel": "Panel Admin",
+    "myProfile": "Mi Perfil",
+    "myOrders": "Mis Órdenes",
+    "login": "Ingresar",
+    "loginTitle": "Iniciar Sesión",
+    "administrator": "Administrador"
   },
   "home": {
     "hero": {
@@ -162,6 +173,46 @@
     "contact": "Contacto",
     "privacy": "Privacidad",
     "terms": "Términos",
-    "allRightsReserved": "Todos los derechos reservados"
+    "allRightsReserved": "Todos los derechos reservados",
+    "storeName": "iPhone Cases Store",
+    "tagline": "Premium Quality",
+    "description": "Protege tu iPhone con estilo. Carcasas de alta calidad con envío a todo Perú.",
+    "navigation": "Navegación",
+    "home": "Inicio",
+    "products": "Productos",
+    "trackOrder": "Rastrear Orden",
+    "myAccount": "Mi Cuenta",
+    "whatsappContact": "Contáctanos por WhatsApp",
+    "quickResponse": "Respuesta rápida",
+    "schedule": "Horario de atención: Lun-Sab 9am-8pm",
+    "badges": {
+      "securePurchase": "Compra Segura",
+      "securePurchaseDesc": "Pago protegido",
+      "fastShipping": "Envío Rápido",
+      "fastShippingDesc": "A todo Perú",
+      "warranty": "Garantía",
+      "warrantyDesc": "Calidad premium",
+      "support": "Soporte 24/7",
+      "supportDesc": "Estamos aquí"
+    },
+    "madeInPeru": "Hecho con cariño en Perú 🇵🇪"
+  },
+  "contact": {
+    "title": "Contáctanos",
+    "subtitle": "Estamos aquí para ayudarte. Escríbenos y te responderemos lo antes posible.",
+    "quickContact": "Contacto Rápido",
+    "businessHours": "Horario de Atención",
+    "location": "Ubicación",
+    "formTitle": "Envíanos un Mensaje",
+    "name": "Nombre Completo",
+    "email": "Email",
+    "phone": "Teléfono",
+    "subject": "Asunto",
+    "message": "Mensaje",
+    "send": "Enviar Mensaje",
+    "success": "¡Mensaje enviado! Te responderemos pronto.",
+    "error": "Hubo un error. Por favor intenta de nuevo.",
+    "fillAllFields": "Por favor completa todos los campos requeridos",
+    "invalidEmail": "Por favor ingresa un email válido"
   }
 }

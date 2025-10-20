@@ -4,13 +4,16 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import { HelmetProvider } from 'react-helmet-async';
 import './App.css';
 
 // Context
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
+import { I18nProvider } from './context/I18nContext';
 
 // Components
+import ErrorBoundary from './components/ErrorBoundary';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import ProductCard from './components/products/ProductCard';
@@ -25,11 +28,23 @@ import AuthPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import AdminPage from './pages/AdminPage';
+import FAQPage from './pages/FAQPage';
+import ContactPage from './pages/ContactPage';
+import AboutPage from './pages/AboutPage';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
+import ReturnsPage from './pages/ReturnsPage';
+import CookiesPage from './pages/CookiesPage';
 
 // Services
 import analyticsService from './services/analyticsService';
 import productService from './services/productService';
 import type { Product as ProductType } from './services/productService';
+import { trackingPixels } from './utils/trackingPixels';
+
+// Marketing
+import NewsletterPopup from './components/marketing/NewsletterPopup';
+import SocialProof from './components/marketing/SocialProof';
 
 // Types
 export interface CartItem {
@@ -150,6 +165,17 @@ const AppContent: React.FC<{
                 {/* Ruta de administración (protegida) */}
                 <Route path="/admin" element={<AdminPage />} />
 
+                {/* Páginas informativas */}
+                <Route path="/faq" element={<FAQPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/about" element={<AboutPage />} />
+
+                {/* Páginas legales */}
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/returns" element={<ReturnsPage />} />
+                <Route path="/cookies" element={<CookiesPage />} />
+
                 {/* 404 */}
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
@@ -167,6 +193,12 @@ const AppContent: React.FC<{
                 onOrderComplete={handleOrderComplete}
               />
             )}
+
+            {/* Newsletter Popup */}
+            <NewsletterPopup />
+
+            {/* Social Proof Notifications */}
+            <SocialProof />
           </div>
         </Router>
       </CartProvider>
@@ -188,6 +220,9 @@ function App() {
     // Inicializar analytics
     analyticsService.trackPageView('home');
     analyticsService.setupAutoTracking();
+
+    // Inicializar tracking pixels
+    trackingPixels.init();
 
     // Simular carga inicial
     setTimeout(() => {
@@ -248,11 +283,17 @@ function App() {
   };
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Elements stripe={stripePromise}>
-        <AppContent {...appContentProps} />
-      </Elements>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <I18nProvider>
+            <Elements stripe={stripePromise}>
+              <AppContent {...appContentProps} />
+            </Elements>
+          </I18nProvider>
+        </QueryClientProvider>
+      </HelmetProvider>
+    </ErrorBoundary>
   );
 }
 

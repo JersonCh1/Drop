@@ -24,7 +24,18 @@
     "cart": "Cart",
     "checkout": "Checkout",
     "tracking": "Track Order",
+    "track": "Track",
     "admin": "Admin"
+  },
+  "header": {
+    "storeName": "iPhone Store",
+    "storeTagline": "Premium Cases & Accessories",
+    "adminPanel": "Admin Panel",
+    "myProfile": "My Profile",
+    "myOrders": "My Orders",
+    "login": "Sign In",
+    "loginTitle": "Sign In",
+    "administrator": "Administrator"
   },
   "home": {
     "hero": {
@@ -162,6 +173,46 @@
     "contact": "Contact",
     "privacy": "Privacy",
     "terms": "Terms",
-    "allRightsReserved": "All rights reserved"
+    "allRightsReserved": "All rights reserved",
+    "storeName": "iPhone Cases Store",
+    "tagline": "Premium Quality",
+    "description": "Protect your iPhone in style. High-quality cases with shipping throughout Peru.",
+    "navigation": "Navigation",
+    "home": "Home",
+    "products": "Products",
+    "trackOrder": "Track Order",
+    "myAccount": "My Account",
+    "whatsappContact": "Contact us on WhatsApp",
+    "quickResponse": "Quick response",
+    "schedule": "Hours: Mon-Sat 9am-8pm",
+    "badges": {
+      "securePurchase": "Secure Purchase",
+      "securePurchaseDesc": "Protected payment",
+      "fastShipping": "Fast Shipping",
+      "fastShippingDesc": "Throughout Peru",
+      "warranty": "Warranty",
+      "warrantyDesc": "Premium quality",
+      "support": "24/7 Support",
+      "supportDesc": "We're here"
+    },
+    "madeInPeru": "Made with love in Peru 🇵🇪"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "We're here to help. Write to us and we'll get back to you as soon as possible.",
+    "quickContact": "Quick Contact",
+    "businessHours": "Business Hours",
+    "location": "Location",
+    "formTitle": "Send Us a Message",
+    "name": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "subject": "Subject",
+    "message": "Message",
+    "send": "Send Message",
+    "success": "Message sent! We'll respond soon.",
+    "error": "There was an error. Please try again.",
+    "fillAllFields": "Please fill in all required fields",
+    "invalidEmail": "Please enter a valid email"
   }
 }

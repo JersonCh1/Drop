@@ -1,8 +1,9 @@
 // frontend/src/components/products/ProductCard.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
 import { CartItem } from '../../context/CartContext';
 import toast from 'react-hot-toast';
+import { trackingPixels } from '../../utils/trackingPixels';
 
 interface ProductCardProps {
   selectedModel: string;
@@ -28,6 +29,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const { addItem, isItemInCart } = useCart();
   const [isAdding, setIsAdding] = useState(false);
 
+  // Track ViewContent cuando cambia el producto
+  useEffect(() => {
+    trackingPixels.trackViewContent({
+      content_name: 'Carcasa iPhone Premium',
+      content_ids: ['1'],
+      content_type: 'product',
+      value: price,
+      currency: 'USD'
+    });
+  }, [price]);
+
   const handleAddToCart = async () => {
     setIsAdding(true);
 
@@ -44,6 +56,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       await new Promise(resolve => setTimeout(resolve, 500));
       addItem(item);
+
+      // Track AddToCart
+      trackingPixels.trackAddToCart({
+        content_name: item.name,
+        content_ids: [item.productId.toString()],
+        content_type: 'product',
+        value: item.price,
+        currency: 'USD',
+        quantity: item.quantity
+      });
 
       toast.success(`${item.name} agregado al carrito!`, {
         icon: '🛒',
