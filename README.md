@@ -1,252 +1,199 @@
-# 📱 Dropshipping iPhone Store
+# 📱 iPhone Cases Store - E-commerce Dropshipping
 
-Plataforma e-commerce completa para venta de carcasas y accesorios de iPhone con panel de administración integrado.
+> Plataforma e-commerce completa para venta de carcasas iPhone con panel de administración, múltiples métodos de pago y automatización de dropshipping.
 
-## 🚀 Tecnologías
-
-### Frontend
-- **React 18** + TypeScript
-- **React Router** - Navegación
-- **TailwindCSS** - Estilos
-- **Axios** - Peticiones HTTP
-- **React Query** - Cache de datos
-- **React Hot Toast** - Notificaciones
-- **Stripe Elements** - Pagos (opcional)
-
-### Backend
-- **Node.js** + Express
-- **Prisma ORM** - Base de datos
-- **SQLite** - Base de datos (desarrollo)
-- **bcryptjs** - Hash de contraseñas
-
-## 📦 Instalación
-
-### 1. Clonar e instalar dependencias
-
-```bash
-# Backend
-cd backend
-npm install
-
-# Frontend
-cd frontend
-npm install
-```
-
-### 2. Configurar base de datos
-
-```bash
-cd backend
-npx prisma generate
-npx prisma db push
-node prisma/seed.js
-```
-
-### 3. Variables de entorno
-
-**Backend (.env):**
-```env
-DATABASE_URL="file:./dev.db"
-PORT=3001
-NODE_ENV=development
-```
-
-**Frontend (.env):**
-```env
-REACT_APP_API_URL=http://localhost:3001/api
-REACT_APP_STRIPE_PUBLISHABLE_KEY=tu_clave_stripe_opcional
-```
-
-### 4. Iniciar servidores
-
-```bash
-# Terminal 1 - Backend
-cd backend
-npm start
-
-# Terminal 2 - Frontend
-cd frontend
-npm start
-```
-
-## 🔐 Acceso Admin
-
-- **URL:** http://localhost:3000
-- **Usuario:** admin
-- **Contraseña:** admin123
-
-## ✨ Características
-
-### Cliente
-- ✅ Catálogo de productos con filtros
-- ✅ Detalle de producto con variantes (colores)
-- ✅ Carrito de compras persistente
-- ✅ Checkout con información de envío
-- ✅ Seguimiento de órdenes por número
-- ✅ WhatsApp integrado para soporte
-- ✅ Responsive design completo
-
-### Admin Panel
-- ✅ Dashboard con estadísticas
-- ✅ Gestión de productos (CRUD completo)
-- ✅ **Upload de imágenes con Unsplash**
-- ✅ Gestión de órdenes
-- ✅ Ver detalles completos del cliente
-- ✅ Contacto directo por WhatsApp
-- ✅ UI moderna con tabs
-
-## 📁 Estructura del Proyecto
-
-```
-dropshipping-iphone/
-├── backend/
-│   ├── prisma/
-│   │   ├── schema.prisma      # Schema de base de datos
-│   │   └── seed.js            # Datos de ejemplo
-│   ├── src/
-│   │   ├── routes/            # [No usado - TODO: limpiar]
-│   │   ├── services/          # Servicios (email, analytics)
-│   │   └── utils/
-│   └── server-simple.js       # ⭐ Servidor principal
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── admin/        # Panel admin
-│   │   │   ├── cart/         # Carrito
-│   │   │   ├── checkout/     # Checkout
-│   │   │   ├── layout/       # Header/Footer
-│   │   │   ├── products/     # Productos
-│   │   │   └── tracking/     # Seguimiento
-│   │   ├── context/          # Context API
-│   │   ├── pages/            # Páginas principales
-│   │   ├── services/         # API services
-│   │   └── App.tsx           # ⭐ App principal
-│   └── public/
-└── README.md
-```
-
-## 🎨 Upload de Imágenes
-
-El sistema soporta 2 métodos para agregar imágenes:
-
-1. **URL Manual** - Pega cualquier URL de imagen (Imgur, Unsplash, etc)
-2. **Unsplash Automático** - Genera imagen basada en el nombre del producto
-
-### Ejemplo en Admin:
-```
-1. Click en "Crear Producto"
-2. Llenar nombre y detalles
-3. Scroll a "Imagen del Producto"
-4. Option A: Pegar URL → Click "Vista Previa"
-5. Option B: Click "Usar Unsplash Automático"
-6. Guardar producto
-```
-
-## 🔧 API Endpoints
-
-### Productos
-```
-GET    /api/products           # Listar productos
-GET    /api/products/:slug     # Detalle de producto
-POST   /api/products           # Crear producto (ADMIN)
-PUT    /api/products/:id       # Actualizar producto (ADMIN)
-DELETE /api/products/:id       # Desactivar producto (ADMIN)
-POST   /api/products/:id/images # Agregar imagen (ADMIN)
-DELETE /api/products/:productId/images/:imageId # Eliminar imagen (ADMIN)
-```
-
-### Órdenes
-```
-GET    /api/orders             # Listar órdenes (ADMIN)
-GET    /api/orders/:orderNumber # Tracking público
-POST   /api/orders             # Crear orden
-PUT    /api/orders/:id/status  # Actualizar estado (ADMIN)
-```
-
-### Admin
-```
-POST   /api/admin/login        # Login admin
-```
-
-## 🗄️ Modelos de Datos
-
-### Product
-- name, slug, description
-- basePrice, stockCount
-- brand, model, compatibility
-- isFeatured, isActive, inStock
-
-### ProductImage
-- url, altText, position
-- isMain (imagen principal)
-
-### ProductVariant
-- name, color, size
-- price, sku, stockQuantity
-
-### Order
-- orderNumber, status
-- customerInfo (nombre, email, teléfono)
-- shippingAddress (dirección completa)
-- paymentInfo (método, estado)
-- trackingNumber
-
-## 🚀 Despliegue
-
-### Producción
-1. Cambiar DATABASE_URL a PostgreSQL/MySQL
-2. Configurar variables de entorno
-3. Build del frontend: `npm run build`
-4. Servir con Nginx/Apache
-
-### Recomendaciones
-- Usar Railway/Vercel para backend
-- Usar Vercel/Netlify para frontend
-- Migrar a PostgreSQL en producción
-- Configurar dominio personalizado
-- Habilitar HTTPS
-
-## 🐛 Solución de Problemas
-
-### Error: EADDRINUSE Port 3001
-```bash
-# Matar proceso en puerto 3001
-npx kill-port 3001
-```
-
-### Error: Prisma Client not generated
-```bash
-cd backend
-npx prisma generate
-```
-
-### Error: Foreign key constraint
-```bash
-cd backend
-npx prisma db push --force-reset
-node prisma/seed.js
-```
-
-## 📈 Mejoras Futuras
-
-- [ ] Sistema de cupones/descuentos
-- [ ] Reviews y ratings de productos
-- [ ] Múltiples imágenes por producto
-- [ ] Integración completa con Stripe
-- [ ] Notificaciones por email
-- [ ] Panel de analytics avanzado
-- [ ] Exportar órdenes a CSV/Excel
-- [ ] Sistema de inventario con alertas
-- [ ] Búsqueda avanzada con Elasticsearch
-
-## 📄 Licencia
-
-MIT
-
-## 👨‍💻 Desarrollador
-
-Proyecto desarrollado para dropshipping de accesorios iPhone.
+[![Producción](https://img.shields.io/badge/Estado-Producción-success)](https://github.com/JersonCh1/Drop)
+[![React](https://img.shields.io/badge/React-18-blue)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20-green)](https://nodejs.org/)
 
 ---
 
-**Última actualización:** Octubre 2025
+## 🚀 Quick Start
+
+```bash
+# Clonar repositorio
+git clone https://github.com/JersonCh1/Drop.git
+cd dropshipping-iphone
+
+# Backend
+cd backend
+npm install
+npx prisma generate
+npx prisma db push
+node prisma/seed.js
+npm start
+
+# Frontend (nueva terminal)
+cd frontend
+npm install
+npm start
+```
+
+**Acceso Admin:**
+- URL: http://localhost:3000/admin
+- Usuario: `admin`
+- Contraseña: `admin123`
+
+---
+
+## 📚 Documentación Completa
+
+**→ Ver [`PROJECT_MASTER.md`](./PROJECT_MASTER.md) para documentación detallada**
+
+Este archivo contiene:
+- ✅ Stack tecnológico completo
+- ✅ Todas las funcionalidades implementadas
+- ✅ Estructura del proyecto
+- ✅ Variables de entorno necesarias
+- ✅ API endpoints completos
+- ✅ Guías de despliegue
+- ✅ Credenciales y configuraciones
+
+---
+
+## ✨ Características Principales
+
+### 🛍️ E-commerce
+- Catálogo de productos con filtros y búsqueda
+- Sistema de reviews y ratings
+- Carrito persistente y checkout multi-paso
+- Tracking de órdenes en tiempo real
+- Sistema de cupones y descuentos
+- Programa de referidos
+
+### 💳 Pagos (7 métodos)
+- **Stripe** - Tarjetas internacionales
+- **Culqi** - Principal para Perú
+- **Niubiz** - Visa/Mastercard Perú
+- **MercadoPago** - América Latina
+- **Yape/Plin** - Billeteras digitales
+- **PagoEfectivo** - Efectivo en agencias
+- **SafetyPay** - Transferencias bancarias
+
+### 📊 Admin Panel
+- Dashboard con analytics en tiempo real
+- Gestión completa de productos y órdenes
+- Email marketing automatizado
+- Integración con CJ Dropshipping
+- Sistema de moderación de reviews
+
+### 📈 Marketing & SEO
+- Email marketing automatizado
+- Newsletter popup y social proof
+- Tracking pixels (Facebook, TikTok)
+- Google Analytics integrado
+- SEO optimizado (meta tags, sitemap, robots.txt)
+- Sistema de referidos
+
+### 🌐 Multi-idioma & PWA
+- Español e Inglés
+- Progressive Web App
+- Instalable en móviles
+- Modo offline
+
+---
+
+## 🏗️ Stack Tecnológico
+
+**Frontend:** React 18 + TypeScript + TailwindCSS + React Query
+**Backend:** Node.js + Express + Prisma ORM
+**Database:** PostgreSQL (Producción) / SQLite (Desarrollo)
+**Despliegue:** Vercel (Frontend) + Railway (Backend)
+**Pagos:** Stripe, Culqi, Niubiz, MercadoPago, etc.
+**Dropshipping:** CJ Dropshipping API
+
+---
+
+## 📦 Estructura
+
+```
+dropshipping-iphone/
+├── backend/          # API + Base de datos
+│   ├── prisma/       # Schema y migrations
+│   ├── src/
+│   │   ├── routes/   # Endpoints REST
+│   │   ├── services/ # Lógica de negocio
+│   │   └── server.js # Servidor Express
+│   └── .env
+│
+├── frontend/         # React App
+│   ├── src/
+│   │   ├── components/  # Componentes React
+│   │   ├── pages/       # Páginas principales
+│   │   ├── context/     # State management
+│   │   └── services/    # API clients
+│   └── .env
+│
+├── PROJECT_MASTER.md    # 📚 Documentación completa
+└── README.md           # Este archivo
+```
+
+---
+
+## 🔐 Variables de Entorno
+
+### Backend (.env)
+```env
+DATABASE_URL="postgresql://..."
+PORT=3001
+JWT_SECRET=your-secret-key
+STRIPE_SECRET_KEY=sk_...
+CULQI_SECRET_KEY=sk_...
+# Ver PROJECT_MASTER.md para lista completa
+```
+
+### Frontend (.env)
+```env
+REACT_APP_API_URL=http://localhost:3001/api
+REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_...
+REACT_APP_META_PIXEL_ID=123456789
+REACT_APP_TIKTOK_PIXEL_ID=ABC123
+# Ver PROJECT_MASTER.md para lista completa
+```
+
+---
+
+## 🚀 Despliegue
+
+El proyecto usa **CI/CD automático**:
+
+1. **Push to GitHub** → Auto-deploy en Vercel + Railway
+2. **Frontend:** https://tu-dominio.vercel.app
+3. **Backend:** https://tu-backend.railway.app
+
+Ver [`PROJECT_MASTER.md`](./PROJECT_MASTER.md) para guía detallada de despliegue.
+
+---
+
+## 🎯 Roadmap
+
+- [x] E-commerce core completo
+- [x] 7 métodos de pago integrados
+- [x] Panel de administración
+- [x] CJ Dropshipping automatizado
+- [x] Email marketing
+- [x] SEO optimizado
+- [x] Multi-idioma (ES/EN)
+- [x] PWA
+- [ ] Chat en vivo
+- [ ] Sistema de wishlist
+- [ ] Notificaciones push
+
+---
+
+## 📞 Soporte
+
+**Desarrollador:** Jerson
+**GitHub:** https://github.com/JersonCh1/Drop
+**Email:** jchurapfulasalle.edu.pe
+
+---
+
+## 📄 Licencia
+
+MIT License - Ver LICENSE para más detalles.
+
+---
+
+**⭐ Si te gusta el proyecto, dale una estrella en GitHub!**
