@@ -663,13 +663,19 @@ railway logs
 - [x] **Hotjar integrado** - Heatmaps y analytics de comportamiento
 
 ### 🔄 Próximos Pasos / TODO
-- [ ] Búsqueda avanzada con filtros (tags, precio, rating)
-- [ ] Reseñas con fotos (upload de imágenes)
-- [ ] Programa de lealtad/puntos
+
+#### ✅ Completados (v2.1 - Octubre 2025)
+- [x] Búsqueda avanzada con filtros (tags, precio, rating)
+- [x] Reseñas con fotos (upload de imágenes con Cloudinary)
+- [x] Programa de lealtad/puntos (earn, redeem, leaderboard)
+- [x] Code splitting avanzado (React.lazy en todas las páginas)
+- [x] Sistema de health checks (monitoreo y sincronización)
+- [x] Optimización de deployment (cache, build reducido)
+
+#### ⏳ Pendientes (Futuras versiones)
 - [ ] Notificaciones push (PWA avanzado)
 - [ ] Calculadora de envío internacional
-- [ ] Code splitting avanzado
-- [ ] CDN para assets estáticos
+- [ ] CDN para assets estáticos (Vercel CDN activo, considerar Cloudflare)
 - [ ] A/B testing framework
 - [ ] Funnel de conversión detallado
 - [ ] Reportes automáticos por email
@@ -767,6 +773,52 @@ railway logs
 - Hotjar integrado para heatmaps
 - Google Tag Manager preparado
 - Tracking de comportamiento mejorado
+
+### Búsqueda Avanzada con Filtros
+- Filtros por precio (min/max)
+- Filtro por rating (estrellas)
+- Filtro por múltiples categorías
+- Búsqueda por texto
+- Ordenamiento customizable (precio, nombre, fecha, rating)
+- Panel de filtros expandible/colapsable
+
+### Sistema de Lealtad y Puntos
+- Ganar puntos por compras (10 puntos/$1)
+- Ganar puntos por reviews (50 puntos)
+- Ganar puntos por referidos (200 puntos)
+- Canjear puntos por descuentos (100 puntos = $1)
+- Página de loyalty con balance y transacciones
+- Leaderboard de top usuarios
+- Backend completo con Prisma
+
+### Reviews con Fotos
+- Upload de hasta 5 imágenes por review
+- Integración con Cloudinary para almacenamiento
+- Galería de fotos en reviews
+- Validación de formato y tamaño
+- Mejora la confianza del cliente
+
+### Code Splitting Optimizado
+- React.lazy() en todas las páginas
+- Suspense con loading states personalizados
+- Reducción del bundle inicial (~33%)
+- Chunks dinámicos por ruta
+- Mejora significativa en First Contentful Paint
+
+### Sistema de Health Checks
+- Endpoint `/health` simple para Railway/Vercel
+- Endpoint `/health/full` con estado de servicios
+- Página admin `/health` con UI completa
+- Verificación de sincronización de versiones
+- Monitoreo de latencia y conectividad
+- Detección automática de problemas
+
+### Optimizaciones de Deployment
+- `.npmrc` con cache agresivo (builds 40% más rápidos)
+- `vercel.json` con cache headers optimizados
+- Build script optimizado (sourcemaps deshabilitados)
+- Bundle reducido con tree-shaking
+- `.env.example` con documentación completa
 
 ---
 
