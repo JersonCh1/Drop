@@ -123,7 +123,7 @@ const AppContent: React.FC<{
               v7_relativeSplatPath: true
             }}
           >
-          <div className="min-h-screen bg-gray-50 flex flex-col">
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-200">
             <Toaster
               position="bottom-right"
               toastOptions={{
@@ -143,7 +143,7 @@ const AppContent: React.FC<{
             {/* Main Content */}
             <main className="flex-1">
               <React.Suspense fallback={
-                <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
                     <p className="text-gray-600 font-medium">Cargando...</p>
@@ -283,7 +283,7 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Cargando tienda...</p>

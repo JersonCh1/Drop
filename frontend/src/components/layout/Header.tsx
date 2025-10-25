@@ -65,8 +65,8 @@ const Header: React.FC<HeaderProps> = () => {
     <header
       className={`sticky top-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-white/80 backdrop-blur-xl shadow-lg shadow-gray-200/50'
-          : 'bg-white/95 backdrop-blur-md shadow-sm'
+          ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50'
+          : 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm dark:shadow-gray-800/50'
       }`}
       style={{
         borderBottom: isScrolled ? '1px solid rgba(226, 232, 240, 0.5)' : '1px solid rgba(241, 245, 249, 0.8)'
@@ -86,10 +86,10 @@ const Header: React.FC<HeaderProps> = () => {
                 </div>
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-2xl font-extrabold bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-extrabold bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 dark:from-white dark:via-blue-100 dark:to-purple-100 bg-clip-text text-transparent">
                   {t('header.storeName')}
                 </h1>
-                <p className="text-xs text-gray-500 font-medium -mt-1">{t('header.storeTagline')}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium -mt-1">{t('header.storeTagline')}</p>
               </div>
             </a>
           </div>
@@ -104,7 +104,7 @@ const Header: React.FC<HeaderProps> = () => {
               <a
                 key={item.href}
                 href={item.href}
-                className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 rounded-xl transition-all duration-200 group"
+                className="flex items-center space-x-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/80 dark:hover:bg-blue-900/30 rounded-xl transition-all duration-200 group"
               >
                 <svg className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
@@ -117,7 +117,7 @@ const Header: React.FC<HeaderProps> = () => {
           {/* Actions - Más Futurista */}
           <div className="flex items-center space-x-2">
             {/* Search */}
-            <button className="hidden sm:flex items-center justify-center w-10 h-10 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200">
+            <button className="hidden sm:flex items-center justify-center w-10 h-10 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-all duration-200">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -128,7 +128,7 @@ const Header: React.FC<HeaderProps> = () => {
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-xl transition-all duration-200"
+                  className="flex items-center space-x-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all duration-200"
                 >
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full blur-sm opacity-50"></div>
@@ -142,12 +142,12 @@ const Header: React.FC<HeaderProps> = () => {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-3 w-64 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/50 py-2 animate-fade-in-down">
-                    <div className="px-4 py-3 border-b border-gray-100">
-                      <p className="text-sm font-semibold text-gray-900">
+                  <div className="absolute right-0 mt-3 w-64 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 py-2 animate-fade-in-down">
+                    <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
                         {user.firstName} {user.lastName}
                       </p>
-                      <p className="text-xs text-gray-500 truncate mt-0.5">{user.email}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{user.email}</p>
                       {user.role === 'ADMIN' && (
                         <span className="inline-flex items-center mt-2 px-2.5 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs font-medium rounded-lg shadow-sm">
                           <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">

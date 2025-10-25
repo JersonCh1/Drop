@@ -1,10 +1,7 @@
 // Service Worker for PWA
-const CACHE_NAME = 'iphone-cases-v1';
+const CACHE_NAME = 'iphone-cases-v2';
 const urlsToCache = [
   '/',
-  '/index.html',
-  '/static/css/main.css',
-  '/static/js/main.js',
   '/manifest.json',
   '/favicon.ico',
   '/favicon.svg'
@@ -16,7 +13,16 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('📦 Service Worker: Caching files');
-        return cache.addAll(urlsToCache);
+        // Use addAll but handle errors gracefully
+        return cache.addAll(urlsToCache).catch((error) => {
+          console.warn('⚠️ Some files failed to cache:', error);
+          // Cache files individually to avoid failing entire batch
+          return Promise.all(
+            urlsToCache.map(url =>
+              cache.add(url).catch(err => console.warn(`Failed to cache ${url}:`, err))
+            )
+          );
+        });
       })
       .then(() => self.skipWaiting())
   );
