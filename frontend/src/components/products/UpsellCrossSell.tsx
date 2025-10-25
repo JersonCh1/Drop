@@ -36,7 +36,7 @@ const UpsellCrossSell: React.FC = () => {
       name: 'Protector de Pantalla Premium',
       price: 12.99,
       originalPrice: 19.99,
-      image: 'https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=400',
+      image: 'https://placehold.co/400x400/2c3e50/fff?text=Rugged+Case',
       rating: 4.9,
       reviews: 892,
       inStock: true
@@ -46,7 +46,7 @@ const UpsellCrossSell: React.FC = () => {
       name: 'Cable USB-C Reforzado',
       price: 15.99,
       originalPrice: 24.99,
-      image: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400',
+      image: 'https://placehold.co/400x400/e74c3c/fff?text=Premium+Case',
       rating: 4.7,
       reviews: 456,
       inStock: true
@@ -56,7 +56,7 @@ const UpsellCrossSell: React.FC = () => {
       name: 'Soporte Magnético para Auto',
       price: 18.99,
       originalPrice: 29.99,
-      image: 'https://images.unsplash.com/photo-1519558260268-cde7e03a0152?w=400',
+      image: 'https://placehold.co/400x400/3498db/fff?text=Slim+Case',
       rating: 4.8,
       reviews: 234,
       inStock: true
@@ -66,7 +66,7 @@ const UpsellCrossSell: React.FC = () => {
       name: 'Auriculares Bluetooth',
       price: 34.99,
       originalPrice: 59.99,
-      image: 'https://images.unsplash.com/photo-1590658165737-15a047b7a9de?w=400',
+      image: 'https://placehold.co/400x400/2ecc71/fff?text=Wireless+Charger',
       rating: 4.6,
       reviews: 678,
       inStock: false

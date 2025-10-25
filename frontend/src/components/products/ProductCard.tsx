@@ -163,7 +163,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </svg>
             Modelo de iPhone
           </h3>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {models.map((model) => (
               <button
                 key={model}
@@ -195,7 +195,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </svg>
             Color
           </h3>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {colors.map((color) => (
               <button
                 key={color}

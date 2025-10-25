@@ -1,13 +1,10 @@
 // Service Worker for PWA
-const CACHE_NAME = 'iphone-cases-v1';
+const CACHE_NAME = 'iphone-cases-v3';
 const urlsToCache = [
   '/',
-  '/index.html',
-  '/static/css/main.css',
-  '/static/js/main.js',
   '/manifest.json',
-  '/logo192.png',
-  '/logo512.png'
+  '/favicon.ico',
+  '/favicon.svg'
 ];
 
 // Install event - cache resources
@@ -16,7 +13,16 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('📦 Service Worker: Caching files');
-        return cache.addAll(urlsToCache);
+        // Use addAll but handle errors gracefully
+        return cache.addAll(urlsToCache).catch((error) => {
+          console.warn('⚠️ Some files failed to cache:', error);
+          // Cache files individually to avoid failing entire batch
+          return Promise.all(
+            urlsToCache.map(url =>
+              cache.add(url).catch(err => console.warn(`Failed to cache ${url}:`, err))
+            )
+          );
+        });
       })
       .then(() => self.skipWaiting())
   );
@@ -40,12 +46,22 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
+  // Only handle GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
         // Return cached version or fetch from network
         return response || fetch(event.request).then((fetchResponse) => {
-          // Cache new resources
+          // Only cache successful responses
+          if (!fetchResponse || fetchResponse.status !== 200 || fetchResponse.type === 'error') {
+            return fetchResponse;
+          }
+
+          // Cache new resources (only for GET requests)
           return caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, fetchResponse.clone());
             return fetchResponse;
@@ -66,8 +82,8 @@ self.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : {};
   const options = {
     body: data.body || 'Nueva notificación',
-    icon: '/logo192.png',
-    badge: '/logo192.png',
+    icon: '/favicon.ico',
+    badge: '/favicon.ico',
     vibrate: [200, 100, 200],
     data: {
       url: data.url || '/'

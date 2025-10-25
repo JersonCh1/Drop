@@ -1033,7 +1033,11 @@ async function startServer() {
     } else {
       console.log('⚠️  Stripe no configurado - STRIPE_SECRET_KEY no encontrada');
     }
-    
+
+    // Auto-fix imágenes rotas (ejecutar en background)
+    const { autoFixImages } = require('./utils/auto-fix-images');
+    autoFixImages().catch(err => console.log('⚠️  Auto-fix imágenes falló:', err.message));
+
     // Iniciar servidor
     app.listen(PORT, '0.0.0.0', () => {
       console.log('\n🎉 ¡Servidor iniciado correctamente!\n');
