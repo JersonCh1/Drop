@@ -52,6 +52,7 @@ const CookiesPage = React.lazy(() => import('./pages/CookiesPage'));
 const WishlistPage = React.lazy(() => import('./pages/WishlistPage'));
 const ComparePage = React.lazy(() => import('./pages/ComparePage'));
 const LoyaltyPage = React.lazy(() => import('./pages/LoyaltyPage'));
+const HealthCheckPage = React.lazy(() => import('./pages/HealthCheckPage'));
 
 // Types
 export interface CartItem {
@@ -183,6 +184,7 @@ const AppContent: React.FC<{
 
                   {/* Ruta de administración (protegida) */}
                   <Route path="/admin" element={<AdminPage />} />
+                  <Route path="/health" element={<HealthCheckPage />} />
 
                   {/* Páginas informativas */}
                   <Route path="/faq" element={<FAQPage />} />

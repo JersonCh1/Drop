@@ -118,25 +118,40 @@ function verifyAdminToken(req, res, next) {
 
 // Health check SIMPLE para Railway (muy rápido)
 app.get('/health', (req, res) => {
+  const packageJson = require('../package.json');
   res.status(200).json({
     status: 'OK',
+    service: 'dropshipping-backend',
+    version: packageJson.version,
+    apiVersion: '2.0.0',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
 // Health check COMPLETO (con verificación de servicios)
 app.get('/health/full', async (req, res) => {
+  const packageJson = require('../package.json');
   const healthCheck = {
     status: 'OK',
+    service: 'dropshipping-backend',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    version: '2.0.0',
+    version: packageJson.version,
+    apiVersion: '2.0.0',
     environment: process.env.NODE_ENV || 'development',
     services: {
       database: 'checking...',
       email: emailService.getServiceInfo().isConfigured,
-      stripe: !!process.env.STRIPE_SECRET_KEY
+      stripe: !!process.env.STRIPE_SECRET_KEY,
+      cloudinary: !!process.env.CLOUDINARY_CLOUD_NAME
+    },
+    endpoints: {
+      health: '/health',
+      healthFull: '/health/full',
+      api: '/api/*',
+      admin: '/api/admin/login'
     }
   };
 
@@ -152,6 +167,7 @@ app.get('/health/full', async (req, res) => {
     }
   } catch (error) {
     healthCheck.services.database = 'error';
+    healthCheck.databaseError = error.message;
   }
 
   const statusCode = Object.values(healthCheck.services).every(status =>

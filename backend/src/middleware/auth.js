@@ -65,5 +65,6 @@ function verifyAdmin(req, res, next) {
 
 module.exports = {
   verifyToken,
-  verifyAdmin
+  verifyAdmin,
+  verifyAdminToken: verifyAdmin // Alias para compatibilidad
 };
