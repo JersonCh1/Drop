@@ -5,11 +5,11 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 /**
- * POST /api/maintenance/fix-images
+ * GET /api/maintenance/fix-images
  * Actualizar imágenes rotas de Unsplash a placeholders
  * Solo para uso administrativo
  */
-router.post('/fix-images', async (req, res) => {
+router.get('/fix-images', async (req, res) => {
   try {
     console.log('🔧 Iniciando actualización de imágenes...');
 
