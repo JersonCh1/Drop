@@ -1,5 +1,5 @@
 // Service Worker for PWA
-const CACHE_NAME = 'iphone-cases-v2';
+const CACHE_NAME = 'iphone-cases-v3';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -46,12 +46,22 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
+  // Only handle GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
         // Return cached version or fetch from network
         return response || fetch(event.request).then((fetchResponse) => {
-          // Cache new resources
+          // Only cache successful responses
+          if (!fetchResponse || fetchResponse.status !== 200 || fetchResponse.type === 'error') {
+            return fetchResponse;
+          }
+
+          // Cache new resources (only for GET requests)
           return caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, fetchResponse.clone());
             return fetchResponse;
