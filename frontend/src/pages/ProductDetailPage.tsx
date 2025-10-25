@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import productService, { Product, ProductVariant } from '../services/productService';
 import { useCart } from '../context/CartContext';
+import { useCurrency } from '../context/CurrencyContext';
 import toast from 'react-hot-toast';
 import { trackingPixels } from '../utils/trackingPixels';
 import ProductReviews from '../components/products/ProductReviews';
@@ -14,6 +15,7 @@ const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
+  const { formatPrice } = useCurrency();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -210,11 +212,11 @@ const ProductDetailPage: React.FC = () => {
 
                 <div className="flex items-baseline space-x-3 mb-4">
                   <span className="text-4xl font-bold text-blue-600">
-                    ${currentPrice.toFixed(2)}
+                    {formatPrice(currentPrice)}
                   </span>
                   {selectedVariant?.comparePrice && parseFloat(selectedVariant.comparePrice) > currentPrice && (
                     <span className="text-2xl text-gray-400 line-through">
-                      ${parseFloat(selectedVariant.comparePrice).toFixed(2)}
+                      {formatPrice(parseFloat(selectedVariant.comparePrice))}
                     </span>
                   )}
                 </div>
@@ -295,7 +297,7 @@ const ProductDetailPage: React.FC = () => {
                         } ${variant.stockQuantity === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <div className="font-medium text-gray-900">{variant.color}</div>
-                        <div className="text-sm text-gray-600">${parseFloat(variant.price).toFixed(2)}</div>
+                        <div className="text-sm text-gray-600">{formatPrice(parseFloat(variant.price))}</div>
                         {variant.stockQuantity === 0 && (
                           <div className="text-xs text-red-600 mt-1">Agotado</div>
                         )}

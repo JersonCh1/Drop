@@ -6,8 +6,8 @@ const urlsToCache = [
   '/static/css/main.css',
   '/static/js/main.js',
   '/manifest.json',
-  '/logo192.png',
-  '/logo512.png'
+  '/favicon.ico',
+  '/favicon.svg'
 ];
 
 // Install event - cache resources
@@ -66,8 +66,8 @@ self.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : {};
   const options = {
     body: data.body || 'Nueva notificación',
-    icon: '/logo192.png',
-    badge: '/logo192.png',
+    icon: '/favicon.ico',
+    badge: '/favicon.ico',
     vibrate: [200, 100, 200],
     data: {
       url: data.url || '/'

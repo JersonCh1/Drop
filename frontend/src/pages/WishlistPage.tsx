@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import wishlistService, { WishlistItem } from '../services/wishlistService';
+import { useCurrency } from '../context/CurrencyContext';
 import SEOHead from '../components/SEO/SEOHead';
 import toast from 'react-hot-toast';
 
 const WishlistPage: React.FC = () => {
+  const { formatPrice } = useCurrency();
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -143,7 +145,7 @@ const WishlistPage: React.FC = () => {
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Desde</p>
                         <p className="text-2xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                          ${item.lowestPrice.toFixed(2)}
+                          {formatPrice(item.lowestPrice)}
                         </p>
                       </div>
                       {item.isFeatured && (

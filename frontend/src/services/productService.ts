@@ -270,6 +270,22 @@ class ProductService {
 
     return [...new Set(colors)];
   }
+
+  /**
+   * Obtener categorías
+   */
+  async getCategories(): Promise<Array<{ id: string; name: string }>> {
+    try {
+      const response = await axios.get(`${API_URL}/categories`);
+      if (response.data.success) {
+        return response.data.data.map((cat: any) => ({ id: cat.id, name: cat.name }));
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      return [];
+    }
+  }
 }
 
 const productService = new ProductService();

@@ -38,11 +38,8 @@ const ProductsPage: React.FC = () => {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/categories`);
-        const data = await response.json();
-        if (data.success) {
-          setCategories(data.data.map((cat: any) => ({ id: cat.id, name: cat.name })));
-        }
+        const cats = await productService.getCategories();
+        setCategories(cats);
       } catch (error) {
         console.error('Error loading categories:', error);
       }

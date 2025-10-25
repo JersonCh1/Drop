@@ -1,11 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCompare } from '../context/CompareContext';
+import { useCurrency } from '../context/CurrencyContext';
 import SEOHead from '../components/SEO/SEOHead';
 import productService from '../services/productService';
 
 const ComparePage: React.FC = () => {
   const { compareProducts, removeFromCompare, clearCompare } = useCompare();
+  const { formatPrice } = useCurrency();
 
   if (compareProducts.length === 0) {
     return (
@@ -151,7 +153,7 @@ const ComparePage: React.FC = () => {
                           )}
                           {feature.key === 'basePrice' && (
                             <span className="text-2xl font-bold text-green-600">
-                              ${product.basePrice.toFixed(2)}
+                              {formatPrice(product.basePrice)}
                             </span>
                           )}
                           {feature.key === 'brand' && (product.brand || 'N/A')}

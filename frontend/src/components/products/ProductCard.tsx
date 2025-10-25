@@ -1,6 +1,7 @@
 // frontend/src/components/products/ProductCard.tsx
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
+import { useCurrency } from '../../context/CurrencyContext';
 import { CartItem } from '../../context/CartContext';
 import toast from 'react-hot-toast';
 import { trackingPixels } from '../../utils/trackingPixels';
@@ -27,6 +28,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   createCartItem
 }) => {
   const { addItem, isItemInCart } = useCart();
+  const { formatPrice } = useCurrency();
   const [isAdding, setIsAdding] = useState(false);
 
   // Track ViewContent cuando cambia el producto
@@ -83,9 +85,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
-  const formatPrice = (price: number): string => {
-    return price.toFixed(2);
-  };
+  // formatPrice is now from useCurrency hook
 
   const getColorClasses = (color: string): string => {
     const colorMap: { [key: string]: string } = {
@@ -136,10 +136,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
               <p className="text-sm font-medium text-gray-600 mb-1">Precio especial</p>
               <div className="flex items-baseline space-x-3">
                 <span className="text-4xl font-black bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  ${formatPrice(price)}
+                  {formatPrice(price)}
                 </span>
                 <span className="text-xl text-gray-400 line-through font-medium">
-                  ${formatPrice(price * 1.4)}
+                  {formatPrice(price * 1.4)}
                 </span>
               </div>
             </div>
@@ -304,7 +304,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
                 <span>Agregar al Carrito</span>
-                <span className="bg-white/20 px-2 py-1 rounded-lg text-sm">${formatPrice(price)}</span>
+                <span className="bg-white/20 px-2 py-1 rounded-lg text-sm">{formatPrice(price)}</span>
               </div>
             )}
           </button>
