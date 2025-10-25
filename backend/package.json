@@ -16,6 +16,7 @@
     "db:generate": "prisma generate",
     "db:seed": "node src/utils/seed.js",
     "db:reset": "prisma migrate reset",
+    "fix:images": "node scripts/fix-images.js",
     "stripe:listen": "stripe listen --forward-to localhost:3001/api/webhooks/stripe"
   },
   "dependencies": {
