@@ -95,8 +95,8 @@ const Header: React.FC<HeaderProps> = () => {
             </a>
           </div>
 
-          {/* Navigation - Más Moderno */}
-          <nav className="hidden md:flex items-center space-x-1">
+          {/* Navigation - Desktop only */}
+          <nav className="hidden lg:flex items-center space-x-1">
             {[
               { href: '/', labelKey: 'nav.home', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
               { href: '/products', labelKey: 'nav.products', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' },
@@ -224,14 +224,20 @@ const Header: React.FC<HeaderProps> = () => {
               </button>
             )}
 
-            {/* Theme Toggle */}
-            <ThemeToggle />
+            {/* Theme Toggle - Hidden on mobile/tablet */}
+            <div className="hidden lg:block">
+              <ThemeToggle />
+            </div>
 
-            {/* Currency Selector */}
-            <CurrencySelector />
+            {/* Currency Selector - Hidden on mobile/tablet */}
+            <div className="hidden lg:block">
+              <CurrencySelector />
+            </div>
 
-            {/* Language Switcher */}
-            <LanguageSwitcher />
+            {/* Language Switcher - Hidden on mobile/tablet */}
+            <div className="hidden lg:block">
+              <LanguageSwitcher />
+            </div>
 
             {/* Cart Button - Premium */}
             <button
@@ -248,10 +254,10 @@ const Header: React.FC<HeaderProps> = () => {
               )}
             </button>
 
-            {/* Mobile menu button */}
+            {/* Mobile menu button - Visible on tablets and mobile */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden flex items-center justify-center w-10 h-10 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-all duration-200"
+              className="lg:hidden flex items-center justify-center w-11 h-11 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-all duration-200 border-2 border-gray-200 dark:border-gray-700"
             >
               {isMobileMenuOpen ? (
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -269,8 +275,30 @@ const Header: React.FC<HeaderProps> = () => {
 
       {/* Mobile Navigation Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 animate-slide-down">
+        <div className="lg:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 animate-slide-down shadow-lg">
           <div className="max-w-7xl mx-auto px-4 py-4 space-y-2">
+            {/* Settings Section - Theme, Currency, Language */}
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-4">
+              <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-3">Configuración</h4>
+              <div className="space-y-3">
+                {/* Theme Toggle */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Tema</span>
+                  <ThemeToggle />
+                </div>
+                {/* Currency Selector */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Moneda</span>
+                  <CurrencySelector />
+                </div>
+                {/* Language Switcher */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Idioma</span>
+                  <LanguageSwitcher />
+                </div>
+              </div>
+            </div>
+
             {/* Mobile Navigation Links */}
             {[
               { href: '/', labelKey: 'nav.home', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
