@@ -949,6 +949,10 @@ app.use('/api/email', emailRoutes);
 const sitemapRoutes = require('./routes/sitemap');
 app.use('/api', sitemapRoutes);
 
+// =================== RUTAS DE MANTENIMIENTO ===================
+const maintenanceRoutes = require('./routes/maintenance');
+app.use('/api/maintenance', maintenanceRoutes);
+
 // =================== ERROR HANDLING ===================
 
 // Error handler
