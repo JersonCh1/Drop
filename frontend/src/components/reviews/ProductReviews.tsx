@@ -8,6 +8,7 @@ interface Review {
   customerName: string;
   isVerified: boolean;
   createdAt: string;
+  images?: string;
 }
 
 interface ReviewStats {
@@ -40,6 +41,8 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
     customerName: '',
     customerEmail: ''
   });
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
 
@@ -64,6 +67,29 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newImages = Array.from(files).slice(0, 5 - images.length);
+    setImages([...images, ...newImages]);
+
+    // Create preview URLs
+    const newPreviewUrls = newImages.map(file => URL.createObjectURL(file));
+    setImagePreviewUrls([...imagePreviewUrls, ...newPreviewUrls]);
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = images.filter((_, i) => i !== index);
+    const newPreviewUrls = imagePreviewUrls.filter((_, i) => i !== index);
+
+    // Revoke URL to prevent memory leaks
+    URL.revokeObjectURL(imagePreviewUrls[index]);
+
+    setImages(newImages);
+    setImagePreviewUrls(newPreviewUrls);
+  };
+
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -82,15 +108,24 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
 
     try {
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
+      // Create FormData for images upload
+      const formDataToSend = new FormData();
+      formDataToSend.append('productId', productId);
+      formDataToSend.append('rating', formData.rating.toString());
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('comment', formData.comment);
+      formDataToSend.append('customerName', formData.customerName);
+      formDataToSend.append('customerEmail', formData.customerEmail);
+
+      // Append images
+      images.forEach((image, index) => {
+        formDataToSend.append(`images`, image);
+      });
+
       const response = await fetch(`${API_URL}/reviews`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productId,
-          ...formData
-        })
+        body: formDataToSend
       });
 
       const result = await response.json();
@@ -104,12 +139,15 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
           customerName: '',
           customerEmail: ''
         });
+        setImages([]);
+        setImagePreviewUrls([]);
         setShowForm(false);
 
         // Reload reviews after a delay
         setTimeout(() => {
           setSubmitMessage('');
-        }, 5000);
+          loadReviews();
+        }, 2000);
       } else {
         setSubmitMessage(result.message || 'Error al enviar la reseña');
       }
@@ -334,6 +372,60 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
                   />
                 </div>
 
+                {/* Images Upload */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-900 mb-2">
+                    Fotos (Opcional - Máximo 5)
+                  </label>
+                  <div className="space-y-3">
+                    {imagePreviewUrls.length < 5 && (
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                          <p className="mb-2 text-sm text-gray-600 font-medium">
+                            <span>Click para subir</span> o arrastra y suelta
+                          </p>
+                          <p className="text-xs text-gray-500">PNG, JPG o JPEG (MAX. 5MB cada una)</p>
+                        </div>
+                        <input
+                          id="dropzone-file"
+                          type="file"
+                          className="hidden"
+                          accept="image/png,image/jpeg,image/jpg"
+                          multiple
+                          onChange={handleImageChange}
+                        />
+                      </label>
+                    )}
+
+                    {/* Image Previews */}
+                    {imagePreviewUrls.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {imagePreviewUrls.map((url, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={url}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Submit Message */}
                 {submitMessage && (
                   <div className={`p-4 rounded-lg ${submitMessage.includes('Gracias') ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
@@ -411,10 +503,41 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
                 )}
 
                 {review.comment && (
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="text-gray-700 leading-relaxed mb-4">
                     {review.comment}
                   </p>
                 )}
+
+                {/* Review Images */}
+                {review.images && (() => {
+                  try {
+                    const imageUrls = JSON.parse(review.images);
+                    if (Array.isArray(imageUrls) && imageUrls.length > 0) {
+                      return (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
+                          {imageUrls.map((url: string, index: number) => (
+                            <a
+                              key={index}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block group"
+                            >
+                              <img
+                                src={url}
+                                alt={`Review image ${index + 1}`}
+                                className="w-full h-24 object-cover rounded-lg border border-gray-200 group-hover:border-blue-500 transition-all group-hover:scale-105 cursor-pointer"
+                              />
+                            </a>
+                          ))}
+                        </div>
+                      );
+                    }
+                  } catch (e) {
+                    return null;
+                  }
+                  return null;
+                })()}
               </div>
             ))
           )}

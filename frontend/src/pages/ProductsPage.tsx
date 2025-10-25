@@ -4,6 +4,10 @@ import { Link, useSearchParams } from 'react-router-dom';
 import productService, { Product } from '../services/productService';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
+import WishlistButton from '../components/wishlist/WishlistButton';
+import CompareButton from '../components/compare/CompareButton';
+import LazyImage from '../components/common/LazyImage';
+import AdvancedFilters from '../components/products/AdvancedFilters';
 
 const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -11,6 +15,7 @@ const ProductsPage: React.FC = () => {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 12,
@@ -21,10 +26,29 @@ const ProductsPage: React.FC = () => {
   // Filtros
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
-    model: searchParams.get('model') || '',
+    priceMin: Number(searchParams.get('priceMin')) || 0,
+    priceMax: Number(searchParams.get('priceMax')) || 1000,
+    rating: Number(searchParams.get('rating')) || 0,
+    categories: searchParams.get('categories')?.split(',') || [],
     sortBy: searchParams.get('sortBy') || 'createdAt',
     sortOrder: searchParams.get('sortOrder') || 'DESC'
   });
+
+  // Load categories
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/categories`);
+        const data = await response.json();
+        if (data.success) {
+          setCategories(data.data.map((cat: any) => ({ id: cat.id, name: cat.name })));
+        }
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      }
+    };
+    loadCategories();
+  }, []);
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -35,10 +59,13 @@ const ProductsPage: React.FC = () => {
         page,
         limit: pagination.limit,
         search: filters.search || undefined,
-        model: filters.model || undefined,
+        categories: filters.categories.length > 0 ? filters.categories : undefined,
+        priceMin: filters.priceMin > 0 ? filters.priceMin : undefined,
+        priceMax: filters.priceMax < 1000 ? filters.priceMax : undefined,
+        rating: filters.rating > 0 ? filters.rating : undefined,
         sortBy: filters.sortBy as any,
         sortOrder: filters.sortOrder as any
-      });
+      } as any);
 
       setProducts(response.data);
       setPagination({
@@ -53,7 +80,7 @@ const ProductsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchParams, pagination.limit, filters.search, filters.model, filters.sortBy, filters.sortOrder]);
+  }, [searchParams, pagination.limit, filters]);
 
   useEffect(() => {
     loadProducts();
@@ -74,14 +101,16 @@ const ProductsPage: React.FC = () => {
     };
   }, [loadProducts]);
 
-  const handleFilterChange = (key: string, value: string) => {
-    const newFilters = { ...filters, [key]: value };
+  const handleFilterChange = (newFilters: typeof filters) => {
     setFilters(newFilters);
 
     const params = new URLSearchParams();
     params.set('page', '1');
     if (newFilters.search) params.set('search', newFilters.search);
-    if (newFilters.model) params.set('model', newFilters.model);
+    if (newFilters.priceMin > 0) params.set('priceMin', newFilters.priceMin.toString());
+    if (newFilters.priceMax < 1000) params.set('priceMax', newFilters.priceMax.toString());
+    if (newFilters.rating > 0) params.set('rating', newFilters.rating.toString());
+    if (newFilters.categories.length > 0) params.set('categories', newFilters.categories.join(','));
     if (newFilters.sortBy) params.set('sortBy', newFilters.sortBy);
     if (newFilters.sortOrder) params.set('sortOrder', newFilters.sortOrder);
 
@@ -113,8 +142,6 @@ const ProductsPage: React.FC = () => {
     });
   };
 
-  const iphoneModels = ['iPhone 15', 'iPhone 14', 'iPhone 13', 'iPhone 12', 'iPhone 11'];
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -127,74 +154,12 @@ const ProductsPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-
-            {/* Search */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Buscar
-              </label>
-              <input
-                type="text"
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-                placeholder="Buscar productos..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            {/* Model Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Modelo
-              </label>
-              <select
-                value={filters.model}
-                onChange={(e) => handleFilterChange('model', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Todos los modelos</option>
-                {iphoneModels.map(model => (
-                  <option key={model} value={model}>{model}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Sort By */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ordenar por
-              </label>
-              <select
-                value={filters.sortBy}
-                onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="createdAt">Más recientes</option>
-                <option value="price">Precio</option>
-                <option value="name">Nombre</option>
-              </select>
-            </div>
-
-            {/* Sort Order */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Orden
-              </label>
-              <select
-                value={filters.sortOrder}
-                onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="DESC">Descendente</option>
-                <option value="ASC">Ascendente</option>
-              </select>
-            </div>
-
-          </div>
-        </div>
+        {/* Advanced Filters */}
+        <AdvancedFilters
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          availableCategories={categories}
+        />
 
         {/* Loading */}
         {loading && (
@@ -229,12 +194,16 @@ const ProductsPage: React.FC = () => {
             </p>
             <button
               onClick={() => {
-                setFilters({
+                const resetFilters = {
                   search: '',
-                  model: '',
+                  priceMin: 0,
+                  priceMax: 1000,
+                  rating: 0,
+                  categories: [],
                   sortBy: 'createdAt',
                   sortOrder: 'DESC'
-                });
+                };
+                setFilters(resetFilters);
                 setSearchParams(new URLSearchParams());
               }}
               className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
@@ -309,17 +278,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   const isAvailable = productService.isAvailable(product);
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 group">
       <Link to={`/products/${product.slug}`}>
         <div className="relative aspect-square bg-gray-100">
-          <img
+          <LazyImage
             src={mainImage}
             alt={product.name}
             className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = 'https://placehold.co/400x400?text=No+Image';
-            }}
           />
+
+          {/* Action Buttons - Show on hover */}
+          <div className="absolute top-2 left-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <WishlistButton productId={product.id} variant="icon" size="md" />
+            <CompareButton product={product} variant="icon" size="md" />
+          </div>
+
           {product.isFeatured && (
             <div className="absolute top-2 right-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-md text-xs font-semibold">
               ⭐ Destacado

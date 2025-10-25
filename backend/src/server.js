@@ -901,6 +901,14 @@ app.use('/api/coupons', couponsRoutes);
 const reviewsRoutes = require('./routes/reviews');
 app.use('/api/reviews', reviewsRoutes);
 
+// =================== RUTAS DE WISHLIST ===================
+const wishlistRoutes = require('./routes/wishlist');
+app.use('/api/wishlist', wishlistRoutes);
+
+// =================== RUTAS DE LOYALTY ===================
+const loyaltyRoutes = require('./routes/loyalty');
+app.use('/api/loyalty', loyaltyRoutes);
+
 // =================== RUTAS DE WHATSAPP ===================
 const whatsappRoutes = require('./routes/whatsapp');
 app.use('/api/whatsapp', whatsappRoutes);

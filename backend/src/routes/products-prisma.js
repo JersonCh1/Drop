@@ -51,8 +51,12 @@ router.get('/', async (req, res) => {
       page = 1,
       limit = 20,
       category,
+      categories, // Array de categorías
       search,
       featured,
+      priceMin,
+      priceMax,
+      rating,
       sortBy = 'createdAt',
       sortOrder = 'desc'
     } = req.query;
@@ -70,13 +74,21 @@ router.get('/', async (req, res) => {
           slug: category
         }
       }),
+      ...(categories && {
+        categoryId: {
+          in: Array.isArray(categories) ? categories : [categories]
+        }
+      }),
       ...(search && {
         OR: [
           { name: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } }
+          { description: { contains: search, mode: 'insensitive' } },
+          { brand: { contains: search, mode: 'insensitive' } }
         ]
       }),
-      ...(featured === 'true' && { isFeatured: true })
+      ...(featured === 'true' && { isFeatured: true }),
+      ...(priceMin && { basePrice: { gte: parseFloat(priceMin) } }),
+      ...(priceMax && { basePrice: { lte: parseFloat(priceMax) } })
     };
 
     // Obtener productos

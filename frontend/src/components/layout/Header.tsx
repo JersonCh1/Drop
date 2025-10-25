@@ -5,6 +5,8 @@ import { useCart } from '../../context/CartContext';
 import { useI18n } from '../../context/I18nContext';
 import authService from '../../services/authService';
 import LanguageSwitcher from '../LanguageSwitcher';
+import ThemeToggle from './ThemeToggle';
+import CurrencySelector from './CurrencySelector';
 
 interface HeaderProps {}
 
@@ -220,6 +222,12 @@ const Header: React.FC<HeaderProps> = () => {
                 <span>{t('header.login')}</span>
               </button>
             )}
+
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
+            {/* Currency Selector */}
+            <CurrencySelector />
 
             {/* Language Switcher */}
             <LanguageSwitcher />

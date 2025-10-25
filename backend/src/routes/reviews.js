@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const jwt = require('jsonwebtoken');
+const cloudinaryService = require('../services/cloudinaryService');
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'dropshipping-super-secret-key-2024';
@@ -67,6 +68,7 @@ router.get('/product/:productId', async (req, res) => {
           comment: true,
           customerName: true,
           isVerified: true,
+          images: true,
           createdAt: true,
           updatedAt: true,
           user: {
@@ -207,6 +209,22 @@ router.post('/', async (req, res) => {
       isVerified = !!purchasedOrder;
     }
 
+    // Upload images to Cloudinary if any
+    let imageUrls = [];
+    if (req.files && req.files.images) {
+      try {
+        const images = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
+        const uploadedImages = await cloudinaryService.uploadMultipleImages(images, {
+          folder: `dropshipping-reviews/${productId}`
+        });
+        imageUrls = uploadedImages.map(img => img.url);
+        console.log(`📸 ${imageUrls.length} imágenes subidas para review`);
+      } catch (uploadError) {
+        console.error('Error uploading review images:', uploadError);
+        // Continue without images if upload fails
+      }
+    }
+
     // Crear review
     const review = await prisma.review.create({
       data: {
@@ -217,12 +235,13 @@ router.post('/', async (req, res) => {
         comment: comment || null,
         customerName: !userId ? customerName : null,
         customerEmail: !userId ? customerEmail : null,
+        images: imageUrls.length > 0 ? JSON.stringify(imageUrls) : null,
         isVerified,
         isApproved: false // Requiere aprobación del admin
       }
     });
 
-    console.log(`✅ Review creada para producto ${productId} - Rating: ${rating}⭐`);
+    console.log(`✅ Review creada para producto ${productId} - Rating: ${rating}⭐${imageUrls.length > 0 ? ` (con ${imageUrls.length} fotos)` : ''}`);
 
     res.status(201).json({
       success: true,

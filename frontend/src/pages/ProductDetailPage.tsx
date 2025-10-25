@@ -7,6 +7,8 @@ import toast from 'react-hot-toast';
 import { trackingPixels } from '../utils/trackingPixels';
 import ProductReviews from '../components/products/ProductReviews';
 import UpsellCrossSell from '../components/products/UpsellCrossSell';
+import WishlistButton from '../components/wishlist/WishlistButton';
+import CompareButton from '../components/compare/CompareButton';
 
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -338,6 +340,12 @@ const ProductDetailPage: React.FC = () => {
               >
                 {isAvailable ? 'Agregar al Carrito' : 'Producto Agotado'}
               </button>
+
+              {/* Wishlist and Compare Buttons */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <WishlistButton productId={product.id} variant="button" />
+                <CompareButton product={product} variant="button" />
+              </div>
 
               {/* Additional Info */}
               <div className="border-t pt-6 space-y-3">

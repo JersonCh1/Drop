@@ -20,12 +20,13 @@
 ### Frontend
 - **React 18** + TypeScript
 - **React Router v6** - Navegación con rutas protegidas
-- **TailwindCSS** - Estilos y diseño responsivo
+- **TailwindCSS** - Estilos y diseño responsivo (Dark mode habilitado)
 - **React Query** - Cache y state management de servidor
 - **React Hot Toast** - Notificaciones
 - **React Helmet Async** - SEO dinámico
 - **Axios** - HTTP client
-- **Context API** - State management global (Cart, Auth, i18n)
+- **Context API** - State management global (Cart, Auth, i18n, Theme, Currency, Compare)
+- **Intersection Observer** - Lazy loading de imágenes
 
 ### Backend
 - **Node.js** + Express.js
@@ -52,7 +53,9 @@
 - ✅ **Google Analytics** - Tracking de usuarios
 - ✅ **Facebook Pixel** - Conversiones Facebook/Instagram
 - ✅ **TikTok Pixel** - Conversiones TikTok Ads
+- ✅ **Hotjar** - Heatmaps y grabaciones de sesión
 - ✅ **WhatsApp Business API** - Soporte al cliente
+- ✅ **WhatsApp Widget** - Chat flotante en el sitio
 
 ### Dropshipping
 - ✅ **CJ Dropshipping API** - Automatización de órdenes
@@ -179,7 +182,7 @@
 dropshipping-iphone/
 ├── backend/
 │   ├── prisma/
-│   │   ├── schema.prisma          # Schema de base de datos
+│   │   ├── schema.prisma          # Schema de base de datos (con Wishlist)
 │   │   ├── seed.js                # Datos iniciales
 │   │   └── dev.db                 # SQLite (desarrollo)
 │   ├── src/
@@ -204,7 +207,8 @@ dropshipping-iphone/
 │   │   │   ├── suppliers.js      # Proveedores
 │   │   │   ├── tracking.js       # Tracking órdenes
 │   │   │   ├── webhooks.js       # Payment webhooks
-│   │   │   └── whatsapp.js       # WhatsApp API
+│   │   │   ├── whatsapp.js       # WhatsApp API
+│   │   │   └── wishlist.js       # ⭐ NUEVO: Wishlist/Favoritos
 │   │   ├── services/
 │   │   │   ├── analyticsService.js   # Google Analytics
 │   │   │   ├── cloudinaryService.js  # Imágenes (no usado)
@@ -234,14 +238,22 @@ dropshipping-iphone/
 │   │   │   ├── cart/
 │   │   │   │   ├── CartSidebar.tsx
 │   │   │   │   └── CartItem.tsx
+│   │   │   ├── chat/
+│   │   │   │   └── WhatsAppWidget.tsx      # ⭐ NUEVO
 │   │   │   ├── checkout/
 │   │   │   │   ├── Checkout.tsx
 │   │   │   │   ├── CulqiCheckout.tsx
 │   │   │   │   ├── StripeCheckout.tsx
 │   │   │   │   └── ...
+│   │   │   ├── common/
+│   │   │   │   └── LazyImage.tsx          # ⭐ NUEVO
+│   │   │   ├── compare/
+│   │   │   │   └── CompareButton.tsx      # ⭐ NUEVO
 │   │   │   ├── layout/
 │   │   │   │   ├── Header.tsx
-│   │   │   │   └── Footer.tsx
+│   │   │   │   ├── Footer.tsx
+│   │   │   │   ├── ThemeToggle.tsx        # ⭐ NUEVO
+│   │   │   │   └── CurrencySelector.tsx   # ⭐ NUEVO
 │   │   │   ├── marketing/
 │   │   │   │   ├── NewsletterPopup.tsx
 │   │   │   │   └── SocialProof.tsx
@@ -252,11 +264,16 @@ dropshipping-iphone/
 │   │   │   │   └── UrgencyIndicators.tsx
 │   │   │   ├── SEO/
 │   │   │   │   └── SEOHead.tsx
+│   │   │   ├── wishlist/
+│   │   │   │   └── WishlistButton.tsx     # ⭐ NUEVO
 │   │   │   └── ErrorBoundary.tsx
 │   │   ├── context/
 │   │   │   ├── AuthContext.tsx
 │   │   │   ├── CartContext.tsx
-│   │   │   └── I18nContext.tsx
+│   │   │   ├── I18nContext.tsx
+│   │   │   ├── CompareContext.tsx         # ⭐ NUEVO
+│   │   │   ├── ThemeContext.tsx           # ⭐ NUEVO
+│   │   │   └── CurrencyContext.tsx        # ⭐ NUEVO
 │   │   ├── pages/
 │   │   │   ├── ProductsPage.tsx
 │   │   │   ├── ProductDetailPage.tsx
@@ -271,11 +288,14 @@ dropshipping-iphone/
 │   │   │   ├── CookiesPage.tsx
 │   │   │   ├── AuthPage.tsx
 │   │   │   ├── ProfilePage.tsx
-│   │   │   └── MyOrdersPage.tsx
+│   │   │   ├── MyOrdersPage.tsx
+│   │   │   ├── WishlistPage.tsx           # ⭐ NUEVO
+│   │   │   └── ComparePage.tsx            # ⭐ NUEVO
 │   │   ├── services/
 │   │   │   ├── productService.ts
 │   │   │   ├── orderService.ts
 │   │   │   ├── analyticsService.ts
+│   │   │   ├── wishlistService.ts         # ⭐ NUEVO
 │   │   │   └── ...
 │   │   ├── utils/
 │   │   │   └── trackingPixels.ts
@@ -385,6 +405,7 @@ REACT_APP_TIKTOK_PIXEL_ID=ABC123XYZ
 
 # Analytics
 REACT_APP_GA_ID=GA-...
+REACT_APP_HOTJAR_ID=YOUR_HOTJAR_ID
 
 # Otros
 REACT_APP_WHATSAPP_NUMBER=51999999999
@@ -620,32 +641,36 @@ railway logs
 - [x] Service Worker
 - [x] Instalable en móviles
 
+### ✅ UX/UI Avanzado (Nuevas)
+- [x] WhatsApp widget flotante
+- [x] Sistema de favoritos/wishlist
+- [x] Comparador de productos
+- [x] Dark mode con toggle
+- [x] Multi-currency (USD/PEN)
+- [x] Lazy loading de imágenes
+
 ---
 
-## 🎯 PRÓXIMOS PASOS / TODO
+## 🎯 NUEVAS FUNCIONALIDADES (Octubre 2025)
 
-### Mejoras Sugeridas
-- [ ] Implementar chat en vivo (WhatsApp widget)
-- [ ] Sistema de wishlist/favoritos
-- [ ] Comparador de productos
-- [ ] Búsqueda avanzada con filtros
-- [ ] Reseñas con fotos
+### ✅ Mejoras Implementadas
+- [x] **Chat en vivo** - WhatsApp widget flotante integrado
+- [x] **Sistema de wishlist/favoritos** - Backend + frontend completo
+- [x] **Comparador de productos** - Compara hasta 4 productos lado a lado
+- [x] **Dark mode** - Modo oscuro con toggle persistente
+- [x] **Multi-currency** - Soporte para USD y PEN con conversión automática
+- [x] **Lazy loading de imágenes** - Intersection Observer para carga optimizada
+- [x] **Hotjar integrado** - Heatmaps y analytics de comportamiento
+
+### 🔄 Próximos Pasos / TODO
+- [ ] Búsqueda avanzada con filtros (tags, precio, rating)
+- [ ] Reseñas con fotos (upload de imágenes)
 - [ ] Programa de lealtad/puntos
-- [ ] Notificaciones push (PWA)
-- [ ] Dark mode
-- [ ] Multi-currency (USD, PEN)
+- [ ] Notificaciones push (PWA avanzado)
 - [ ] Calculadora de envío internacional
-
-### Optimizaciones
-- [ ] Lazy loading de imágenes
 - [ ] Code splitting avanzado
-- [ ] CDN para assets
-- [ ] Compresión de imágenes
-- [ ] Cache strategies mejoradas
-
-### Analytics
-- [ ] Heatmaps (Hotjar)
-- [ ] A/B testing
+- [ ] CDN para assets estáticos
+- [ ] A/B testing framework
 - [ ] Funnel de conversión detallado
 - [ ] Reportes automáticos por email
 
@@ -701,6 +726,50 @@ railway logs
 
 ---
 
-**Última actualización:** Octubre 20, 2025
-**Versión del proyecto:** 2.0
-**Build:** #8afd62f
+## 📦 NUEVAS CARACTERÍSTICAS v2.1
+
+### WhatsApp Widget
+- Widget flotante en todas las páginas
+- Animaciones suaves y diseño moderno
+- Configuración vía variable de entorno
+
+### Sistema de Wishlist/Favoritos
+- Backend completo con Prisma
+- Frontend con botones y página dedicada
+- Persistencia por usuario autenticado
+- API endpoints: GET, POST, DELETE
+
+### Comparador de Productos
+- Comparar hasta 4 productos simultáneamente
+- Tabla comparativa con características
+- Persistencia en localStorage
+- Context API para state management
+
+### Dark Mode
+- Toggle persistente en localStorage
+- Soporte completo en TailwindCSS
+- Detección automática de preferencia del sistema
+- Transiciones suaves
+
+### Multi-Currency
+- Soporte para USD y PEN
+- Conversión automática de precios
+- Selector visual con banderas
+- Tasas de cambio configurables
+
+### Lazy Loading
+- Intersection Observer API
+- Carga progresiva de imágenes
+- Placeholders y estados de error
+- Mejora significativa de rendimiento
+
+### Analytics Avanzado
+- Hotjar integrado para heatmaps
+- Google Tag Manager preparado
+- Tracking de comportamiento mejorado
+
+---
+
+**Última actualización:** Octubre 24, 2025
+**Versión del proyecto:** 2.1
+**Build:** #NEW

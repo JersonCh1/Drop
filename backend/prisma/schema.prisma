@@ -21,10 +21,12 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relaciones
-  orders    Order[]
-  reviews   Review[]
-  addresses Address[]
-  cart      CartItem[]
+  orders        Order[]
+  reviews       Review[]
+  addresses     Address[]
+  cart          CartItem[]
+  wishlist      Wishlist[]
+  loyaltyPoints LoyaltyPoints?
 
   @@map("users")
 }
@@ -135,6 +137,7 @@ model Product {
   reviews    Review[]
   orderItems OrderItem[]
   cartItems  CartItem[]
+  wishlist   Wishlist[]
 
   @@map("products")
 }
@@ -381,18 +384,19 @@ model Review {
   id        String @id @default(cuid())
   userId    String?
   productId String
-  
+
   // Información del reviewer (para usuarios anónimos)
   customerName  String?
   customerEmail String?
-  
+
   rating    Int // 1-5
   title     String?
   comment   String?
-  
+  images    String? // JSON array de URLs de imágenes
+
   isVerified Boolean @default(false) // Si compró el producto
   isApproved Boolean @default(false) // Moderación
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -401,6 +405,21 @@ model Review {
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@map("reviews")
+}
+
+model Wishlist {
+  id        String @id @default(cuid())
+  userId    String
+  productId String
+
+  createdAt DateTime @default(now())
+
+  // Relaciones
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("wishlists")
 }
 
 model Address {
@@ -566,4 +585,48 @@ enum SupplierOrderStatus {
   DELIVERED   // Entregado
   CANCELLED   // Cancelado
   FAILED      // Falló al crear orden
+}
+
+// =================== LOYALTY POINTS ===================
+
+model LoyaltyPoints {
+  id          String @id @default(cuid())
+  userId      String @unique
+  points      Int    @default(0)
+  totalEarned Int    @default(0)
+  totalSpent  Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions LoyaltyTransaction[]
+
+  @@map("loyalty_points")
+}
+
+model LoyaltyTransaction {
+  id          String @id @default(cuid())
+  loyaltyId   String
+  points      Int
+  type        LoyaltyTransactionType
+  description String
+  orderId     String?
+
+  createdAt DateTime @default(now())
+
+  // Relaciones
+  loyalty LoyaltyPoints @relation(fields: [loyaltyId], references: [id], onDelete: Cascade)
+
+  @@map("loyalty_transactions")
+}
+
+enum LoyaltyTransactionType {
+  PURCHASE
+  REVIEW
+  REFERRAL
+  REDEMPTION
+  BONUS
+  ADJUSTMENT
 }

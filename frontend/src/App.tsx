@@ -11,6 +11,9 @@ import './App.css';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import { I18nProvider } from './context/I18nContext';
+import { CompareProvider } from './context/CompareContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { CurrencyProvider } from './context/CurrencyContext';
 
 // Components
 import ErrorBoundary from './components/ErrorBoundary';
@@ -19,22 +22,6 @@ import Footer from './components/layout/Footer';
 import ProductCard from './components/products/ProductCard';
 import CartSidebar from './components/cart/CartSidebar';
 import Checkout from './components/checkout/Checkout';
-
-// Pages
-import ProductsPage from './pages/ProductsPage';
-import ProductDetailPage from './pages/ProductDetailPage';
-import TrackingPage from './pages/TrackingPage';
-import AuthPage from './pages/AuthPage';
-import ProfilePage from './pages/ProfilePage';
-import MyOrdersPage from './pages/MyOrdersPage';
-import AdminPage from './pages/AdminPage';
-import FAQPage from './pages/FAQPage';
-import ContactPage from './pages/ContactPage';
-import AboutPage from './pages/AboutPage';
-import PrivacyPage from './pages/PrivacyPage';
-import TermsPage from './pages/TermsPage';
-import ReturnsPage from './pages/ReturnsPage';
-import CookiesPage from './pages/CookiesPage';
 
 // Services
 import analyticsService from './services/analyticsService';
@@ -45,6 +32,26 @@ import { trackingPixels } from './utils/trackingPixels';
 // Marketing
 import NewsletterPopup from './components/marketing/NewsletterPopup';
 import SocialProof from './components/marketing/SocialProof';
+import WhatsAppWidget from './components/chat/WhatsAppWidget';
+
+// Pages - Lazy loading for code splitting
+const ProductsPage = React.lazy(() => import('./pages/ProductsPage'));
+const ProductDetailPage = React.lazy(() => import('./pages/ProductDetailPage'));
+const TrackingPage = React.lazy(() => import('./pages/TrackingPage'));
+const AuthPage = React.lazy(() => import('./pages/AuthPage'));
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
+const MyOrdersPage = React.lazy(() => import('./pages/MyOrdersPage'));
+const AdminPage = React.lazy(() => import('./pages/AdminPage'));
+const FAQPage = React.lazy(() => import('./pages/FAQPage'));
+const ContactPage = React.lazy(() => import('./pages/ContactPage'));
+const AboutPage = React.lazy(() => import('./pages/AboutPage'));
+const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage'));
+const TermsPage = React.lazy(() => import('./pages/TermsPage'));
+const ReturnsPage = React.lazy(() => import('./pages/ReturnsPage'));
+const CookiesPage = React.lazy(() => import('./pages/CookiesPage'));
+const WishlistPage = React.lazy(() => import('./pages/WishlistPage'));
+const ComparePage = React.lazy(() => import('./pages/ComparePage'));
+const LoyaltyPage = React.lazy(() => import('./pages/LoyaltyPage'));
 
 // Types
 export interface CartItem {
@@ -107,13 +114,14 @@ const AppContent: React.FC<{
 }) => {
   return (
     <AuthProvider>
-      <CartProvider>
-        <Router
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true
-          }}
-        >
+      <CompareProvider>
+        <CartProvider>
+          <Router
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true
+            }}
+          >
           <div className="min-h-screen bg-gray-50 flex flex-col">
             <Toaster
               position="bottom-right"
@@ -133,52 +141,64 @@ const AppContent: React.FC<{
 
             {/* Main Content */}
             <main className="flex-1">
-              <Routes>
-                <Route path="/" element={
-                  <HomePage 
-                    selectedModel={selectedModel}
-                    selectedColor={selectedColor}
-                    models={models}
-                    colors={colors}
-                    price={basePrice}
-                    onModelChange={setSelectedModel}
-                    onColorChange={setSelectedColor}
-                    createCartItem={createCartItem}
-                  />
-                } />
-                
-                {/* Rutas implementadas y funcionales */}
-                <Route path="/products" element={<ProductsPage />} />
-                <Route path="/products/:slug" element={<ProductDetailPage />} />
-                <Route path="/track" element={<TrackingPage />} />
-                <Route path="/track/:orderNumber" element={<TrackingPage />} />
-                <Route path="/cart" element={<CartPage />} />
-                <Route path="/checkout" element={<CheckoutPage />} />
-                <Route path="/order-success" element={<OrderSuccessPage />} />
+              <React.Suspense fallback={
+                <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600 font-medium">Cargando...</p>
+                  </div>
+                </div>
+              }>
+                <Routes>
+                  <Route path="/" element={
+                    <HomePage
+                      selectedModel={selectedModel}
+                      selectedColor={selectedColor}
+                      models={models}
+                      colors={colors}
+                      price={basePrice}
+                      onModelChange={setSelectedModel}
+                      onColorChange={setSelectedColor}
+                      createCartItem={createCartItem}
+                    />
+                  } />
 
-                {/* Rutas de autenticación de clientes */}
-                <Route path="/login" element={<AuthPage />} />
-                <Route path="/register" element={<AuthPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/my-orders" element={<MyOrdersPage />} />
+                  {/* Rutas implementadas y funcionales */}
+                  <Route path="/products" element={<ProductsPage />} />
+                  <Route path="/products/:slug" element={<ProductDetailPage />} />
+                  <Route path="/track" element={<TrackingPage />} />
+                  <Route path="/track/:orderNumber" element={<TrackingPage />} />
+                  <Route path="/cart" element={<CartPage />} />
+                  <Route path="/checkout" element={<CheckoutPage />} />
+                  <Route path="/order-success" element={<OrderSuccessPage />} />
 
-                {/* Ruta de administración (protegida) */}
-                <Route path="/admin" element={<AdminPage />} />
+                  {/* Rutas de autenticación de clientes */}
+                  <Route path="/login" element={<AuthPage />} />
+                  <Route path="/register" element={<AuthPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/my-orders" element={<MyOrdersPage />} />
+                  <Route path="/wishlist" element={<WishlistPage />} />
+                  <Route path="/compare" element={<ComparePage />} />
+                  <Route path="/loyalty" element={<LoyaltyPage />} />
 
-                {/* Páginas informativas */}
-                <Route path="/faq" element={<FAQPage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="/about" element={<AboutPage />} />
+                  {/* Ruta de administración (protegida) */}
+                  <Route path="/admin" element={<AdminPage />} />
 
-                {/* Páginas legales */}
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/terms" element={<TermsPage />} />
-                <Route path="/returns" element={<ReturnsPage />} />
-                <Route path="/cookies" element={<CookiesPage />} />
+                  {/* Páginas informativas */}
+                  <Route path="/faq" element={<FAQPage />} />
+                  <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/about" element={<AboutPage />} />
 
-                {/* 404 */}
-                <Route path="*" element={<NotFoundPage />} />
-              </Routes>
+                  {/* Páginas legales */}
+                  <Route path="/privacy" element={<PrivacyPage />} />
+                  <Route path="/terms" element={<TermsPage />} />
+                  <Route path="/returns" element={<ReturnsPage />} />
+                  <Route path="/cookies" element={<CookiesPage />} />
+
+                  {/* 404 */}
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+              </React.Suspense>
             </main>
 
             <Footer />
@@ -199,9 +219,13 @@ const AppContent: React.FC<{
 
             {/* Social Proof Notifications */}
             <SocialProof />
+
+            {/* WhatsApp Widget */}
+            <WhatsAppWidget />
           </div>
         </Router>
-      </CartProvider>
+        </CartProvider>
+      </CompareProvider>
     </AuthProvider>
   );
 };
@@ -286,11 +310,15 @@ function App() {
     <ErrorBoundary>
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
-          <I18nProvider>
-            <Elements stripe={stripePromise}>
-              <AppContent {...appContentProps} />
-            </Elements>
-          </I18nProvider>
+          <ThemeProvider>
+            <CurrencyProvider>
+              <I18nProvider>
+                <Elements stripe={stripePromise}>
+                  <AppContent {...appContentProps} />
+                </Elements>
+              </I18nProvider>
+            </CurrencyProvider>
+          </ThemeProvider>
         </QueryClientProvider>
       </HelmetProvider>
     </ErrorBoundary>
