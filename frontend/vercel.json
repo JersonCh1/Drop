@@ -50,11 +50,5 @@
       "source": "/api/:path*",
       "destination": "https://dropshipping-iphone-production.up.railway.app/api/:path*"
     }
-  ],
-  "functions": {
-    "src/index.tsx": {
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  }
+  ]
 }
