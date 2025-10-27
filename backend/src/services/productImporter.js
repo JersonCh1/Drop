@@ -113,6 +113,7 @@ async function parseGenericProduct(url) {
 
 /**
  * Crea un producto en la base de datos desde datos importados
+ * MEJORADO: Usa margen por categoría automáticamente si está configurado
  * @param {object} productData - Datos del producto importado
  * @param {object} options - Opciones adicionales
  * @returns {object} Producto creado
@@ -121,9 +122,36 @@ async function createProductFromImport(productData, options = {}) {
   const {
     categoryId,
     supplierId,
-    profitMargin = 30,
+    profitMargin: customMargin,
     autoCalculatePrice = true
   } = options;
+
+  // Obtener margen apropiado (por categoría o personalizado)
+  let profitMargin = 40; // Default
+
+  if (customMargin !== undefined) {
+    // Si se proporciona margen personalizado, usarlo
+    profitMargin = customMargin;
+  } else if (categoryId) {
+    // Si no, intentar obtener margen de la categoría
+    try {
+      const { PrismaClient } = require('@prisma/client');
+      const prisma = new PrismaClient();
+
+      const marginConfig = await prisma.profitMargin.findUnique({
+        where: { category: categoryId }
+      });
+
+      if (marginConfig && marginConfig.isActive) {
+        profitMargin = marginConfig.margin;
+        console.log(`✅ Usando margen de categoría ${categoryId}: ${profitMargin}%`);
+      } else {
+        console.log(`⚠️ No hay margen configurado para ${categoryId}, usando default: ${profitMargin}%`);
+      }
+    } catch (error) {
+      console.log(`⚠️ Error obteniendo margen de categoría, usando default: ${profitMargin}%`);
+    }
+  }
 
   // Calcular precio de venta si se especificó
   let basePrice = productData.supplierPrice;

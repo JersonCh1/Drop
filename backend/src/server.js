@@ -909,6 +909,10 @@ app.use('/api/suppliers', suppliersRoutes);
 const bulkImportRoutes = require('./routes/suppliers-bulk-import');
 app.use('/api/suppliers', bulkImportRoutes);
 
+// =================== RUTAS DE MÁRGENES DE GANANCIA ===================
+const profitMarginsRoutes = require('./routes/profit-margins');
+app.use('/api/profit-margins', profitMarginsRoutes);
+
 // =================== RUTAS DE CATEGORÍAS ===================
 const categoriesRoutes = require('./routes/categories');
 app.use('/api/categories', categoriesRoutes);

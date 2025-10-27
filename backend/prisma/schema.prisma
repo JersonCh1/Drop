@@ -48,6 +48,20 @@ model Category {
   @@map("categories")
 }
 
+model ProfitMargin {
+  id          String   @id @default(cuid())
+  category    String   @unique // Nombre de la categoría
+  margin      Float    @default(40) // Porcentaje de margen (ej: 40 = 40%)
+  minMargin   Float?   // Margen mínimo permitido
+  maxMargin   Float?   // Margen máximo permitido
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("profit_margins")
+}
+
 model Supplier {
   id          String  @id @default(cuid())
   name        String  @unique // AliExpress, CJ Dropshipping, etc.
