@@ -1026,7 +1026,22 @@ async function startServer() {
   try {
     console.log('🚀 Iniciando servidor...');
     console.log(`📊 Entorno: ${process.env.NODE_ENV || 'development'}`);
-    console.log('📁 Base de datos: SQLite (local)');
+
+    // Detectar tipo de base de datos desde DATABASE_URL
+    const databaseUrl = process.env.DATABASE_URL || '';
+    let dbInfo = 'No configurada';
+
+    if (databaseUrl.includes('postgresql://') || databaseUrl.includes('postgres://')) {
+      if (databaseUrl.includes('railway')) {
+        dbInfo = 'PostgreSQL (Railway - Producción)';
+      } else {
+        dbInfo = 'PostgreSQL (Producción)';
+      }
+    } else if (databaseUrl.includes('file:')) {
+      dbInfo = 'SQLite (Local - Desarrollo)';
+    }
+
+    console.log(`📁 Base de datos: ${dbInfo}`);
 
     // Inicializar base de datos - COMENTADO para SQLite/Prisma
     // await initializeDatabase();
