@@ -953,6 +953,10 @@ app.use('/api', sitemapRoutes);
 const maintenanceRoutes = require('./routes/maintenance');
 app.use('/api/maintenance', maintenanceRoutes);
 
+// =================== RUTAS DE ENVÍO ===================
+const shippingRoutes = require('./routes/shipping');
+app.use('/api/shipping', shippingRoutes);
+
 // =================== ERROR HANDLING ===================
 
 // Error handler

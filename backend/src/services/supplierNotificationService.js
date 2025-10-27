@@ -327,17 +327,55 @@ ${order.shippingCountry}
 _Orden generada automáticamente_
     `.trim();
 
-    // TODO: Implementar integración con WhatsApp Business API
-    // Requiere cuenta de Twilio, MessageBird u otro proveedor
+    // Implementar integración con WhatsApp Business API usando Twilio
+    const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
+    const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
+    const twilioWhatsAppNumber = process.env.TWILIO_WHATSAPP_NUMBER || 'whatsapp:+14155238886';
 
-    console.log(`📱 WhatsApp para ${supplier.name}:`, message);
-    console.log(`⚠️  WhatsApp API no configurada. Implementar con Twilio o similar.`);
+    if (twilioAccountSid && twilioAuthToken) {
+      try {
+        const axios = require('axios');
+        const auth = Buffer.from(`${twilioAccountSid}:${twilioAuthToken}`).toString('base64');
 
-    return {
-      success: false,
-      message: 'WhatsApp API not configured',
-      supplier: supplier.name
-    };
+        const response = await axios.post(
+          `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`,
+          new URLSearchParams({
+            From: twilioWhatsAppNumber,
+            To: `whatsapp:${supplier.contactPhone}`,
+            Body: message
+          }),
+          {
+            headers: {
+              'Authorization': `Basic ${auth}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }
+        );
+
+        console.log(`✅ WhatsApp enviado exitosamente a ${supplier.name}`);
+        return {
+          success: true,
+          messageId: response.data.sid,
+          supplier: supplier.name
+        };
+      } catch (error) {
+        console.error(`❌ Error enviando WhatsApp vía Twilio:`, error.message);
+        return {
+          success: false,
+          error: error.message,
+          supplier: supplier.name
+        };
+      }
+    } else {
+      console.log(`📱 WhatsApp para ${supplier.name}:`, message);
+      console.log(`⚠️  Twilio no configurado. Configura TWILIO_ACCOUNT_SID y TWILIO_AUTH_TOKEN`);
+
+      return {
+        success: false,
+        message: 'WhatsApp API not configured (Twilio credentials missing)',
+        supplier: supplier.name
+      };
+    }
 
   } catch (error) {
     console.error('❌ Error en sendWhatsAppToSupplier:', error);
@@ -355,45 +393,71 @@ async function createOrderViaAPI(supplierOrder) {
 
     console.log(`🔄 Intentando crear orden vía API en ${supplier.name}...`);
 
-    // Ejemplo placeholder para CJ Dropshipping
+    // Integración real con CJ Dropshipping
     if (supplier.slug === 'cjdropshipping' && supplier.apiKey) {
-      // TODO: Implementar integración real con CJ Dropshipping API
-      /*
-      const axios = require('axios');
-      const response = await axios.post('https://api.cjdropshipping.com/v1/orders/create', {
-        products: order.items.map(item => ({
-          productId: item.product.supplierProductId,
-          quantity: item.quantity,
-          variantId: item.variantId
-        })),
-        shippingAddress: {
-          name: `${order.customerFirstName} ${order.customerLastName}`,
-          phone: order.customerPhone,
-          email: order.customerEmail,
-          address: order.shippingAddress,
-          city: order.shippingCity,
-          state: order.shippingState,
-          zip: order.shippingPostalCode,
-          country: order.shippingCountry
-        }
-      }, {
-        headers: {
-          'CJ-Access-Token': supplier.apiKey
-        }
-      });
+      try {
+        const axios = require('axios');
 
-      await prisma.supplierOrder.update({
-        where: { id: supplierOrder.id },
-        data: {
-          supplierOrderId: response.data.orderId,
-          supplierOrderNumber: response.data.orderNumber,
-          status: 'PLACED',
-          orderedAt: new Date()
-        }
-      });
+        // Crear orden en CJ Dropshipping
+        const response = await axios.post(
+          'https://developers.cjdropshipping.com/api2.0/v1/shopping/order/createOrder',
+          {
+            products: order.items.map(item => ({
+              vid: item.product.supplierProductId || item.productId,
+              quantity: item.quantity,
+              variantId: item.variantId || null
+            })),
+            shippingAddress: {
+              firstName: order.customerFirstName,
+              lastName: order.customerLastName,
+              phone: order.customerPhone,
+              email: order.customerEmail,
+              addressLine1: order.shippingAddress,
+              city: order.shippingCity,
+              province: order.shippingState,
+              zip: order.shippingPostalCode,
+              country: order.shippingCountry
+            },
+            remark: `Order #${order.orderNumber} - Auto-created by dropshipping system`
+          },
+          {
+            headers: {
+              'CJ-Access-Token': supplier.apiKey,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
 
-      return { success: true, orderId: response.data.orderId };
-      */
+        if (response.data && response.data.code === 200) {
+          // Actualizar orden con ID de CJ
+          await prisma.supplierOrder.update({
+            where: { id: supplierOrder.id },
+            data: {
+              supplierOrderId: response.data.data.orderId,
+              supplierOrderNumber: response.data.data.orderNumber || response.data.data.orderId,
+              status: 'PLACED',
+              orderedAt: new Date()
+            }
+          });
+
+          console.log(`✅ Orden creada en CJ Dropshipping: ${response.data.data.orderId}`);
+          return {
+            success: true,
+            orderId: response.data.data.orderId,
+            orderNumber: response.data.data.orderNumber,
+            supplier: supplier.name
+          };
+        } else {
+          throw new Error(response.data.message || 'Error creating order in CJ');
+        }
+      } catch (error) {
+        console.error(`❌ Error creando orden en CJ Dropshipping:`, error.message);
+        return {
+          success: false,
+          error: error.message,
+          supplier: supplier.name
+        };
+      }
     }
 
     console.log(`⚠️  API no configurada para ${supplier.name}`);

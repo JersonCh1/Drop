@@ -204,7 +204,75 @@ router.post('/webhook', async (req, res) => {
 
     if (OperationStatus === 102) { // 102 = PAID
       console.log(`✅ Pago confirmado para orden ${MerchantSalesID}`);
-      // TODO: Actualizar estado de la orden en la base de datos
+
+      // Actualizar estado de la orden en la base de datos
+      const { PrismaClient } = require('@prisma/client');
+      const prisma = new PrismaClient();
+
+      try {
+        const order = await prisma.order.findUnique({
+          where: { id: MerchantSalesID },
+          include: { items: true }
+        });
+
+        if (order) {
+          await prisma.order.update({
+            where: { id: MerchantSalesID },
+            data: {
+              paymentStatus: 'PAID',
+              status: 'CONFIRMED',
+              notes: `Pago confirmado vía SafetyPay. Transaction ID: ${TransactionIdentifier}, Monto: S/ ${Amount}`
+            }
+          });
+
+          console.log(`✅ Orden ${order.orderNumber} actualizada a PAID`);
+
+          // Crear órdenes con proveedores y enviar notificaciones
+          setTimeout(async () => {
+            try {
+              const { createSupplierOrderFromCustomerOrder } = require('../services/supplierOrderService');
+              const { sendOrderToSuppliers } = require('../services/supplierNotificationService');
+              const whatsappService = require('../services/whatsappService');
+
+              const supplierResult = await createSupplierOrderFromCustomerOrder(MerchantSalesID);
+
+              if (supplierResult.success) {
+                console.log(`✅ ${supplierResult.supplierOrders.length} órdenes con proveedores creadas`);
+                await sendOrderToSuppliers(supplierResult.supplierOrders);
+              }
+
+              // Enviar WhatsApp al cliente
+              if (order.customerPhone) {
+                const orderData = {
+                  orderNumber: order.orderNumber,
+                  customerPhone: order.customerPhone,
+                  customerName: `${order.customerFirstName} ${order.customerLastName}`,
+                  total: parseFloat(order.total),
+                  items: order.items.map(item => ({
+                    productName: item.productName,
+                    quantity: item.quantity,
+                    price: parseFloat(item.price)
+                  }))
+                };
+
+                await whatsappService.sendOrderConfirmation(orderData);
+                await whatsappService.notifyAdminPaymentConfirmed({
+                  orderNumber: order.orderNumber,
+                  customerName: `${order.customerFirstName} ${order.customerLastName}`,
+                  total: parseFloat(order.total),
+                  paymentMethod: 'SafetyPay'
+                });
+              }
+            } catch (error) {
+              console.error('❌ Error procesando órdenes con proveedores:', error);
+            }
+          }, 500);
+        } else {
+          console.warn(`⚠️ Orden ${MerchantSalesID} no encontrada`);
+        }
+      } catch (dbError) {
+        console.error('❌ Error actualizando orden en BD:', dbError);
+      }
     }
 
     res.status(200).json({

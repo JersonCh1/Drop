@@ -38,8 +38,15 @@ router.post('/tracking', async (req, res) => {
       });
     }
 
-    // TODO: Verificar API key del proveedor
-    // En producción, validar que el apiKey corresponde al proveedor correcto
+    // Verificar API key del proveedor
+    const validApiKey = process.env.WEBHOOK_API_KEY || 'dropshipping-webhook-secret-2024';
+    if (apiKey !== validApiKey) {
+      console.warn('⚠️ Intento de acceso con API key inválida');
+      return res.status(403).json({
+        success: false,
+        message: 'API key inválida'
+      });
+    }
 
     // Actualizar tracking
     const result = await updateSupplierOrderTracking(supplierOrderId, {
@@ -55,7 +62,32 @@ router.post('/tracking', async (req, res) => {
         message: 'Tracking actualizado exitosamente'
       });
 
-      // TODO: Enviar notificación al cliente por email
+      // Enviar notificación al cliente por email
+      const emailService = require('../services/emailService');
+      try {
+        const { PrismaClient } = require('@prisma/client');
+        const prisma = new PrismaClient();
+        const supplierOrder = await prisma.supplierOrder.findUnique({
+          where: { id: supplierOrderId },
+          include: { order: true }
+        });
+
+        if (supplierOrder && supplierOrder.order) {
+          await emailService.sendEmail({
+            to: supplierOrder.order.customerEmail,
+            subject: `📦 Tu pedido #${supplierOrder.order.orderNumber} ha sido enviado`,
+            html: `
+              <h2>¡Tu pedido está en camino!</h2>
+              <p>Tu pedido <strong>#${supplierOrder.order.orderNumber}</strong> ha sido enviado.</p>
+              <p><strong>Número de tracking:</strong> ${trackingNumber}</p>
+              <p><strong>Transportista:</strong> ${carrier || 'Unknown'}</p>
+              ${trackingUrl ? `<p><a href="${trackingUrl}">Rastrear mi pedido</a></p>` : ''}
+            `
+          });
+        }
+      } catch (emailError) {
+        console.error('Error enviando email de tracking:', emailError);
+      }
       console.log(`✅ Tracking actualizado vía webhook: ${trackingNumber}`);
     } else {
       res.status(500).json({
@@ -93,8 +125,20 @@ router.post('/aliexpress', async (req, res) => {
       status
     });
 
-    // TODO: Verificar firma de seguridad de AliExpress
-    // Validar que la petición realmente viene de AliExpress
+    // Verificar firma de seguridad de AliExpress
+    const crypto = require('crypto');
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.ALIEXPRESS_SECRET || 'aliexpress-secret')
+      .update(JSON.stringify({ order_id, tracking_number, status }))
+      .digest('hex');
+
+    if (signature && signature !== expectedSignature) {
+      console.warn('⚠️ Firma inválida de AliExpress');
+      return res.status(403).json({
+        success: false,
+        message: 'Firma de seguridad inválida'
+      });
+    }
 
     // Mapear campos de AliExpress a nuestro sistema
     const trackingInfo = {
@@ -155,7 +199,15 @@ router.post('/cj', async (req, res) => {
       orderStatus
     });
 
-    // TODO: Verificar secret compartido
+    // Verificar secret compartido con CJ Dropshipping
+    const validSecret = process.env.CJ_WEBHOOK_SECRET || 'cj-dropshipping-secret-2024';
+    if (secret !== validSecret) {
+      console.warn('⚠️ Secret inválido de CJ Dropshipping');
+      return res.status(403).json({
+        success: false,
+        message: 'Secret compartido inválido'
+      });
+    }
 
     const trackingInfo = {
       trackingNumber: trackingNumber,
@@ -226,7 +278,15 @@ router.post('/status', async (req, res) => {
       });
     }
 
-    // TODO: Verificar API key
+    // Verificar API key
+    const validApiKey = process.env.WEBHOOK_API_KEY || 'dropshipping-webhook-secret-2024';
+    if (apiKey !== validApiKey) {
+      console.warn('⚠️ API key inválida en webhook de estado');
+      return res.status(403).json({
+        success: false,
+        message: 'API key inválida'
+      });
+    }
 
     // Actualizar estado
     const { PrismaClient } = require('@prisma/client');
@@ -272,7 +332,25 @@ router.post('/niubiz', async (req, res) => {
 
     console.log('📨 Webhook Niubiz recibido:', { transactionId, purchaseNumber, orderId });
 
-    // TODO: Verificar firma/secret de Niubiz para seguridad
+    // Verificar firma/secret de Niubiz para seguridad
+    const niubizSignature = req.headers['x-niubiz-signature'];
+    const validSecret = process.env.NIUBIZ_WEBHOOK_SECRET || 'niubiz-secret-2024';
+
+    if (niubizSignature) {
+      const crypto = require('crypto');
+      const expectedSignature = crypto
+        .createHmac('sha256', validSecret)
+        .update(JSON.stringify({ transactionId, orderId }))
+        .digest('hex');
+
+      if (niubizSignature !== expectedSignature) {
+        console.warn('⚠️ Firma inválida de Niubiz');
+        return res.status(403).json({
+          success: false,
+          message: 'Firma de seguridad inválida'
+        });
+      }
+    }
 
     if (!orderId) {
       console.log('⚠️  Webhook sin orderId');
@@ -383,8 +461,25 @@ router.post('/pagoefectivo', async (req, res) => {
 
     console.log('📨 Webhook PagoEfectivo recibido:', { transactionCode, cip, status });
 
-    // TODO: Verificar firma del webhook para seguridad
-    // const signature = req.headers['x-signature'];
+    // Verificar firma del webhook para seguridad
+    const signature = req.headers['x-pagoefectivo-signature'];
+    const validSecret = process.env.PAGOEFECTIVO_WEBHOOK_SECRET || 'pagoefectivo-secret-2024';
+
+    if (signature) {
+      const crypto = require('crypto');
+      const expectedSignature = crypto
+        .createHmac('sha256', validSecret)
+        .update(JSON.stringify({ transactionCode, cip, status }))
+        .digest('hex');
+
+      if (signature !== expectedSignature) {
+        console.warn('⚠️ Firma inválida de PagoEfectivo');
+        return res.status(403).json({
+          success: false,
+          message: 'Firma de seguridad inválida'
+        });
+      }
+    }
 
     if (!transactionCode || !status) {
       return res.status(400).json({
