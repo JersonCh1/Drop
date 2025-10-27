@@ -79,8 +79,12 @@ async function scrapeAliExpressProduct(url) {
   try {
     console.log(`🔍 Scraping AliExpress: ${url}`);
 
+    // Limpiar URL de parámetros de tracking innecesarios
+    const cleanUrl = url.split('?')[0] + '.html';
+    console.log(`🧹 URL limpia: ${cleanUrl}`);
+
     // Hacer request con headers que simulan un navegador real
-    const response = await axios.get(url, {
+    const response = await axios.get(cleanUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -119,28 +123,46 @@ async function scrapeAliExpressProduct(url) {
     }
 
     // 2. Buscar datos en el script JSON embebido (método principal de AliExpress)
+    console.log(`📄 Buscando datos en ${$('script').length} scripts...`);
     const scripts = $('script').toArray();
+    let jsonDataFound = false;
+
     for (const script of scripts) {
       const scriptContent = $(script).html();
 
       // AliExpress embebe los datos en window.runParams o data.
-      if (scriptContent && scriptContent.includes('data:')) {
+      if (scriptContent && (scriptContent.includes('data:') || scriptContent.includes('window.runParams'))) {
         try {
           // Intentar extraer JSON embebido
-          const jsonMatch = scriptContent.match(/data:\s*({[\s\S]*?})\s*[,}]/);
+          let jsonMatch = scriptContent.match(/data:\s*({[\s\S]*?})\s*[,}]/);
+
+          // Intentar otro patrón común
+          if (!jsonMatch) {
+            jsonMatch = scriptContent.match(/window\.runParams\s*=\s*({[\s\S]*?});/);
+          }
+
           if (jsonMatch) {
+            console.log('📦 JSON embebido encontrado, parseando...');
             const jsonData = JSON.parse(jsonMatch[1]);
+            jsonDataFound = true;
 
             // Extraer título
             if (jsonData.titleModule?.subject) {
               productData.name = jsonData.titleModule.subject.trim();
+              console.log(`✓ Título: ${productData.name}`);
+            } else {
+              console.log('✗ Título no encontrado en JSON');
             }
 
             // Extraer precio
             if (jsonData.priceModule?.minActivityAmount?.value) {
               productData.supplierPrice = parseFloat(jsonData.priceModule.minActivityAmount.value);
+              console.log(`✓ Precio: $${productData.supplierPrice}`);
             } else if (jsonData.priceModule?.minAmount?.value) {
               productData.supplierPrice = parseFloat(jsonData.priceModule.minAmount.value);
+              console.log(`✓ Precio: $${productData.supplierPrice}`);
+            } else {
+              console.log('✗ Precio no encontrado en JSON');
             }
 
             // Extraer imágenes
@@ -148,13 +170,20 @@ async function scrapeAliExpressProduct(url) {
               productData.images = jsonData.imageModule.imagePathList
                 .map(img => img.startsWith('//') ? 'https:' + img : img)
                 .slice(0, 10);
+              console.log(`✓ Imágenes: ${productData.images.length} encontradas`);
+            } else {
+              console.log('✗ Imágenes no encontradas en JSON');
             }
 
             // Extraer descripción
             if (jsonData.pageModule?.description) {
               productData.description = jsonData.pageModule.description.trim();
+              console.log(`✓ Descripción encontrada`);
             } else if (jsonData.titleModule?.subject) {
               productData.description = `Producto importado de AliExpress: ${jsonData.titleModule.subject}`;
+              console.log(`✓ Descripción generada del título`);
+            } else {
+              console.log('✗ Descripción no encontrada');
             }
 
             // Extraer variantes (colores, tallas, etc.)
@@ -167,6 +196,7 @@ async function scrapeAliExpressProduct(url) {
                   image: val.skuPropertyImagePath
                 }))
               }));
+              console.log(`✓ Variantes: ${productData.variants.length} encontradas`);
             }
 
             // Extraer especificaciones
@@ -174,12 +204,14 @@ async function scrapeAliExpressProduct(url) {
               jsonData.specsModule.props.forEach(spec => {
                 productData.specifications[spec.attrName] = spec.attrValue;
               });
+              console.log(`✓ Especificaciones: ${Object.keys(productData.specifications).length} encontradas`);
             }
 
             // Extraer tiempo de envío
             if (jsonData.shippingModule?.generalFreightInfo?.originalLayoutResultList?.[0]?.bizData?.deliveryDayMax) {
               const days = jsonData.shippingModule.generalFreightInfo.originalLayoutResultList[0].bizData.deliveryDayMax;
               productData.shippingTime = `${days} días hábiles`;
+              console.log(`✓ Tiempo de envío: ${productData.shippingTime}`);
             }
 
             console.log('✅ Datos extraídos del JSON embebido');
@@ -187,9 +219,14 @@ async function scrapeAliExpressProduct(url) {
           }
         } catch (parseError) {
           // Continuar con otros métodos si falla el JSON
-          console.log('⚠️ Error parseando JSON embebido, intentando scraping HTML...');
+          console.log('⚠️ Error parseando JSON embebido:', parseError.message);
+          console.log('Intentando scraping HTML como fallback...');
         }
       }
+    }
+
+    if (!jsonDataFound) {
+      console.log('⚠️ No se encontró JSON embebido, usando scraping HTML directo...');
     }
 
     // 3. Fallback: Scraping HTML directo si no se encontró JSON
@@ -292,12 +329,14 @@ async function scrapeAliExpressProduct(url) {
 
   } catch (error) {
     console.error('❌ Error scraping AliExpress:', error.message);
+    console.error('📍 Stack trace:', error.stack);
+    console.error('🔗 URL original:', url);
 
     // Retornar datos básicos en caso de error
     return {
       externalId: null,
       name: 'Producto Importado de AliExpress - Error',
-      description: 'No se pudo extraer la información automáticamente. Por favor ingresa los datos manualmente.',
+      description: `No se pudo extraer la información automáticamente. Error: ${error.message}. Por favor ingresa los datos manualmente o intenta con otra URL.`,
       supplierPrice: 0,
       images: [],
       variants: [],
@@ -306,7 +345,11 @@ async function scrapeAliExpressProduct(url) {
       supplierUrl: url,
       platform: 'AliExpress',
       needsManualReview: true,
-      rawData: { error: error.message }
+      rawData: {
+        error: error.message,
+        errorType: error.name,
+        url: url
+      }
     };
   }
 }
