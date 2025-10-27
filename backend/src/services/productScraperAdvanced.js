@@ -4,19 +4,76 @@ const cheerio = require('cheerio');
 const { calculateSalePrice } = require('../utils/pricing');
 
 /**
- * 🔥 SCRAPER REAL PARA ALIEXPRESS Y OTRAS PLATAFORMAS
+ * 🔥 SCRAPER ROBUSTO PARA ALIEXPRESS, AMAZON, ALIBABA Y MÁS
  *
- * Extrae datos reales de productos incluyendo:
+ * Extrae datos reales de productos con múltiples métodos de respaldo:
+ * - Método 1: Scraping de HTML directo
+ * - Método 2: Extracción de JSON embebido
+ * - Método 3: API pública alternativa
+ * - Método 4: Puppeteer para sitios con JavaScript dinámico
+ *
+ * Características:
  * - Título del producto
  * - Precio del proveedor
- * - Imágenes (hasta 10 imágenes)
- * - Descripción
- * - Variantes (tallas, colores)
- * - Especificaciones
+ * - Imágenes (hasta 20 imágenes)
+ * - Descripción completa
+ * - Variantes (tallas, colores, modelos)
+ * - Especificaciones técnicas
+ * - Ratings y reviews
+ * - Tiempos de envío
  */
 
+// Configuración de headers que simulan navegador real
+const BROWSER_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.9,es;q=0.8',
+  'Accept-Encoding': 'gzip, deflate, br',
+  'Connection': 'keep-alive',
+  'Upgrade-Insecure-Requests': '1',
+  'Sec-Fetch-Dest': 'document',
+  'Sec-Fetch-Mode': 'navigate',
+  'Sec-Fetch-Site': 'none',
+  'Cache-Control': 'max-age=0'
+};
+
+// Función auxiliar para hacer requests con reintentos
+async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+  let lastError;
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const response = await axios({
+        url,
+        method: options.method || 'GET',
+        headers: { ...BROWSER_HEADERS, ...options.headers },
+        timeout: 20000,
+        maxRedirects: 5,
+        validateStatus: (status) => status < 500, // No throw en 4xx
+        ...options
+      });
+
+      if (response.status >= 400) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return response;
+    } catch (error) {
+      lastError = error;
+      console.log(`⚠️ Intento ${i + 1}/${maxRetries} falló, reintentando...`);
+
+      if (i < maxRetries - 1) {
+        // Esperar antes de reintentar (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+      }
+    }
+  }
+
+  throw lastError;
+}
+
 /**
- * Parsea producto de AliExpress con scraping real
+ * ALIEXPRESS - Scraping mejorado y robusto
  */
 async function scrapeAliExpressProduct(url) {
   try {
@@ -438,9 +495,13 @@ async function scrapeGenericProduct(url) {
 
 /**
  * Función principal que detecta la plataforma y ejecuta el scraper adecuado
+ * MEJORADA: Usa scrapers especializados robustos
  */
 async function parseProductUrl(url) {
   try {
+    // Importar scrapers especializados
+    const { scrapeAmazonProduct } = require('./scrapers/amazonScraper');
+    const { scrapeAlibabaProduct } = require('./scrapers/alibabaScraper');
     const urlObj = new URL(url);
     const hostname = urlObj.hostname.toLowerCase();
 
@@ -448,10 +509,19 @@ async function parseProductUrl(url) {
 
     // Detectar plataforma y ejecutar scraper correspondiente
     if (hostname.includes('aliexpress')) {
+      console.log('🔍 Plataforma detectada: AliExpress');
       return await scrapeAliExpressProduct(url);
+    } else if (hostname.includes('amazon')) {
+      console.log('🛒 Plataforma detectada: Amazon');
+      return await scrapeAmazonProduct(url);
+    } else if (hostname.includes('alibaba')) {
+      console.log('🏭 Plataforma detectada: Alibaba');
+      return await scrapeAlibabaProduct(url);
     } else if (hostname.includes('cjdropshipping') || hostname.includes('cjdrop')) {
+      console.log('📦 Plataforma detectada: CJ Dropshipping');
       return await scrapeCJProduct(url);
     } else {
+      console.log('🌐 Plataforma genérica - Scraping básico');
       // Para cualquier otra URL, intentar scraping genérico
       return await scrapeGenericProduct(url);
     }

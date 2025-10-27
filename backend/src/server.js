@@ -905,6 +905,10 @@ app.use('/api/auth', authRoutes);
 const suppliersRoutes = require('./routes/suppliers');
 app.use('/api/suppliers', suppliersRoutes);
 
+// =================== RUTAS DE IMPORTACIÓN MASIVA ===================
+const bulkImportRoutes = require('./routes/suppliers-bulk-import');
+app.use('/api/suppliers', bulkImportRoutes);
+
 // =================== RUTAS DE CATEGORÍAS ===================
 const categoriesRoutes = require('./routes/categories');
 app.use('/api/categories', categoriesRoutes);
