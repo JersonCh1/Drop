@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
+// API URL desde variable de entorno
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
 interface Supplier {
   id: string;
   name: string;
@@ -64,7 +67,7 @@ const SuppliersManager: React.FC = () => {
   const loadSuppliers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3001/api/suppliers', {
+      const response = await fetch(`${API_URL}/suppliers`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -106,8 +109,8 @@ const SuppliersManager: React.FC = () => {
 
     try {
       const url = editingSupplier
-        ? `http://localhost:3001/api/suppliers/${editingSupplier.id}`
-        : 'http://localhost:3001/api/suppliers';
+        ? `${API_URL}/suppliers/${editingSupplier.id}`
+        : `${API_URL}/suppliers`;
 
       const method = editingSupplier ? 'PUT' : 'POST';
 
@@ -171,7 +174,7 @@ const SuppliersManager: React.FC = () => {
     if (!window.confirm('¿Estás seguro de desactivar este proveedor?')) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/suppliers/${id}`, {
+      const response = await fetch(`${API_URL}/suppliers/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -193,7 +196,7 @@ const SuppliersManager: React.FC = () => {
 
   const viewSupplierStats = async (supplier: Supplier) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/suppliers/${supplier.id}/stats`, {
+      const response = await fetch(`${API_URL}/suppliers/${supplier.id}/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

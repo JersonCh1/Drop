@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
+// API URL desde variable de entorno
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
 interface OrderStatus {
   id: number;
   order_number: string;
@@ -41,7 +44,7 @@ const OrderTracking: React.FC = () => {
     setOrderData(null);
 
     try {
-      const response = await fetch(`http://localhost:3001/api/tracking/${orderNumber}`, {
+      const response = await fetch(`${API_URL}/tracking/${orderNumber}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

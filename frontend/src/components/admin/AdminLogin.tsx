@@ -22,7 +22,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onClose }) => {
     localStorage.removeItem('authToken');
 
     try {
-      const response = await fetch('http://localhost:3001/api/admin/login', {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+      const response = await fetch(`${API_URL}/admin/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
