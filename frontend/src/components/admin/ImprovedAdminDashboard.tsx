@@ -118,7 +118,7 @@ const ImprovedAdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, adminT
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-gray-50">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
