@@ -147,16 +147,41 @@ const ProductImporter: React.FC = () => {
   const handleSaveProduct = async () => {
     if (!importedProduct) return;
 
+    // Validar campos requeridos antes de enviar
+    if (!importedProduct.name || importedProduct.name.includes('Error')) {
+      toast.error('El nombre del producto es inválido. Por favor edítalo manualmente.');
+      return;
+    }
+
+    if (!selectedCategory) {
+      toast.error('Por favor selecciona una categoría');
+      return;
+    }
+
+    if (!importedProduct.supplierPrice || importedProduct.supplierPrice === 0) {
+      toast.error('El precio del proveedor debe ser mayor a 0');
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // Preparar producto con todos los campos requeridos
+      const productToSave = {
+        ...importedProduct,
+        categoryId: selectedCategory,
+        supplierId: selectedSupplier,
+        basePrice: parseFloat(calculateSalePrice()),
+        profitMargin: profitMargin
+      };
+
       const response = await fetch(`${API_URL}/products`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(importedProduct)
+        body: JSON.stringify(productToSave)
       });
 
       if (!response.ok) {
@@ -390,6 +415,27 @@ const ProductImporter: React.FC = () => {
 
             {/* Right Column - Pricing */}
             <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Precio del Proveedor (USD) *
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={importedProduct.supplierPrice}
+                  onChange={(e) => setImportedProduct({
+                    ...importedProduct,
+                    supplierPrice: parseFloat(e.target.value) || 0
+                  })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="0.00"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Este es el precio que pagas al proveedor
+                </p>
+              </div>
+
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h4 className="font-semibold text-gray-900 mb-3">Cálculo de Precios</h4>
 
