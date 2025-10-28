@@ -1,9 +1,19 @@
 // backend/src/services/productScraperAdvanced.js
 const axios = require('axios');
 const cheerio = require('cheerio');
-const puppeteerCore = require('puppeteer-core');
-const chromium = require('@sparticuz/chromium');
 const { calculateSalePrice } = require('../utils/pricing');
+
+// Puppeteer es opcional - solo se carga si está habilitado
+let puppeteerCore, chromium;
+try {
+  if (process.env.PUPPETEER_ENABLED === 'true') {
+    puppeteerCore = require('puppeteer-core');
+    chromium = require('@sparticuz/chromium');
+    console.log('✅ Puppeteer módulos cargados');
+  }
+} catch (error) {
+  console.log('⚠️ Puppeteer no disponible, usando solo HTTP scraping');
+}
 
 /**
  * 🔥 SCRAPER ROBUSTO PARA ALIEXPRESS, AMAZON, ALIBABA Y MÁS
@@ -81,6 +91,11 @@ async function scrapeAliExpressWithPuppeteer(url) {
   let browser = null;
 
   try {
+    // Verificar que Puppeteer esté disponible
+    if (!puppeteerCore || !chromium) {
+      throw new Error('Puppeteer no está disponible o no está habilitado');
+    }
+
     console.log(`🚀 Iniciando Puppeteer para AliExpress: ${url}`);
 
     // Limpiar URL de parámetros de tracking
@@ -261,20 +276,26 @@ async function scrapeAliExpressProduct(url) {
   try {
     console.log(`🔍 Scraping AliExpress: ${url}`);
 
-    // PRIMERO: Intentar con Puppeteer (navegador real)
-    try {
-      console.log('🚀 Intentando con Puppeteer (navegador real)...');
-      const puppeteerData = await scrapeAliExpressWithPuppeteer(url);
+    // PRIMERO: Intentar con Puppeteer (navegador real) - SOLO SI ESTÁ DISPONIBLE
+    const PUPPETEER_ENABLED = process.env.PUPPETEER_ENABLED === 'true' || false;
 
-      // Si Puppeteer obtuvo datos válidos, retornarlos
-      if (puppeteerData.name && !puppeteerData.name.includes('Error') && puppeteerData.supplierPrice > 0) {
-        console.log('✅ Puppeteer exitoso, retornando datos');
-        return puppeteerData;
-      } else {
-        console.log('⚠️ Puppeteer no obtuvo todos los datos, intentando método HTTP...');
+    if (PUPPETEER_ENABLED) {
+      try {
+        console.log('🚀 Intentando con Puppeteer (navegador real)...');
+        const puppeteerData = await scrapeAliExpressWithPuppeteer(url);
+
+        // Si Puppeteer obtuvo datos válidos, retornarlos
+        if (puppeteerData.name && !puppeteerData.name.includes('Error') && puppeteerData.supplierPrice > 0) {
+          console.log('✅ Puppeteer exitoso, retornando datos');
+          return puppeteerData;
+        } else {
+          console.log('⚠️ Puppeteer no obtuvo todos los datos, intentando método HTTP...');
+        }
+      } catch (puppeteerError) {
+        console.log('⚠️ Puppeteer falló, intentando método HTTP como fallback:', puppeteerError.message);
       }
-    } catch (puppeteerError) {
-      console.log('⚠️ Puppeteer falló, intentando método HTTP como fallback:', puppeteerError.message);
+    } else {
+      console.log('ℹ️ Puppeteer deshabilitado, usando método HTTP directo');
     }
 
     // FALLBACK: Método HTTP original
