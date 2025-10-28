@@ -905,17 +905,9 @@ app.use('/api/auth', authRoutes);
 const suppliersRoutes = require('./routes/suppliers');
 app.use('/api/suppliers', suppliersRoutes);
 
-// =================== RUTAS DE IMPORTACIÓN MASIVA ===================
-const bulkImportRoutes = require('./routes/suppliers-bulk-import');
-app.use('/api/suppliers', bulkImportRoutes);
-
 // =================== RUTAS DE MÁRGENES DE GANANCIA ===================
 const profitMarginsRoutes = require('./routes/profit-margins');
 app.use('/api/profit-margins', profitMarginsRoutes);
-
-// =================== RUTAS DE UTILIDADES ===================
-const urlCleanerRoutes = require('./routes/url-cleaner');
-app.use('/api', urlCleanerRoutes);
 
 // =================== RUTAS DE CATEGORÍAS ===================
 const categoriesRoutes = require('./routes/categories');
