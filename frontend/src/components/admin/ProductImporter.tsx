@@ -88,6 +88,37 @@ const ProductImporter: React.FC = () => {
     }
   };
 
+  const handleCleanUrl = async () => {
+    if (!productUrl.trim()) {
+      toast.error('Por favor ingresa una URL primero');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/clean-url`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ url: productUrl })
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al limpiar URL');
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        setProductUrl(result.data.cleanUrl);
+        toast.success(`URL limpia! Eliminados ${result.data.removed} caracteres`);
+      }
+    } catch (error: any) {
+      console.error('Error cleaning URL:', error);
+      toast.error('Error al limpiar URL');
+    }
+  };
+
   const handleImport = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -131,14 +162,59 @@ const ProductImporter: React.FC = () => {
       const result = await response.json();
 
       if (result.success) {
-        setImportedProduct(result.data.product);
-        toast.success('Producto importado exitosamente. Revisa los datos antes de guardar.');
+        // Asegurar que siempre haya un producto con datos válidos
+        const product = result.data.product || {};
+        const productWithDefaults: ImportedProduct = {
+          externalId: product.externalId || null,
+          name: product.name || 'Producto Importado (Edita este nombre)',
+          description: product.description || 'Descripción del producto (Edita esta descripción)',
+          supplierPrice: product.supplierPrice || 0,
+          images: product.images || [],
+          variants: product.variants || [],
+          specifications: product.specifications || {},
+          shippingTime: product.shippingTime || '15-30 días hábiles',
+          supplierUrl: product.supplierUrl || productUrl,
+          platform: product.platform || 'Desconocido',
+          needsManualReview: product.needsManualReview !== false
+        };
+
+        setImportedProduct(productWithDefaults);
+
+        if (productWithDefaults.needsManualReview || !productWithDefaults.name || productWithDefaults.name.includes('Error')) {
+          toast('⚠️ Scraper falló. Por favor edita los datos manualmente.', {
+            duration: 5000,
+            icon: '⚠️'
+          });
+        } else {
+          toast.success('Producto importado exitosamente. Revisa los datos antes de guardar.');
+        }
       } else {
         throw new Error(result.message);
       }
     } catch (error: any) {
       console.error('Error importing product:', error);
       toast.error(error.message || 'Error al importar producto');
+
+      // Crear producto con valores por defecto para permitir edición manual
+      const fallbackProduct: ImportedProduct = {
+        externalId: null,
+        name: 'Producto Importado (Edita este nombre)',
+        description: 'Descripción del producto (Edita esta descripción)',
+        supplierPrice: 0,
+        images: [],
+        variants: [],
+        specifications: {},
+        shippingTime: '15-30 días hábiles',
+        supplierUrl: productUrl,
+        platform: 'Error al importar',
+        needsManualReview: true
+      };
+
+      setImportedProduct(fallbackProduct);
+      toast('Puedes editar los datos manualmente y guardar', {
+        duration: 5000,
+        icon: '✏️'
+      });
     } finally {
       setLoading(false);
     }
@@ -303,13 +379,39 @@ const ProductImporter: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={handleCleanUrl}
+              disabled={!productUrl || loading}
+              className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+              Limpiar URL
+            </button>
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {loading ? 'Importando...' : 'Importar Producto'}
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Importando...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Importar Producto
+                </>
+              )}
             </button>
           </div>
         </form>

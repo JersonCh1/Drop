@@ -913,6 +913,10 @@ app.use('/api/suppliers', bulkImportRoutes);
 const profitMarginsRoutes = require('./routes/profit-margins');
 app.use('/api/profit-margins', profitMarginsRoutes);
 
+// =================== RUTAS DE UTILIDADES ===================
+const urlCleanerRoutes = require('./routes/url-cleaner');
+app.use('/api', urlCleanerRoutes);
+
 // =================== RUTAS DE CATEGORÍAS ===================
 const categoriesRoutes = require('./routes/categories');
 app.use('/api/categories', categoriesRoutes);
