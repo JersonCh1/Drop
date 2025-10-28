@@ -1,6 +1,7 @@
 // backend/src/services/productScraperAdvanced.js
 const axios = require('axios');
 const cheerio = require('cheerio');
+const puppeteer = require('puppeteer');
 const { calculateSalePrice } = require('../utils/pricing');
 
 /**
@@ -73,12 +74,215 @@ async function fetchWithRetry(url, options = {}, maxRetries = 3) {
 }
 
 /**
- * ALIEXPRESS - Scraping mejorado y robusto
+ * ALIEXPRESS - Scraping con Puppeteer (navegador real)
+ */
+async function scrapeAliExpressWithPuppeteer(url) {
+  let browser = null;
+
+  try {
+    console.log(`🚀 Iniciando Puppeteer para AliExpress: ${url}`);
+
+    // Limpiar URL de parámetros de tracking
+    const cleanUrl = url.split('?')[0];
+    console.log(`🧹 URL limpia: ${cleanUrl}`);
+
+    // Lanzar navegador headless
+    browser = await puppeteer.launch({
+      headless: 'new',
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--disable-gpu',
+        '--window-size=1920x1080',
+        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      ]
+    });
+
+    const page = await browser.newPage();
+
+    // Configurar viewport y user agent
+    await page.setViewport({ width: 1920, height: 1080 });
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+
+    // Ir a la página
+    console.log('📄 Navegando a la página...');
+    await page.goto(cleanUrl, {
+      waitUntil: 'networkidle2',
+      timeout: 60000
+    });
+
+    // Esperar a que carguen los datos principales
+    console.log('⏳ Esperando datos del producto...');
+    await page.waitForSelector('h1', { timeout: 30000 });
+
+    // Extraer datos usando evaluación en el contexto de la página
+    console.log('📦 Extrayendo datos del producto...');
+    const productData = await page.evaluate((originalUrl) => {
+      const data = {
+        externalId: null,
+        name: '',
+        description: '',
+        supplierPrice: 0,
+        images: [],
+        variants: [],
+        specifications: {},
+        shippingTime: '15-30 días hábiles',
+        supplierUrl: originalUrl,
+        platform: 'AliExpress',
+        needsManualReview: false
+      };
+
+      // Extraer ID del producto
+      const idMatch = originalUrl.match(/item\/(\d+)\.html/) || originalUrl.match(/\/(\d+)\.html/);
+      if (idMatch) {
+        data.externalId = idMatch[1];
+      }
+
+      // Intentar extraer datos del objeto window
+      try {
+        if (window.runParams && window.runParams.data) {
+          const pageData = window.runParams.data;
+
+          // Nombre
+          if (pageData.titleModule && pageData.titleModule.subject) {
+            data.name = pageData.titleModule.subject.trim();
+          }
+
+          // Precio
+          if (pageData.priceModule) {
+            if (pageData.priceModule.minActivityAmount && pageData.priceModule.minActivityAmount.value) {
+              data.supplierPrice = parseFloat(pageData.priceModule.minActivityAmount.value);
+            } else if (pageData.priceModule.minAmount && pageData.priceModule.minAmount.value) {
+              data.supplierPrice = parseFloat(pageData.priceModule.minAmount.value);
+            }
+          }
+
+          // Imágenes
+          if (pageData.imageModule && pageData.imageModule.imagePathList) {
+            data.images = pageData.imageModule.imagePathList
+              .map(img => img.startsWith('//') ? 'https:' + img : img)
+              .slice(0, 20);
+          }
+
+          // Descripción
+          if (pageData.pageModule && pageData.pageModule.description) {
+            data.description = pageData.pageModule.description.trim();
+          } else if (data.name) {
+            data.description = `${data.name}. Producto importado desde AliExpress con envío internacional.`;
+          }
+
+          // Variantes
+          if (pageData.skuModule && pageData.skuModule.productSKUPropertyList) {
+            data.variants = pageData.skuModule.productSKUPropertyList.map(prop => ({
+              name: prop.skuPropertyName,
+              values: prop.skuPropertyValues.map(val => ({
+                id: val.propertyValueId,
+                name: val.propertyValueDisplayName,
+                image: val.skuPropertyImagePath ? (val.skuPropertyImagePath.startsWith('//') ? 'https:' + val.skuPropertyImagePath : val.skuPropertyImagePath) : null
+              }))
+            }));
+          }
+
+          // Especificaciones
+          if (pageData.specsModule && pageData.specsModule.props) {
+            pageData.specsModule.props.forEach(spec => {
+              data.specifications[spec.attrName] = spec.attrValue;
+            });
+          }
+        }
+      } catch (e) {
+        console.log('Error extrayendo de window.runParams:', e.message);
+      }
+
+      // Fallback: scraping HTML directo si no hay datos de window
+      if (!data.name) {
+        const h1 = document.querySelector('h1');
+        if (h1) data.name = h1.textContent.trim();
+      }
+
+      if (data.images.length === 0) {
+        const imgs = document.querySelectorAll('img[src*="alicdn"]');
+        const imageSet = new Set();
+        imgs.forEach(img => {
+          let src = img.src || img.getAttribute('data-src');
+          if (src && !src.includes('avatar') && !src.includes('logo')) {
+            if (src.startsWith('//')) src = 'https:' + src;
+            imageSet.add(src);
+          }
+        });
+        data.images = Array.from(imageSet).slice(0, 20);
+      }
+
+      if (data.supplierPrice === 0) {
+        const priceElements = document.querySelectorAll('[class*="price"], [class*="Price"]');
+        for (const el of priceElements) {
+          const text = el.textContent;
+          const match = text.match(/[\d,]+\.?\d*/);
+          if (match) {
+            const price = parseFloat(match[0].replace(/,/g, ''));
+            if (price > 0 && price < 100000) {
+              data.supplierPrice = price;
+              break;
+            }
+          }
+        }
+      }
+
+      // Marcar para revisión si faltan datos críticos
+      if (!data.name || data.supplierPrice === 0 || data.images.length === 0) {
+        data.needsManualReview = true;
+      }
+
+      return data;
+    }, url);
+
+    await browser.close();
+
+    console.log(`✅ Puppeteer scraping completado:`);
+    console.log(`   Nombre: ${productData.name || 'NO ENCONTRADO'}`);
+    console.log(`   Precio: $${productData.supplierPrice || 0}`);
+    console.log(`   Imágenes: ${productData.images.length}`);
+    console.log(`   Variantes: ${productData.variants.length}`);
+    console.log(`   Necesita revisión: ${productData.needsManualReview ? 'Sí' : 'No'}`);
+
+    return productData;
+
+  } catch (error) {
+    if (browser) {
+      await browser.close();
+    }
+
+    console.error('❌ Error en Puppeteer scraping:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * ALIEXPRESS - Scraping mejorado y robusto (método antiguo - fallback)
  */
 async function scrapeAliExpressProduct(url) {
   try {
     console.log(`🔍 Scraping AliExpress: ${url}`);
 
+    // PRIMERO: Intentar con Puppeteer (navegador real)
+    try {
+      console.log('🚀 Intentando con Puppeteer (navegador real)...');
+      const puppeteerData = await scrapeAliExpressWithPuppeteer(url);
+
+      // Si Puppeteer obtuvo datos válidos, retornarlos
+      if (puppeteerData.name && !puppeteerData.name.includes('Error') && puppeteerData.supplierPrice > 0) {
+        console.log('✅ Puppeteer exitoso, retornando datos');
+        return puppeteerData;
+      } else {
+        console.log('⚠️ Puppeteer no obtuvo todos los datos, intentando método HTTP...');
+      }
+    } catch (puppeteerError) {
+      console.log('⚠️ Puppeteer falló, intentando método HTTP como fallback:', puppeteerError.message);
+    }
+
+    // FALLBACK: Método HTTP original
     // Limpiar URL de parámetros de tracking innecesarios
     const cleanUrl = url.split('?')[0] + '.html';
     console.log(`🧹 URL limpia: ${cleanUrl}`);
