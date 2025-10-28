@@ -107,80 +107,6 @@ router.post('/tracking', async (req, res) => {
 });
 
 /**
- * POST /api/webhooks/aliexpress - Webhook específico para AliExpress
- */
-router.post('/aliexpress', async (req, res) => {
-  try {
-    const {
-      order_id,
-      tracking_number,
-      carrier_name,
-      status,
-      signature // Firma de seguridad de AliExpress
-    } = req.body;
-
-    console.log('📨 Webhook AliExpress recibido:', {
-      order_id,
-      tracking_number,
-      status
-    });
-
-    // Verificar firma de seguridad de AliExpress
-    const crypto = require('crypto');
-    const expectedSignature = crypto
-      .createHmac('sha256', process.env.ALIEXPRESS_SECRET || 'aliexpress-secret')
-      .update(JSON.stringify({ order_id, tracking_number, status }))
-      .digest('hex');
-
-    if (signature && signature !== expectedSignature) {
-      console.warn('⚠️ Firma inválida de AliExpress');
-      return res.status(403).json({
-        success: false,
-        message: 'Firma de seguridad inválida'
-      });
-    }
-
-    // Mapear campos de AliExpress a nuestro sistema
-    const trackingInfo = {
-      trackingNumber: tracking_number,
-      carrier: carrier_name,
-      trackingUrl: `https://www.17track.net/en/track?nums=${tracking_number}`
-    };
-
-    // Buscar la orden en nuestro sistema por supplierOrderNumber
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
-
-    const supplierOrder = await prisma.supplierOrder.findFirst({
-      where: {
-        supplierOrderId: order_id
-      }
-    });
-
-    if (supplierOrder) {
-      await updateSupplierOrderTracking(supplierOrder.id, trackingInfo);
-
-      res.json({
-        success: true,
-        message: 'Webhook procesado'
-      });
-    } else {
-      res.status(404).json({
-        success: false,
-        message: 'Orden no encontrada'
-      });
-    }
-
-  } catch (error) {
-    console.error('❌ Error procesando webhook de AliExpress:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error procesando webhook'
-    });
-  }
-});
-
-/**
  * POST /api/webhooks/cj - Webhook específico para CJ Dropshipping
  */
 router.post('/cj', async (req, res) => {
@@ -604,7 +530,6 @@ router.get('/test', (req, res) => {
     ],
     suppliers: [
       'POST /api/webhooks/tracking - Tracking genérico',
-      'POST /api/webhooks/aliexpress - AliExpress específico',
       'POST /api/webhooks/cj - CJ Dropshipping específico',
       'POST /api/webhooks/status - Actualización de estado'
     ],

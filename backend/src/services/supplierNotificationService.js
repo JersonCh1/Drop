@@ -242,7 +242,7 @@ async function sendEmailToSupplier(supplierOrder) {
       </ol>
 
       <div style="text-align: center; margin: 30px 0;">
-        <a href="${supplier.website || 'https://www.aliexpress.com'}" class="btn">
+        <a href="${supplier.website || 'https://www.cjdropshipping.com'}" class="btn">
           🛒 Ir a ${supplier.name}
         </a>
       </div>

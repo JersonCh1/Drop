@@ -4,7 +4,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import ProductsManager from './ProductsManager';
 import SuppliersManager from './SuppliersManager';
-import ProductImporter from './ProductImporter';
+import CJProductImporter from './CJProductImporter';
 import AnalyticsDashboard from './AnalyticsDashboard';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
@@ -393,7 +393,7 @@ const ImprovedAdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, adminT
 
             {/* Import Tab */}
             {activeTab === 'import' && (
-              <ProductImporter />
+              <CJProductImporter />
             )}
           </>
         )}
