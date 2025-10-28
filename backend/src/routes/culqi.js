@@ -43,6 +43,41 @@ router.post('/create-charge', async (req, res) => {
 
     console.log('✅ Cargo Culqi creado:', charge.id);
 
+    // 🤖 AUTOMATIZACIÓN: Si el pago fue exitoso, crear orden en CJ Dropshipping
+    if (charge.outcome.type === 'venta_exitosa' && orderId) {
+      try {
+        const { PrismaClient } = require('@prisma/client');
+        const prisma = new PrismaClient();
+
+        // Actualizar orden a PAID
+        await prisma.order.update({
+          where: { id: orderId },
+          data: {
+            paymentStatus: 'PAID',
+            status: 'CONFIRMED',
+            culqiChargeId: charge.id
+          }
+        });
+
+        // Crear orden automáticamente en CJ Dropshipping
+        setTimeout(async () => {
+          try {
+            const supplierOrderService = require('../services/supplierOrderService');
+            const result = await supplierOrderService.createSupplierOrderFromCustomerOrder(orderId);
+
+            if (result.success) {
+              console.log(`✅ Orden automática en CJ creada: ${result.supplierOrders.length} orden(es)`);
+            }
+          } catch (autoError) {
+            console.error('❌ Error en automatización de CJ:', autoError);
+          }
+        }, 500);
+
+      } catch (dbError) {
+        console.error('❌ Error actualizando orden:', dbError);
+      }
+    }
+
     res.status(200).json({
       success: true,
       chargeId: charge.id,

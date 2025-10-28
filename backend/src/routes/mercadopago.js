@@ -174,6 +174,22 @@ router.post('/webhook', async (req, res) => {
       });
 
       console.log(`Order ${order.orderNumber} updated: ${orderStatus} - ${paymentStatus}`);
+
+      // 🤖 AUTOMATIZACIÓN: Si el pago fue aprobado, crear orden en CJ Dropshipping
+      if (payment.body.status === 'approved') {
+        setTimeout(async () => {
+          try {
+            const supplierOrderService = require('../services/supplierOrderService');
+            const result = await supplierOrderService.createSupplierOrderFromCustomerOrder(order.id);
+
+            if (result.success) {
+              console.log(`✅ Orden automática en CJ creada: ${result.supplierOrders.length} orden(es)`);
+            }
+          } catch (autoError) {
+            console.error('❌ Error en automatización de CJ:', autoError);
+          }
+        }, 500);
+      }
     }
 
     res.sendStatus(200);
