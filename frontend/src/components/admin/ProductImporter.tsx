@@ -253,19 +253,52 @@ const ProductImporter: React.FC = () => {
   const handleSaveProduct = async () => {
     if (!importedProduct) return;
 
-    // Validar campos requeridos antes de enviar
-    if (!importedProduct.name || importedProduct.name.includes('Error')) {
-      toast.error('El nombre del producto es inválido. Por favor edítalo manualmente.');
-      return;
+    // Lista de errores para mostrar todo lo que falta
+    const errors: string[] = [];
+
+    // Validar nombre del producto
+    if (!importedProduct.name ||
+        importedProduct.name.trim() === '' ||
+        importedProduct.name.includes('Error') ||
+        importedProduct.name.includes('Edita este nombre')) {
+      errors.push('❌ Nombre del producto: Debes editar el nombre');
     }
 
+    // Validar descripción
+    if (!importedProduct.description ||
+        importedProduct.description.trim() === '' ||
+        importedProduct.description.includes('Edita esta descripción')) {
+      errors.push('❌ Descripción: Debes editar la descripción');
+    }
+
+    // Validar categoría
     if (!selectedCategory) {
-      toast.error('Por favor selecciona una categoría');
-      return;
+      errors.push('❌ Categoría: Debes seleccionar una categoría');
     }
 
+    // Validar proveedor
+    if (!selectedSupplier) {
+      errors.push('❌ Proveedor: Debes seleccionar un proveedor');
+    }
+
+    // Validar precio del proveedor
     if (!importedProduct.supplierPrice || importedProduct.supplierPrice === 0) {
-      toast.error('El precio del proveedor debe ser mayor a 0');
+      errors.push('❌ Precio del proveedor: Debe ser mayor a $0.00');
+    }
+
+    // Si hay errores, mostrarlos todos
+    if (errors.length > 0) {
+      toast.error(
+        <div>
+          <strong>Complete los siguientes campos:</strong>
+          <ul className="mt-2 text-sm">
+            {errors.map((error, index) => (
+              <li key={index}>{error}</li>
+            ))}
+          </ul>
+        </div>,
+        { duration: 6000 }
+      );
       return;
     }
 
@@ -322,6 +355,30 @@ const ProductImporter: React.FC = () => {
     if (!importedProduct) return '0.00';
     const salePrice = parseFloat(calculateSalePrice());
     return (salePrice - importedProduct.supplierPrice).toFixed(2);
+  };
+
+  // Helper para verificar si un campo necesita edición
+  const needsEdit = (field: string): boolean => {
+    if (!importedProduct) return false;
+
+    if (field === 'name') {
+      return !importedProduct.name ||
+             importedProduct.name.trim() === '' ||
+             importedProduct.name.includes('Error') ||
+             importedProduct.name.includes('Edita este nombre');
+    }
+
+    if (field === 'description') {
+      return !importedProduct.description ||
+             importedProduct.description.trim() === '' ||
+             importedProduct.description.includes('Edita esta descripción');
+    }
+
+    if (field === 'price') {
+      return !importedProduct.supplierPrice || importedProduct.supplierPrice === 0;
+    }
+
+    return false;
   };
 
   return (
@@ -546,6 +603,73 @@ const ProductImporter: React.FC = () => {
             )}
           </div>
 
+          {/* Banner de Advertencia cuando hay campos que necesitan edición */}
+          {(needsEdit('name') || needsEdit('description') || needsEdit('price') || !selectedCategory || !selectedSupplier) && (
+            <div className="mb-6 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300 rounded-lg p-4">
+              <div className="flex items-start">
+                <svg className="w-6 h-6 text-red-600 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <div className="flex-1">
+                  <h4 className="text-red-800 font-bold text-lg mb-2">⚠️ Scraper Falló - Edición Manual Requerida</h4>
+                  <p className="text-red-700 text-sm mb-3">
+                    No pudimos extraer la información automáticamente. Por favor, completa los siguientes campos antes de guardar:
+                  </p>
+                  <ul className="space-y-1 text-sm">
+                    {needsEdit('name') && (
+                      <li className="flex items-center text-red-700">
+                        <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                        <strong>Nombre del producto:</strong> Edita "Producto Importado (Edita este nombre)"
+                      </li>
+                    )}
+                    {needsEdit('description') && (
+                      <li className="flex items-center text-red-700">
+                        <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                        <strong>Descripción:</strong> Edita "Descripción del producto (Edita esta descripción)"
+                      </li>
+                    )}
+                    {needsEdit('price') && (
+                      <li className="flex items-center text-red-700">
+                        <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                        <strong>Precio del proveedor:</strong> Ingresa un precio mayor a $0.00
+                      </li>
+                    )}
+                    {!selectedCategory && (
+                      <li className="flex items-center text-red-700">
+                        <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                        <strong>Categoría:</strong> Selecciona una categoría arriba en el formulario
+                      </li>
+                    )}
+                    {!selectedSupplier && (
+                      <li className="flex items-center text-red-700">
+                        <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                        <strong>Proveedor:</strong> Selecciona un proveedor arriba en el formulario
+                      </li>
+                    )}
+                  </ul>
+                  <div className="mt-3 pt-3 border-t border-red-200">
+                    <p className="text-xs text-red-600 flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                      Los campos marcados con borde rojo y fondo rosado requieren tu atención
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Imágenes importadas */}
           {importedProduct.images && importedProduct.images.length > 0 && (
             <div className="mb-6">
@@ -582,23 +706,57 @@ const ProductImporter: React.FC = () => {
             {/* Left Column - Product Info */}
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                <label className="block text-sm font-medium mb-1">
+                  <span className={needsEdit('name') ? 'text-red-600' : 'text-gray-700'}>
+                    Nombre del Producto {needsEdit('name') && <span className="text-red-500">*</span>}
+                  </span>
+                </label>
                 <input
                   type="text"
                   value={importedProduct.name}
                   onChange={(e) => setImportedProduct({ ...importedProduct, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                    needsEdit('name')
+                      ? 'border-red-400 bg-red-50'
+                      : 'border-gray-300 bg-white'
+                  }`}
+                  placeholder="Escribe el nombre del producto aquí"
                 />
+                {needsEdit('name') && (
+                  <p className="text-xs text-red-600 mt-1 flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    Debes editar el nombre del producto
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                <label className="block text-sm font-medium mb-1">
+                  <span className={needsEdit('description') ? 'text-red-600' : 'text-gray-700'}>
+                    Descripción {needsEdit('description') && <span className="text-red-500">*</span>}
+                  </span>
+                </label>
                 <textarea
                   value={importedProduct.description}
                   onChange={(e) => setImportedProduct({ ...importedProduct, description: e.target.value })}
                   rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                    needsEdit('description')
+                      ? 'border-red-400 bg-red-50'
+                      : 'border-gray-300 bg-white'
+                  }`}
+                  placeholder="Escribe la descripción del producto aquí"
                 />
+                {needsEdit('description') && (
+                  <p className="text-xs text-red-600 mt-1 flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    Debes editar la descripción del producto
+                  </p>
+                )}
               </div>
 
               <div>
@@ -635,8 +793,10 @@ const ProductImporter: React.FC = () => {
             {/* Right Column - Pricing */}
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Precio del Proveedor (USD) *
+                <label className="block text-sm font-medium mb-1">
+                  <span className={needsEdit('price') ? 'text-red-600' : 'text-gray-700'}>
+                    Precio del Proveedor (USD) {needsEdit('price') && <span className="text-red-500">*</span>}
+                  </span>
                 </label>
                 <input
                   type="number"
@@ -647,12 +807,25 @@ const ProductImporter: React.FC = () => {
                     ...importedProduct,
                     supplierPrice: parseFloat(e.target.value) || 0
                   })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="0.00"
+                  className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                    needsEdit('price')
+                      ? 'border-red-400 bg-red-50'
+                      : 'border-gray-300 bg-white'
+                  }`}
+                  placeholder="Ej: 25.99"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Este es el precio que pagas al proveedor
-                </p>
+                {needsEdit('price') ? (
+                  <p className="text-xs text-red-600 mt-1 flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    Debes ingresar un precio mayor a $0.00
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Este es el precio que pagas al proveedor
+                  </p>
+                )}
               </div>
 
               <div className="bg-blue-50 p-4 rounded-lg">
