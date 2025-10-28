@@ -1,7 +1,8 @@
 // backend/src/services/productScraperAdvanced.js
 const axios = require('axios');
 const cheerio = require('cheerio');
-const puppeteer = require('puppeteer');
+const puppeteerCore = require('puppeteer-core');
+const chromium = require('@sparticuz/chromium');
 const { calculateSalePrice } = require('../utils/pricing');
 
 /**
@@ -86,24 +87,18 @@ async function scrapeAliExpressWithPuppeteer(url) {
     const cleanUrl = url.split('?')[0];
     console.log(`🧹 URL limpia: ${cleanUrl}`);
 
-    // Lanzar navegador headless
-    browser = await puppeteer.launch({
-      headless: 'new',
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-gpu',
-        '--window-size=1920x1080',
-        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      ]
+    // Lanzar navegador headless con Chromium precompilado (compatible con Railway)
+    browser = await puppeteerCore.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+      ignoreHTTPSErrors: true
     });
 
     const page = await browser.newPage();
 
-    // Configurar viewport y user agent
-    await page.setViewport({ width: 1920, height: 1080 });
+    // Configurar user agent adicional si es necesario
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
     // Ir a la página

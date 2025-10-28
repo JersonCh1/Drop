@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.12.0",
+    "@sparticuz/chromium": "^141.0.0",
     "axios": "^1.12.2",
     "bcryptjs": "^2.4.3",
     "cheerio": "^1.1.2",
@@ -44,6 +45,7 @@
     "pg": "^8.16.3",
     "prisma": "^6.12.0",
     "puppeteer": "^24.26.1",
+    "puppeteer-core": "^24.26.1",
     "qrcode": "^1.5.3",
     "resend": "^6.2.0",
     "stripe": "^13.11.0",

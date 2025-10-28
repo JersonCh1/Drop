@@ -1,0 +1,14 @@
+# nixpacks.toml - Configuración para Railway
+# No instalar Chrome manualmente, usar @sparticuz/chromium
+
+[phases.setup]
+nixPkgs = ["nodejs", "npm"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run db:generate"]
+
+[start]
+cmd = "npm start"
