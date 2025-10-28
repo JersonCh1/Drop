@@ -136,7 +136,7 @@ const CJProductImporter: React.FC = () => {
 
         setProductName(details.productNameEn || product.productNameEn);
         setDescription(details.description || `Producto importado desde CJ Dropshipping: ${details.productNameEn}`);
-        setSupplierPrice(parseFloat(details.sellPrice) || parseFloat(product.sellPrice) || 0);
+        setSupplierPrice(details.sellPrice || product.sellPrice || 0);
         setImages(details.productImage ? [details.productImage] : [product.productImage]);
 
         toast.success('Detalles cargados');

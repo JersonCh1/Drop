@@ -1,5 +1,5 @@
 // Service Worker for PWA
-const CACHE_NAME = 'iphone-cases-v3';
+const CACHE_NAME = 'iphone-cases-v4'; // Incrementado para forzar limpieza
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -51,6 +51,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // IMPORTANTE: NO cachear peticiones a la API
+  // Esto previene que URLs antiguas (localhost) queden en cache
+  const url = new URL(event.request.url);
+  if (url.pathname.startsWith('/api/') ||
+      url.hostname.includes('railway.app') ||
+      url.hostname.includes('localhost')) {
+    // Peticiones API siempre van directo a la red, sin cache
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -61,7 +72,7 @@ self.addEventListener('fetch', (event) => {
             return fetchResponse;
           }
 
-          // Cache new resources (only for GET requests)
+          // Cache new resources (only for static assets)
           return caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, fetchResponse.clone());
             return fetchResponse;
