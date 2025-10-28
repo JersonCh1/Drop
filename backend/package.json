@@ -70,9 +70,5 @@
     "notifications"
   ],
   "author": "Tu Nombre",
-  "license": "ISC",
-  "optionalDependencies": {
-    "@sparticuz/chromium": "^141.0.0",
-    "puppeteer-core": "^24.26.1"
-  }
+  "license": "ISC"
 }
