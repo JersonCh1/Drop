@@ -1,6 +1,7 @@
 // backend/src/services/supplierOrderService.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const cjService = require('./cjDropshippingService');
 
 /**
  * Servicio de automatización de órdenes con proveedores
@@ -128,26 +129,45 @@ async function placeOrderWithSupplierAPI(supplierOrderId, supplier, items, custo
   try {
     console.log(`🔄 Intentando crear orden automática con ${supplier.name}...`);
 
-    // TODO: Implementar integraciones con APIs específicas
-    // Ejemplo: AliExpress API, CJ Dropshipping API, etc.
+    let apiResponse;
 
-    // Por ahora, simulamos una llamada exitosa
-    const mockApiResponse = {
-      success: true,
-      supplierOrderId: `${supplier.slug.toUpperCase()}-${Date.now()}`,
-      supplierOrderNumber: `ORD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
-      estimatedDelivery: calculateEstimatedDelivery(supplier.averageShippingDays)
-    };
+    // Detectar el proveedor y usar su API
+    if (supplier.slug === 'cj-dropshipping' || supplier.name.toLowerCase().includes('cj')) {
+      console.log('📦 Usando API de CJ Dropshipping...');
+      apiResponse = await placeOrderWithCJ(items, customerOrder, supplier);
+    } else {
+      // Para otros proveedores, retornar error para que se maneje manualmente
+      console.log(`⚠️ Proveedor ${supplier.name} no tiene integración automática`);
+
+      await prisma.supplierOrder.update({
+        where: { id: supplierOrderId },
+        data: {
+          status: 'PENDING',
+          notes: `Proveedor sin integración API - requiere procesamiento manual`
+        }
+      });
+
+      return {
+        success: false,
+        requiresManualProcessing: true,
+        message: `${supplier.name} requiere procesamiento manual`
+      };
+    }
+
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.error || 'Error creando orden con proveedor');
+    }
 
     // Actualizar la orden del proveedor con la información de la API
     await prisma.supplierOrder.update({
       where: { id: supplierOrderId },
       data: {
         status: 'PLACED',
-        supplierOrderId: mockApiResponse.supplierOrderId,
-        supplierOrderNumber: mockApiResponse.supplierOrderNumber,
+        supplierOrderId: apiResponse.supplierOrderId,
+        supplierOrderNumber: apiResponse.supplierOrderNumber,
         orderedAt: new Date(),
-        notes: `Orden realizada automáticamente vía API`
+        trackingNumber: apiResponse.trackingNumber || null,
+        notes: `Orden realizada automáticamente vía ${supplier.name} API`
       }
     });
 
@@ -155,13 +175,15 @@ async function placeOrderWithSupplierAPI(supplierOrderId, supplier, items, custo
     await prisma.order.update({
       where: { id: customerOrder.id },
       data: {
-        estimatedDelivery: mockApiResponse.estimatedDelivery
+        estimatedDelivery: apiResponse.estimatedDelivery,
+        trackingNumber: apiResponse.trackingNumber || null,
+        status: apiResponse.trackingNumber ? 'SHIPPED' : 'PROCESSING'
       }
     });
 
-    console.log(`✅ Orden automática creada: ${mockApiResponse.supplierOrderNumber}`);
+    console.log(`✅ Orden automática creada: ${apiResponse.supplierOrderNumber}`);
 
-    return mockApiResponse;
+    return apiResponse;
 
   } catch (error) {
     console.error(`❌ Error al crear orden con API de ${supplier.name}:`, error);
@@ -171,10 +193,72 @@ async function placeOrderWithSupplierAPI(supplierOrderId, supplier, items, custo
       where: { id: supplierOrderId },
       data: {
         status: 'FAILED',
-        errorMessage: error.message
+        errorMessage: error.message,
+        notes: `Error automático: ${error.message}. Requiere revisión manual.`
       }
     });
 
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Crea orden automáticamente con CJ Dropshipping
+ * @param {array} items - Items de la orden
+ * @param {object} customerOrder - Orden del cliente
+ * @param {object} supplier - Información del proveedor
+ * @returns {Promise<object>} Respuesta de la API de CJ
+ */
+async function placeOrderWithCJ(items, customerOrder, supplier) {
+  try {
+    console.log('🚀 Creando orden automática en CJ Dropshipping...');
+
+    // Preparar productos para CJ
+    const products = items.map(item => ({
+      productId: item.product.externalId || item.product.cjProductId, // ID de CJ
+      variantId: item.variant || null,
+      quantity: item.quantity,
+      price: parseFloat(item.product.supplierPrice) || parseFloat(item.price)
+    }));
+
+    // Preparar datos de la orden
+    const orderData = {
+      customerName: `${customerOrder.customerFirstName || ''} ${customerOrder.customerLastName || ''}`.trim(),
+      customerEmail: customerOrder.customerEmail,
+      customerPhone: customerOrder.customerPhone || customerOrder.shippingPhone,
+      shippingAddress: customerOrder.shippingAddress,
+      shippingCity: customerOrder.shippingCity,
+      shippingState: customerOrder.shippingState || '',
+      shippingPostalCode: customerOrder.shippingPostalCode || '',
+      shippingCountry: customerOrder.shippingCountry || 'PE',
+      products,
+      orderNumber: customerOrder.orderNumber,
+      remarks: `Orden automática desde tienda - ${customerOrder.orderNumber}`
+    };
+
+    // Crear orden en CJ
+    const result = await cjService.createOrder(orderData);
+
+    if (result.success) {
+      console.log(`✅ Orden creada en CJ: ${result.cjOrderNumber}`);
+
+      return {
+        success: true,
+        supplierOrderId: result.cjOrderId,
+        supplierOrderNumber: result.cjOrderNumber,
+        trackingNumber: result.trackingNumber || null,
+        estimatedDelivery: calculateEstimatedDelivery(supplier.averageShippingDays || '15-30'),
+        totalAmount: result.totalAmount
+      };
+    } else {
+      throw new Error(result.error || 'Error desconocido creando orden en CJ');
+    }
+
+  } catch (error) {
+    console.error('❌ Error creando orden en CJ:', error);
     return {
       success: false,
       error: error.message

@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const stripeService = require('../services/stripeServiceSimple');
 const { PrismaClient } = require('@prisma/client');
+const supplierOrderService = require('../services/supplierOrderService');
 
 const prisma = new PrismaClient();
 
@@ -114,6 +115,23 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
           });
 
           console.log(`✅ Orden ${session.metadata.orderId} marcada como pagada`);
+
+          // 🚀 AUTOMATIZACIÓN: Crear orden automáticamente en CJ Dropshipping
+          try {
+            console.log(`🤖 Iniciando creación automática de orden en CJ para ${session.metadata.orderId}...`);
+            const supplierOrderResult = await supplierOrderService.createSupplierOrderFromCustomerOrder(
+              session.metadata.orderId
+            );
+
+            if (supplierOrderResult.success) {
+              console.log(`✅ Orden automática en CJ creada: ${supplierOrderResult.supplierOrders.length} orden(es)`);
+            } else {
+              console.error(`⚠️ No se pudo crear orden automática en CJ: ${supplierOrderResult.error}`);
+            }
+          } catch (autoOrderError) {
+            // No fallar el webhook si la automatización falla
+            console.error('❌ Error en automatización de orden:', autoOrderError);
+          }
         }
         break;
 

@@ -1065,6 +1065,10 @@ async function startServer() {
       console.log('⚠️  Stripe no configurado - STRIPE_SECRET_KEY no encontrada');
     }
 
+    // 🤖 Iniciar cron job de CJ Dropshipping (sincronización automática de tracking)
+    const { startCJTrackingSyncJob } = require('./cron/syncCJTracking');
+    startCJTrackingSyncJob();
+
     // Auto-fix imágenes rotas (ejecutar en background)
     const { autoFixImages } = require('./utils/auto-fix-images');
     autoFixImages().catch(err => console.log('⚠️  Auto-fix imágenes falló:', err.message));
