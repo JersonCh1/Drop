@@ -897,6 +897,10 @@ app.use('/api/pagoefectivo', pagoefectivoRoutes);
 const safetypayRoutes = require('./routes/safetypay');
 app.use('/api/safetypay', safetypayRoutes);
 
+// =================== RUTAS DE PAYU (TARJETAS LATAM) ===================
+const payuRoutes = require('./routes/payu');
+app.use('/api/payu', payuRoutes);
+
 // =================== RUTAS DE AUTENTICACIÓN ===================
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
