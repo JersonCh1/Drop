@@ -27,7 +27,15 @@
       "Bash(set:*)",
       "Bash(dir:*)",
       "Bash(findstr:*)",
-      "Bash(npx react-scripts build)"
+      "Bash(npx react-scripts build)",
+      "Bash(npx prisma db push:*)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:zwfHcUfTAZoQMZNbvuSDJiBFWYzesYkk@shinkansen.proxy.rlwy.net:47497/railway\" npx prisma db push:*)",
+      "Bash(timeout 30 bash:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(git rm:*)",
+      "WebFetch(domain:developers.izipay.pe)",
+      "WebFetch(domain:github.com)",
+      "Bash(del \"C:\\Users\\Jerson\\Desktop\\DROP\\dropshipping-iphone\\backend\\src\\routes\\payu.js\")"
     ],
     "deny": [],
     "ask": []

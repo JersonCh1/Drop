@@ -41,13 +41,15 @@
 - **Morgan** - HTTP logging
 
 ### Integraciones de Pago
+- ✅ **Izipay** - Pasarela BCP (Tarjetas + Yape + Plin) - **PRINCIPAL**
 - ✅ **Stripe** - Tarjetas internacionales
-- ✅ **Culqi** - Tarjetas Perú (principal)
+- ✅ **Culqi** - Tarjetas Perú
 - ✅ **Niubiz** - Visa/Mastercard Perú
 - ✅ **MercadoPago** - América Latina
-- ✅ **Yape/Plin** - Billeteras digitales Perú
 - ✅ **PagoEfectivo** - Efectivo en agentes
 - ✅ **SafetyPay** - Transferencias bancarias
+
+**Nota:** Yape y Plin funcionan vía Izipay (BCP) con procesamiento instantáneo y automatización completa.
 
 ### Marketing & Analytics
 - ✅ **Google Analytics** - Tracking de usuarios

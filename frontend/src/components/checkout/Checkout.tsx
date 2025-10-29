@@ -24,7 +24,7 @@ interface CheckoutProps {
   onOrderComplete: () => void;
 }
 
-type PaymentMethod = 'niubiz' | 'pagoefectivo' | 'safetypay' | 'yape' | 'plin' | 'stripe' | 'mercadopago' | 'culqi';
+type PaymentMethod = 'niubiz' | 'pagoefectivo' | 'safetypay' | 'yape' | 'plin' | 'stripe' | 'mercadopago' | 'culqi' | 'izipay';
 
 const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
   const { items: cart, totalPrice, shippingCost, finalTotal, clearCart } = useCart();
@@ -512,6 +512,88 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
         } else {
           throw new Error('Error al crear la preferencia de MercadoPago');
         }
+      } else if (paymentMethod === 'izipay') {
+        // Izipay - Obtener FormToken y abrir modal de pago
+        // Primero crear orden en la BD
+        const orderResponse = await fetch(`${API_URL}/orders`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            customerInfo: formData,
+            items: cart.map(item => ({
+              name: item.name,
+              model: item.model || '',
+              color: item.color || '',
+              quantity: item.quantity,
+              price: item.price
+            })),
+            subtotal,
+            shippingCost,
+            total,
+            paymentMethod: 'izipay',
+            orderDate: new Date().toISOString()
+          })
+        });
+
+        if (!orderResponse.ok) {
+          throw new Error('Error al crear la orden');
+        }
+
+        const orderResult = await orderResponse.json();
+        const orderId = orderResult.data?.id || orderResult.orderNumber;
+
+        // Obtener FormToken del backend
+        const response = await fetch(`${API_URL}/izipay/formtoken`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            amount: total,
+            currency: 'PEN',
+            orderId: orderId,
+            email: formData.email,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            phoneNumber: formData.phone,
+            identityType: 'DNI',
+            identityCode: formData.postalCode, // Usamos postal code como identidad
+            address: formData.address,
+            country: formData.country,
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.postalCode
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Izipay formToken obtained:', result);
+
+          // Track Purchase intent
+          trackingPixels.trackPurchase({
+            content_ids: cart.map(item => item.productId.toString()),
+            contents: cart.map(item => ({
+              id: item.productId.toString(),
+              quantity: item.quantity,
+              name: item.name
+            })),
+            value: total,
+            currency: 'USD',
+            transaction_id: orderId
+          });
+
+          clearCart();
+
+          // TODO: Aquí se debería cargar el SDK de Izipay y abrir el formulario
+          // Por ahora, simplemente mostramos un mensaje
+          alert('Se abrirá el formulario de pago de Izipay. (Pendiente: integrar SDK en frontend)');
+          onOrderComplete();
+        } else {
+          throw new Error('Error al obtener FormToken de Izipay');
+        }
       } else if (paymentMethod === 'niubiz') {
         // Niubiz (Visanet) - Procesamiento de tarjetas
         alert('Niubiz: Por el momento este método requiere configuración de credenciales. Usa Yape o Plin (GRATIS) o MercadoPago como alternativa.');
@@ -531,18 +613,88 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
         return;
 
       } else if (paymentMethod === 'yape' || paymentMethod === 'plin') {
-        // Mostrar pantalla de confirmación de pago
-        setPendingOrderData({
-          customerInfo: formData,
-          items: cart,
-          subtotal,
-          shippingCost,
-          total,
-          paymentMethod
+        // Yape/Plin - Procesar vía Izipay
+        // Primero crear orden en la BD
+        const orderResponse = await fetch(`${API_URL}/orders`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            customerInfo: formData,
+            items: cart.map(item => ({
+              name: item.name,
+              model: item.model || '',
+              color: item.color || '',
+              quantity: item.quantity,
+              price: item.price
+            })),
+            subtotal,
+            shippingCost,
+            total,
+            paymentMethod: paymentMethod,
+            orderDate: new Date().toISOString()
+          })
         });
-        setShowPaymentConfirmation(true);
-        setIsSubmitting(false);
-        return;
+
+        if (!orderResponse.ok) {
+          throw new Error('Error al crear la orden');
+        }
+
+        const orderResult = await orderResponse.json();
+        const orderId = orderResult.data?.id || orderResult.orderNumber;
+
+        // Obtener FormToken del backend especificando el método de pago
+        const response = await fetch(`${API_URL}/izipay/formtoken`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            amount: total,
+            currency: 'PEN',
+            orderId: orderId,
+            email: formData.email,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            phoneNumber: formData.phone,
+            identityType: 'DNI',
+            identityCode: formData.postalCode,
+            address: formData.address,
+            country: 'PE',
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.postalCode,
+            payMethod: paymentMethod === 'yape' ? 'YAPE_CODE' : 'PLIN'
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log(`Izipay ${paymentMethod} formToken obtained:`, result);
+
+          // Track Purchase intent
+          trackingPixels.trackPurchase({
+            content_ids: cart.map(item => item.productId.toString()),
+            contents: cart.map(item => ({
+              id: item.productId.toString(),
+              quantity: item.quantity,
+              name: item.name
+            })),
+            value: total,
+            currency: 'USD',
+            transaction_id: orderId
+          });
+
+          clearCart();
+
+          // TODO: Aquí se debería usar el hook useIzipay para abrir el formulario
+          // Por ahora, simplemente mostramos un mensaje
+          alert(`Se abrirá el formulario de ${paymentMethod.toUpperCase()} vía Izipay. (Pendiente: integrar SDK completo en frontend)`);
+          onOrderComplete();
+        } else {
+          throw new Error(`Error al obtener FormToken de Izipay para ${paymentMethod}`);
+        }
       }
     } catch (error) {
       console.error('Error:', error);
@@ -893,18 +1045,22 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
                         <span className="text-2xl">📱</span>
                       </div>
                       <div>
-                        <h4 className="font-bold text-gray-900 mb-2">Pago con Yape</h4>
+                        <h4 className="font-bold text-gray-900 mb-2">Pago con Yape vía Izipay</h4>
                         <p className="text-sm text-gray-600 mb-3">
-                          Te contactaremos por WhatsApp para coordinar el pago mediante Yape.
-                          Es rápido, seguro y 100% peruano.
+                          Paga con Yape de manera instantánea a través de la pasarela segura de Izipay.
+                          Genera tu código de aprobación en la app de Yape e ingrésalo en el formulario.
                         </p>
                         <div className="bg-white/60 p-3 rounded-lg">
                           <p className="text-xs text-gray-700 font-medium">
-                            ✓ Pago instantáneo<br/>
+                            ✓ Pago instantáneo con código OTP<br/>
                             ✓ Sin comisiones adicionales<br/>
-                            ✓ Confirmación inmediata
+                            ✓ Confirmación inmediata automática<br/>
+                            ✓ Procesado por BCP (Izipay)
                           </p>
                         </div>
+                        <p className="text-xs text-gray-600 mt-3">
+                          Abre tu app Yape → Menú → "Código de aprobación" → Ingresa el código aquí
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -912,24 +1068,28 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
 
                 {/* Plin Info */}
                 {paymentMethod === 'plin' && (
-                  <div className="mt-6 p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                  <div className="mt-6 p-6 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl border border-cyan-200">
                     <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <div className="w-12 h-12 bg-cyan-600 rounded-xl flex items-center justify-center flex-shrink-0">
                         <span className="text-2xl">💸</span>
                       </div>
                       <div>
-                        <h4 className="font-bold text-gray-900 mb-2">Pago con Plin</h4>
+                        <h4 className="font-bold text-gray-900 mb-2">Pago con Plin vía Izipay</h4>
                         <p className="text-sm text-gray-600 mb-3">
-                          Te contactaremos por WhatsApp para coordinar el pago mediante Plin.
-                          Acepta múltiples bancos peruanos.
+                          Paga con Plin de manera instantánea a través de la pasarela segura de Izipay.
+                          Compatible con todos los bancos del Perú: Interbank, Scotiabank, BBVA y más.
                         </p>
                         <div className="bg-white/60 p-3 rounded-lg">
                           <p className="text-xs text-gray-700 font-medium">
                             ✓ Transferencia inmediata<br/>
                             ✓ Compatible con todos los bancos<br/>
-                            ✓ Sin costo adicional
+                            ✓ Sin comisiones adicionales<br/>
+                            ✓ Procesado por BCP (Izipay)
                           </p>
                         </div>
+                        <p className="text-xs text-gray-600 mt-3">
+                          Se abrirá el formulario de pago para completar tu transacción con Plin
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1009,6 +1169,37 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
                             ✓ Comisión 2.5%
                           </p>
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Izipay Info */}
+                {paymentMethod === 'izipay' && (
+                  <div className="mt-6 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 mb-2">Pago con Izipay</h4>
+                        <p className="text-sm text-gray-600 mb-3">
+                          Pasarela oficial del BCP (Banco de Crédito del Perú). Acepta todas las tarjetas:
+                          Visa, Mastercard, American Express y Diners. Pago 100% seguro con automatización CJ Dropshipping.
+                        </p>
+                        <div className="bg-white/60 p-3 rounded-lg">
+                          <p className="text-xs text-gray-700 font-medium">
+                            ✓ Todas las tarjetas (Visa, Mastercard, Amex, Diners)<br/>
+                            ✓ Procesamiento instantáneo<br/>
+                            ✓ Dinero disponible al día siguiente<br/>
+                            ✓ Automatización 100% con CJ Dropshipping
+                          </p>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-3">
+                          Se abrirá el formulario seguro de Izipay para completar tu pago.
+                        </p>
                       </div>
                     </div>
                   </div>

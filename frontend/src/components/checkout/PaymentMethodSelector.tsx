@@ -33,24 +33,24 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({ selectedM
     {
       id: 'yape',
       name: 'Yape',
-      description: 'Pago móvil',
+      description: 'Vía Izipay',
       icon: '📱',
       gradient: 'from-purple-600 via-pink-600 to-rose-600',
       hoverGradient: 'from-purple-700 via-pink-700 to-rose-700',
-      badge: 'Gratis',
-      badgeColor: 'bg-yellow-500',
-      commission: '0%'
+      badge: 'Instant',
+      badgeColor: 'bg-purple-500',
+      commission: 'Sin comisión'
     },
     {
       id: 'plin',
       name: 'Plin',
-      description: 'Todos los bancos',
+      description: 'Vía Izipay',
       icon: '💸',
       gradient: 'from-cyan-600 via-sky-600 to-blue-600',
       hoverGradient: 'from-cyan-700 via-sky-700 to-blue-700',
-      badge: 'Gratis',
-      badgeColor: 'bg-yellow-500',
-      commission: '0%'
+      badge: 'Instant',
+      badgeColor: 'bg-cyan-500',
+      commission: 'Sin comisión'
     },
     {
       id: 'safetypay',
@@ -62,6 +62,17 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({ selectedM
       badge: 'Seguro',
       badgeColor: 'bg-indigo-500',
       commission: '2.5%'
+    },
+    {
+      id: 'izipay',
+      name: 'Izipay',
+      description: 'Tarjetas BCP',
+      icon: '💳',
+      gradient: 'from-blue-600 via-indigo-600 to-purple-600',
+      hoverGradient: 'from-blue-700 via-indigo-700 to-purple-700',
+      badge: 'BCP',
+      badgeColor: 'bg-blue-500',
+      commission: 'Variable'
     }
   ];
 
