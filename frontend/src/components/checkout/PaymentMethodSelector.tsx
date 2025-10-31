@@ -9,7 +9,7 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({ selectedM
 
   const paymentMethods = [
     {
-      id: 'niubiz',
+      id: 'izipay',
       name: 'Tarjeta',
       description: 'Visa, Mastercard, Amex',
       icon: '💳',
@@ -17,60 +17,38 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({ selectedM
       hoverGradient: 'from-blue-700 via-indigo-700 to-purple-700',
       badge: 'Recomendado',
       badgeColor: 'bg-green-500',
-      commission: '2.5%'
-    },
-    {
-      id: 'pagoefectivo',
-      name: 'Efectivo',
-      description: '+100,000 puntos',
-      icon: '🏪',
-      gradient: 'from-emerald-600 via-green-600 to-teal-600',
-      hoverGradient: 'from-emerald-700 via-green-700 to-teal-700',
-      badge: 'Fácil',
-      badgeColor: 'bg-blue-500',
-      commission: '2.89%'
+      commission: 'BCP'
     },
     {
       id: 'yape',
       name: 'Yape',
-      description: 'Vía Izipay',
+      description: 'Instant\u00e1neo y f\u00e1cil',
       icon: '📱',
       gradient: 'from-purple-600 via-pink-600 to-rose-600',
       hoverGradient: 'from-purple-700 via-pink-700 to-rose-700',
-      badge: 'Instant',
+      badge: 'Gratis',
       badgeColor: 'bg-purple-500',
-      commission: 'Sin comisión'
+      commission: 'Sin comisi\u00f3n'
     },
     {
       id: 'plin',
       name: 'Plin',
-      description: 'Vía Izipay',
+      description: 'Todos los bancos',
       icon: '💸',
       gradient: 'from-cyan-600 via-sky-600 to-blue-600',
       hoverGradient: 'from-cyan-700 via-sky-700 to-blue-700',
-      badge: 'Instant',
+      badge: 'Gratis',
       badgeColor: 'bg-cyan-500',
-      commission: 'Sin comisión'
+      commission: 'Sin comisi\u00f3n'
     },
     {
-      id: 'safetypay',
-      name: 'Transferencia',
-      description: 'Banca online',
-      icon: '🏦',
-      gradient: 'from-orange-600 via-amber-600 to-yellow-600',
-      hoverGradient: 'from-orange-700 via-amber-700 to-yellow-700',
-      badge: 'Seguro',
-      badgeColor: 'bg-indigo-500',
-      commission: '2.5%'
-    },
-    {
-      id: 'izipay',
-      name: 'Izipay',
-      description: 'Tarjetas BCP',
-      icon: '💳',
-      gradient: 'from-blue-600 via-indigo-600 to-purple-600',
-      hoverGradient: 'from-blue-700 via-indigo-700 to-purple-700',
-      badge: 'BCP',
+      id: 'mercadopago',
+      name: 'MercadoPago',
+      description: 'Pago online',
+      icon: '⚡',
+      gradient: 'from-blue-600 via-cyan-600 to-teal-600',
+      hoverGradient: 'from-blue-700 via-cyan-700 to-teal-700',
+      badge: 'Popular',
       badgeColor: 'bg-blue-500',
       commission: 'Variable'
     }

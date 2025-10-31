@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
-import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { QRCodeSVG } from 'qrcode.react';
-import { useCulqi } from '../../hooks/useCulqi';
+import { useIzipay } from '../../hooks/useIzipay';
 import PaymentMethodSelector from './PaymentMethodSelector';
 import { trackingPixels } from '../../utils/trackingPixels';
 
@@ -24,14 +23,10 @@ interface CheckoutProps {
   onOrderComplete: () => void;
 }
 
-type PaymentMethod = 'niubiz' | 'pagoefectivo' | 'safetypay' | 'yape' | 'plin' | 'stripe' | 'mercadopago' | 'culqi' | 'izipay';
+type PaymentMethod = 'yape' | 'plin' | 'izipay' | 'mercadopago';
 
 const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
   const { items: cart, totalPrice, shippingCost, finalTotal, clearCart } = useCart();
-
-  // Siempre llamar los hooks (regla de React Hooks)
-  const stripe = useStripe();
-  const elements = useElements();
 
   // Track InitiateCheckout cuando se abre el checkout
   useEffect(() => {
@@ -50,11 +45,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
     }
   }, []); // Solo al montar el componente
 
-  // Verificar si Stripe está disponible después de llamar los hooks
-  const hasStripe = !!process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
-
-  // Determinar método de pago por defecto (priorizar los gratuitos/baratos)
-  const defaultPaymentMethod: PaymentMethod = 'yape'; // Yape es gratis
+  // Determinar método de pago por defecto
+  const defaultPaymentMethod: PaymentMethod = 'izipay'; // Izipay es la pasarela principal
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(defaultPaymentMethod);
   const [formData, setFormData] = useState<CheckoutFormData>({
@@ -72,7 +64,6 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
 
   const [errors, setErrors] = useState<Partial<CheckoutFormData>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [cardError, setCardError] = useState<string>('');
   const [showPaymentConfirmation, setShowPaymentConfirmation] = useState(false);
   const [operationCode, setOperationCode] = useState('');
   const [pendingOrderData, setPendingOrderData] = useState<any>(null);
@@ -83,97 +74,36 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
   const [couponError, setCouponError] = useState('');
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
 
-  // Cálculos de precios (necesarios para Culqi)
+  // Cálculos de precios
   const subtotal = totalPrice;
   const discountAmount = appliedCoupon?.discountAmount || 0;
   const total = appliedCoupon ? appliedCoupon.newTotal + shippingCost : finalTotal;
 
-  // Inicializar Culqi
-  const { openCulqi } = useCulqi({
-    publicKey: process.env.REACT_APP_CULQI_PUBLIC_KEY,
-    title: 'Pago de Orden',
-    currency: 'PEN',
-    description: `Orden por S/ ${(total * 3.7).toFixed(2)}`, // Conversión aproximada USD a PEN
-    amount: Math.round(total * 370), // Convertir USD a PEN (centavos)
-    onToken: async (token) => {
-      console.log('Token de Culqi recibido:', token.id);
-      setIsSubmitting(true);
+  // Inicializar Izipay
+  const { isLoaded: isIzipayLoaded, openCardPayment } = useIzipay({
+    onSuccess: async (response) => {
+      console.log('Pago exitoso con Izipay:', response);
 
-      try {
-        // Crear orden primero
-        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
-        const orderResponse = await fetch(`${API_URL}/orders`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            customerInfo: formData,
-            items: cart.map(item => ({
-              name: item.name,
-              model: item.model || '',
-              color: item.color || '',
-              quantity: item.quantity,
-              price: item.price
-            })),
-            subtotal,
-            shippingCost,
-            total,
-            paymentMethod: 'culqi',
-            orderDate: new Date().toISOString()
-          })
-        });
+      // Track Purchase
+      trackingPixels.trackPurchase({
+        content_ids: cart.map(item => item.productId.toString()),
+        contents: cart.map(item => ({
+          id: item.productId.toString(),
+          quantity: item.quantity,
+          name: item.name
+        })),
+        value: total,
+        currency: 'USD',
+        transaction_id: response.transactionId || `izipay_${Date.now()}`
+      });
 
-        if (!orderResponse.ok) throw new Error('Error al crear la orden');
-
-        const orderResult = await orderResponse.json();
-        const orderId = orderResult.data?.id;
-
-        // Procesar pago con Culqi
-        const chargeResponse = await fetch(`${API_URL}/culqi/create-charge`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            token: token.id,
-            amount: total,
-            email: formData.email,
-            orderId
-          })
-        });
-
-        if (!chargeResponse.ok) throw new Error('Error al procesar el pago');
-
-        const chargeResult = await chargeResponse.json();
-
-        if (chargeResult.success) {
-          // Track Purchase
-          trackingPixels.trackPurchase({
-            content_ids: cart.map(item => item.productId.toString()),
-            contents: cart.map(item => ({
-              id: item.productId.toString(),
-              quantity: item.quantity,
-              name: item.name
-            })),
-            value: total,
-            currency: 'USD',
-            transaction_id: orderId || `culqi_${Date.now()}`
-          });
-
-          clearCart();
-          alert('¡Pago exitoso! Tu orden ha sido procesada.');
-          onOrderComplete();
-        } else {
-          throw new Error(chargeResult.message || 'Error al procesar el pago');
-        }
-
-      } catch (error: any) {
-        console.error('Error:', error);
-        alert('Hubo un error al procesar tu pago. Por favor intenta de nuevo.');
-      } finally {
-        setIsSubmitting(false);
-      }
+      clearCart();
+      alert('¡Pago exitoso! Tu orden ha sido procesada.');
+      onOrderComplete();
     },
     onError: (error) => {
-      console.error('Error de Culqi:', error);
-      alert('Hubo un error al procesar el pago con Culqi.');
+      console.error('Error de Izipay:', error);
+      alert('Hubo un error al procesar el pago con Izipay. Por favor intenta de nuevo.');
       setIsSubmitting(false);
     }
   });
@@ -335,127 +265,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
     try {
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
-      if (paymentMethod === 'stripe') {
-        // Validar que Stripe y elementos estén disponibles
-        if (!stripe || !elements) {
-          alert('Stripe no está cargado correctamente. Por favor recarga la página.');
-          return;
-        }
-
-        const cardElement = elements.getElement(CardElement);
-        if (!cardElement) {
-          alert('Formulario de tarjeta no encontrado');
-          return;
-        }
-
-        // Crear orden primero
-        const orderResponse = await fetch(`${API_URL}/orders`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            customerInfo: formData,
-            items: cart.map(item => ({
-              name: item.name,
-              model: item.model || '',
-              color: item.color || '',
-              quantity: item.quantity,
-              price: item.price
-            })),
-            subtotal,
-            shippingCost,
-            total,
-            paymentMethod: 'stripe',
-            orderDate: new Date().toISOString()
-          })
-        });
-
-        if (!orderResponse.ok) {
-          throw new Error('Error al crear la orden');
-        }
-
-        const orderResult = await orderResponse.json();
-        const orderId = orderResult.data?.id;
-
-        // Crear payment intent
-        const paymentResponse = await fetch(`${API_URL}/stripe/create-payment-intent`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            orderId,
-            amount: Math.round(total * 100), // Stripe usa centavos
-            currency: 'usd',
-            customerInfo: formData
-          })
-        });
-
-        if (!paymentResponse.ok) {
-          throw new Error('Error al crear el intento de pago');
-        }
-
-        const { clientSecret } = await paymentResponse.json();
-
-        // Confirmar el pago
-        const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-          payment_method: {
-            card: cardElement,
-            billing_details: {
-              name: `${formData.firstName} ${formData.lastName}`,
-              email: formData.email,
-              phone: formData.phone,
-              address: {
-                line1: formData.address,
-                city: formData.city,
-                state: formData.state,
-                postal_code: formData.postalCode,
-                country: formData.country
-              }
-            }
-          }
-        });
-
-        if (stripeError) {
-          setCardError(stripeError.message || 'Error al procesar el pago');
-          alert('Error al procesar el pago: ' + stripeError.message);
-          return;
-        }
-
-        if (paymentIntent?.status === 'succeeded') {
-          // Track Purchase
-          trackingPixels.trackPurchase({
-            content_ids: cart.map(item => item.productId.toString()),
-            contents: cart.map(item => ({
-              id: item.productId.toString(),
-              quantity: item.quantity,
-              name: item.name
-            })),
-            value: total,
-            currency: 'USD',
-            transaction_id: paymentIntent.id || `stripe_${Date.now()}`
-          });
-
-          clearCart();
-          alert('¡Pago exitoso! Tu orden ha sido procesada.');
-          onOrderComplete();
-        }
-
-      } else if (paymentMethod === 'culqi') {
-        // Validar formulario antes de abrir Culqi
-        if (!validateForm()) {
-          alert('Por favor completa todos los campos requeridos');
-          setIsSubmitting(false);
-          return;
-        }
-
-        // Abrir el checkout de Culqi
-        openCulqi();
-        setIsSubmitting(false);
-        return;
-
-      } else if (paymentMethod === 'mercadopago') {
+      if (paymentMethod === 'mercadopago') {
         // Crear preferencia de MercadoPago
         const response = await fetch(`${API_URL}/mercadopago/create-preference`, {
           method: 'POST',
@@ -514,6 +324,12 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
         }
       } else if (paymentMethod === 'izipay') {
         // Izipay - Obtener FormToken y abrir modal de pago
+        if (!isIzipayLoaded) {
+          alert('El SDK de Izipay aún no está cargado. Por favor espera un momento e intenta de nuevo.');
+          setIsSubmitting(false);
+          return;
+        }
+
         // Primero crear orden en la BD
         const orderResponse = await fetch(`${API_URL}/orders`, {
           method: 'POST',
@@ -572,46 +388,29 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
           const result = await response.json();
           console.log('Izipay formToken obtained:', result);
 
-          // Track Purchase intent
-          trackingPixels.trackPurchase({
-            content_ids: cart.map(item => item.productId.toString()),
-            contents: cart.map(item => ({
-              id: item.productId.toString(),
-              quantity: item.quantity,
-              name: item.name
-            })),
-            value: total,
-            currency: 'USD',
-            transaction_id: orderId
-          });
-
-          clearCart();
-
-          // TODO: Aquí se debería cargar el SDK de Izipay y abrir el formulario
-          // Por ahora, simplemente mostramos un mensaje
-          alert('Se abrirá el formulario de pago de Izipay. (Pendiente: integrar SDK en frontend)');
-          onOrderComplete();
+          // Abrir el formulario de pago de Izipay usando el hook
+          await openCardPayment(
+            {
+              publicKey: process.env.REACT_APP_IZIPAY_PUBLIC_KEY || '',
+              amount: total,
+              currency: 'PEN',
+              orderId: orderId,
+              email: formData.email,
+              firstName: formData.firstName,
+              lastName: formData.lastName,
+              phoneNumber: formData.phone,
+              identityCode: formData.postalCode,
+              address: formData.address,
+              country: formData.country,
+              city: formData.city,
+              state: formData.state,
+              zipCode: formData.postalCode
+            },
+            result.formToken
+          );
         } else {
           throw new Error('Error al obtener FormToken de Izipay');
         }
-      } else if (paymentMethod === 'niubiz') {
-        // Niubiz (Visanet) - Procesamiento de tarjetas
-        alert('Niubiz: Por el momento este método requiere configuración de credenciales. Usa Yape o Plin (GRATIS) o MercadoPago como alternativa.');
-        setIsSubmitting(false);
-        return;
-
-      } else if (paymentMethod === 'pagoefectivo') {
-        // PagoEfectivo - Generar código CIP
-        alert('PagoEfectivo: Por el momento este método requiere configuración de credenciales. Usa Yape o Plin (GRATIS) como alternativa.');
-        setIsSubmitting(false);
-        return;
-
-      } else if (paymentMethod === 'safetypay') {
-        // SafetyPay - Transferencia bancaria
-        alert('SafetyPay: Por el momento este método requiere configuración de credenciales. Usa Yape o Plin (GRATIS) o MercadoPago como alternativa.');
-        setIsSubmitting(false);
-        return;
-
       } else if (paymentMethod === 'yape' || paymentMethod === 'plin') {
         // Yape/Plin - Procesar vía Izipay
         // Primero crear orden en la BD
@@ -916,107 +715,6 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
                   onSelectMethod={(method) => setPaymentMethod(method as PaymentMethod)}
                 />
 
-                {/* Stripe Card Form */}
-                {paymentMethod === 'stripe' && (
-                  <div className="mt-6 p-6 bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border border-purple-200">
-                    {!hasStripe || !stripe || !elements ? (
-                      <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
-                        <div className="flex items-start">
-                          <svg className="w-6 h-6 text-yellow-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                          </svg>
-                          <div>
-                            <h4 className="font-bold text-gray-900 mb-1">Stripe no está configurado</h4>
-                            <p className="text-sm text-gray-700">
-                              El procesador de pagos con tarjeta no está disponible en este momento.
-                              Por favor, selecciona otro método de pago como MercadoPago, Yape o Plin.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <h4 className="font-bold text-gray-900 mb-4 flex items-center">
-                          <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                          </svg>
-                          Información de la Tarjeta
-                        </h4>
-                        <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
-                          <CardElement
-                            options={{
-                              style: {
-                                base: {
-                                  fontSize: '16px',
-                                  color: '#424770',
-                                  '::placeholder': {
-                                    color: '#aab7c4',
-                                  },
-                                  padding: '10px',
-                                },
-                                invalid: {
-                                  color: '#9e2146',
-                                },
-                              },
-                            }}
-                            onChange={(e) => {
-                              if (e.error) {
-                                setCardError(e.error.message);
-                              } else {
-                                setCardError('');
-                              }
-                            }}
-                          />
-                        </div>
-                        {cardError && (
-                          <p className="text-red-600 text-sm mt-2 flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                            {cardError}
-                          </p>
-                        )}
-                        <p className="text-xs text-gray-600 mt-3 flex items-center">
-                          <svg className="w-4 h-4 mr-1 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                          Tu pago es seguro. Encriptación SSL de 256 bits.
-                        </p>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {/* Culqi Info */}
-                {paymentMethod === 'culqi' && (
-                  <div className="mt-6 p-6 bg-gradient-to-br from-red-50 to-orange-50 rounded-xl border border-red-200">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-gray-900 mb-2">Pago con Culqi</h4>
-                        <p className="text-sm text-gray-600 mb-3">
-                          Se abrirá una ventana segura de Culqi para ingresar los datos de tu tarjeta.
-                          Acepta Visa, Mastercard, Amex y Diners (emitidas en Perú).
-                        </p>
-                        <div className="bg-white/60 p-3 rounded-lg">
-                          <p className="text-xs text-gray-700 font-medium">
-                            ✓ Procesamiento en Soles (PEN)<br/>
-                            ✓ Pago 100% seguro<br/>
-                            ✓ Confirmación inmediata
-                          </p>
-                        </div>
-                        <p className="text-xs text-gray-600 mt-2">
-                          Monto aprox: S/ {(total * 3.7).toFixed(2)} PEN
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* MercadoPago Info */}
                 {paymentMethod === 'mercadopago' && (
                   <div className="mt-6 p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-200">
@@ -1090,85 +788,6 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
                         <p className="text-xs text-gray-600 mt-3">
                           Se abrirá el formulario de pago para completar tu transacción con Plin
                         </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Niubiz Info */}
-                {paymentMethod === 'niubiz' && (
-                  <div className="mt-6 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-gray-900 mb-2">Pago con Niubiz (Visanet)</h4>
-                        <p className="text-sm text-gray-600 mb-3">
-                          Pasarela oficial de Visa Perú. Se abrirá una ventana segura para ingresar los datos de tu tarjeta.
-                          Acepta Visa, Mastercard, American Express y Diners Club.
-                        </p>
-                        <div className="bg-white/60 p-3 rounded-lg">
-                          <p className="text-xs text-gray-700 font-medium">
-                            ✓ Procesamiento seguro PCI-DSS<br/>
-                            ✓ Aceptación instantánea<br/>
-                            ✓ Comisión 2.5%
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* PagoEfectivo Info */}
-                {paymentMethod === 'pagoefectivo' && (
-                  <div className="mt-6 p-6 bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border border-emerald-200">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <span className="text-2xl">🏪</span>
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-gray-900 mb-2">Pago con PagoEfectivo</h4>
-                        <p className="text-sm text-gray-600 mb-3">
-                          Genera un código CIP para pagar en efectivo en más de 100,000 puntos en todo Perú:
-                          bancos, agentes, bodegas, farmacias y más.
-                        </p>
-                        <div className="bg-white/60 p-3 rounded-lg">
-                          <p className="text-xs text-gray-700 font-medium">
-                            ✓ +100,000 puntos de pago<br/>
-                            ✓ Código válido por 48 horas<br/>
-                            ✓ Comisión 2.89%
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* SafetyPay Info */}
-                {paymentMethod === 'safetypay' && (
-                  <div className="mt-6 p-6 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border border-orange-200">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-gray-900 mb-2">Pago con SafetyPay</h4>
-                        <p className="text-sm text-gray-600 mb-3">
-                          Transferencia bancaria online segura. Serás redirigido al portal de tu banco
-                          para completar el pago. Compatible con todos los bancos peruanos.
-                        </p>
-                        <div className="bg-white/60 p-3 rounded-lg">
-                          <p className="text-xs text-gray-700 font-medium">
-                            ✓ Todos los bancos peruanos<br/>
-                            ✓ Transferencia segura<br/>
-                            ✓ Comisión 2.5%
-                          </p>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -1377,7 +996,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
 
               <button
                 type="submit"
-                disabled={isSubmitting || (paymentMethod === 'stripe' && (!stripe || !elements))}
+                disabled={isSubmitting}
                 className="group relative px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden"
               >
                 <span className="relative z-10 flex items-center space-x-2">

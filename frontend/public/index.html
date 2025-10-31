@@ -19,18 +19,24 @@
 
     <title>iPhone Cases Store - Carcasas de Alta Calidad</title>
 
-    <!-- Culqi Checkout -->
-    <script src="https://checkout.culqi.com/js/v4"></script>
-
     <!-- Izipay Checkout SDK -->
     <!-- Documentación: https://developers.izipay.pe/ -->
+    <!-- MODO TEST - Cambiar a producción cuando esté listo -->
     <script src="https://static.micuentaweb.pe/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js"
-            kr-public-key="YOUR_PUBLIC_KEY_HERE"
+            kr-public-key="81996279:testpublickey_DGqzCk7EUJrObfHmtUcN2dSO5FBuFhb5AknagPZLCHAJn"
             kr-post-url-success="/"
             kr-post-url-refused="/">
     </script>
     <link rel="stylesheet" href="https://static.micuentaweb.pe/static/js/krypton-client/V4.0/ext/classic-reset.css">
     <script src="https://static.micuentaweb.pe/static/js/krypton-client/V4.0/ext/classic.js"></script>
+
+    <!-- PRODUCCIÓN (Comentado - Descomentar cuando esté listo para producción)
+    <script src="https://static.micuentaweb.pe/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js"
+            kr-public-key="81996279:publickey_oy0QZCy4XxB4CmV2zO3W9t79i7flvrikXOPHhDf5yqWlC"
+            kr-post-url-success="/"
+            kr-post-url-refused="/">
+    </script>
+    -->
 
     <!-- Hotjar Tracking Code - Disabled until HOTJAR_ID is configured -->
     <!-- To enable: Set REACT_APP_HOTJAR_ID in .env and uncomment the code below -->

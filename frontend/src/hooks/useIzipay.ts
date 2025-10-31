@@ -15,7 +15,6 @@ interface IzipayConfig {
   city: string;
   state: string;
   zipCode: string;
-  payMethod?: 'CARD' | 'YAPE_CODE' | 'PLIN'; // Métodos de pago soportados
 }
 
 interface IzipayResponse {
@@ -33,13 +32,13 @@ interface UseIzipayProps {
 
 declare global {
   interface Window {
-    Izipay: any;
+    KR: any; // SDK de Izipay (Krypton)
   }
 }
 
 /**
  * Hook para integrar Izipay en React
- * Maneja tarjetas, Yape y Plin
+ * Usa el SDK KR (Krypton) de Izipay
  */
 export const useIzipay = ({ onSuccess, onError }: UseIzipayProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -48,10 +47,11 @@ export const useIzipay = ({ onSuccess, onError }: UseIzipayProps) => {
   // Verificar si el SDK está cargado
   useEffect(() => {
     const checkIzipayLoaded = () => {
-      if (window.Izipay) {
+      if (window.KR && typeof window.KR.setFormConfig === 'function') {
+        console.log('✅ SDK de Izipay (KR) cargado correctamente');
         setIsLoaded(true);
       } else {
-        // Reintentar cada 500ms hasta que se cargue
+        console.log('⏳ Esperando SDK de Izipay...');
         setTimeout(checkIzipayLoaded, 500);
       }
     };
@@ -60,11 +60,11 @@ export const useIzipay = ({ onSuccess, onError }: UseIzipayProps) => {
   }, []);
 
   /**
-   * Abrir formulario de Izipay para tarjetas
+   * Abrir formulario de pago de Izipay
    */
   const openCardPayment = useCallback(async (config: IzipayConfig, formToken: string) => {
-    if (!isLoaded || !window.Izipay) {
-      console.error('SDK de Izipay no está cargado');
+    if (!isLoaded || !window.KR) {
+      console.error('❌ SDK de Izipay no está cargado');
       onError({ message: 'SDK de Izipay no disponible' });
       return;
     }
@@ -72,190 +72,44 @@ export const useIzipay = ({ onSuccess, onError }: UseIzipayProps) => {
     setIsProcessing(true);
 
     try {
-      const iziConfig = {
-        transactionId: config.orderId,
-        merchantCode: config.publicKey.substring(0, 10), // Primeros 10 chars del public key
-        order: {
-          orderNumber: config.orderId,
-          currency: config.currency,
-          amount: config.amount * 100, // Convertir a centavos
-          processType: 'AT', // Autorización y captura
-          merchantBuyerId: config.email,
-          dateTimeTransaction: new Date().toISOString()
-        },
-        billing: {
-          firstName: config.firstName,
-          lastName: config.lastName,
-          email: config.email,
-          phoneNumber: config.phoneNumber,
-          street: config.address,
-          city: config.city,
-          state: config.state,
-          country: config.country,
-          postalCode: config.zipCode,
-          document: config.identityCode,
-          documentType: 'DNI'
-        },
-        appearance: {
-          logo: '', // URL del logo de tu tienda (opcional)
-          theme: 'default'
-        }
-      };
+      console.log('🔵 Configurando formulario de Izipay con formToken');
 
-      const checkout = new window.Izipay({ config: iziConfig });
-
-      // Cargar el formulario con el formToken
-      await checkout.LoadForm({
-        authorization: formToken,
-        keyRSA: config.publicKey,
-        callbackResponse: (response: IzipayResponse) => {
-          setIsProcessing(false);
-
-          if (response.code === '00') {
-            // Pago exitoso
-            onSuccess(response);
-          } else {
-            // Error en el pago
-            onError(response);
-          }
-        }
+      // Configurar el formulario con el token
+      window.KR.setFormConfig({
+        formToken: formToken,
+        'kr-language': 'es-ES'
       });
 
-    } catch (error) {
-      console.error('Error al abrir formulario de Izipay:', error);
-      setIsProcessing(false);
-      onError(error);
-    }
-  }, [isLoaded, onSuccess, onError]);
+      // Evento cuando el pago se envía
+      window.KR.onSubmit(async (paymentResponse: any) => {
+        console.log('📥 Respuesta de pago:', paymentResponse);
 
-  /**
-   * Procesar pago con Yape
-   */
-  const processYapePayment = useCallback(async (config: IzipayConfig, formToken: string, yapeCode: string) => {
-    if (!isLoaded || !window.Izipay) {
-      console.error('SDK de Izipay no está cargado');
-      onError({ message: 'SDK de Izipay no disponible' });
-      return;
-    }
-
-    setIsProcessing(true);
-
-    try {
-      const iziConfig = {
-        transactionId: config.orderId,
-        merchantCode: config.publicKey.substring(0, 10),
-        order: {
-          orderNumber: config.orderId,
-          currency: 'PEN', // Yape solo soporta PEN
-          amount: config.amount * 100,
-          processType: 'AT',
-          merchantBuyerId: config.email,
-          dateTimeTransaction: new Date().toISOString()
-        },
-        billing: {
-          firstName: config.firstName,
-          lastName: config.lastName,
-          email: config.email,
-          phoneNumber: config.phoneNumber,
-          street: config.address,
-          city: config.city,
-          state: config.state,
-          country: 'PE',
-          postalCode: config.zipCode,
-          document: config.identityCode,
-          documentType: 'DNI'
-        },
-        payMethod: 'YAPE_CODE' // Especificar método Yape
-      };
-
-      const checkout = new window.Izipay({ config: iziConfig });
-
-      // Procesar pago con código Yape
-      await checkout.LoadForm({
-        authorization: formToken,
-        keyRSA: config.publicKey,
-        yapeOTP: yapeCode, // Código OTP de Yape
-        callbackResponse: (response: IzipayResponse) => {
+        if (paymentResponse.clientAnswer && paymentResponse.clientAnswer.orderStatus === 'PAID') {
           setIsProcessing(false);
-
-          if (response.code === '00') {
-            onSuccess(response);
-          } else {
-            // Códigos de error específicos de Yape:
-            // Y06: Restricciones de Yape
-            // Y07: Excede límite diario
-            // Y08: Cuenta bloqueada
-            // Y12/Y13: Código OTP inválido/expirado
-            onError(response);
-          }
+          onSuccess({
+            code: '00',
+            message: 'Pago exitoso',
+            transactionId: paymentResponse.clientAnswer.transactions?.[0]?.uuid,
+            authorizationCode: paymentResponse.clientAnswer.transactions?.[0]?.transactionDetails?.cardDetails?.authorizationResponse,
+            transactionDate: paymentResponse.clientAnswer.orderDetails?.creationDate
+          });
+        } else {
+          setIsProcessing(false);
+          onError({
+            code: paymentResponse.clientAnswer?.orderStatus || 'ERROR',
+            message: paymentResponse.clientAnswer?.orderStatusLabel || 'Error en el pago'
+          });
         }
+
+        return false; // Prevenir redirección automática
       });
 
-    } catch (error) {
-      console.error('Error al procesar pago Yape:', error);
-      setIsProcessing(false);
-      onError(error);
-    }
-  }, [isLoaded, onSuccess, onError]);
-
-  /**
-   * Procesar pago con Plin
-   */
-  const processPlinPayment = useCallback(async (config: IzipayConfig, formToken: string) => {
-    if (!isLoaded || !window.Izipay) {
-      console.error('SDK de Izipay no está cargado');
-      onError({ message: 'SDK de Izipay no disponible' });
-      return;
-    }
-
-    setIsProcessing(true);
-
-    try {
-      const iziConfig = {
-        transactionId: config.orderId,
-        merchantCode: config.publicKey.substring(0, 10),
-        order: {
-          orderNumber: config.orderId,
-          currency: 'PEN',
-          amount: config.amount * 100,
-          processType: 'AT',
-          merchantBuyerId: config.email,
-          dateTimeTransaction: new Date().toISOString()
-        },
-        billing: {
-          firstName: config.firstName,
-          lastName: config.lastName,
-          email: config.email,
-          phoneNumber: config.phoneNumber,
-          street: config.address,
-          city: config.city,
-          state: config.state,
-          country: 'PE',
-          postalCode: config.zipCode,
-          document: config.identityCode,
-          documentType: 'DNI'
-        },
-        payMethod: 'PLIN' // Especificar método Plin
-      };
-
-      const checkout = new window.Izipay({ config: iziConfig });
-
-      await checkout.LoadForm({
-        authorization: formToken,
-        keyRSA: config.publicKey,
-        callbackResponse: (response: IzipayResponse) => {
-          setIsProcessing(false);
-
-          if (response.code === '00') {
-            onSuccess(response);
-          } else {
-            onError(response);
-          }
-        }
-      });
+      // Abrir el formulario de pago
+      console.log('🚀 Abriendo formulario de pago de Izipay');
+      window.KR.openPaymentForm();
 
     } catch (error) {
-      console.error('Error al procesar pago Plin:', error);
+      console.error('❌ Error al abrir formulario de Izipay:', error);
       setIsProcessing(false);
       onError(error);
     }
@@ -264,8 +118,6 @@ export const useIzipay = ({ onSuccess, onError }: UseIzipayProps) => {
   return {
     isLoaded,
     isProcessing,
-    openCardPayment,
-    processYapePayment,
-    processPlinPayment
+    openCardPayment
   };
 };
