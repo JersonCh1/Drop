@@ -118,17 +118,17 @@ const SocialProof: React.FC = () => {
       return;
     }
 
-    // Mostrar primera notificación después de 10 segundos
+    // Mostrar primera notificación después de 15 segundos
     const initialTimer = setTimeout(() => {
       showNotification();
-    }, 10000);
+    }, 15000);
 
-    // Mostrar notificaciones cada 20 segundos
+    // Mostrar notificaciones cada 45 segundos
     const interval = setInterval(() => {
       if (!isVisible) {
         showNotification();
       }
-    }, 20000);
+    }, 45000);
 
     return () => {
       clearTimeout(initialTimer);
