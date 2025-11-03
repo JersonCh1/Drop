@@ -1,13 +1,14 @@
 // backend/src/routes/shipping.js
 const express = require('express');
 const router = express.Router();
+const { calculateShippingCost, getFallbackShippingRates } = require('../services/shippingCalculator');
 
 /**
  * 📦 CALCULADORA DE ENVÍO INTERNACIONAL
- * Calcula costos de envío basado en peso, dimensiones y destino
+ * Calcula costos de envío usando CJ Dropshipping API + tarifas de respaldo
  */
 
-// Tarifas base por región (en USD)
+// Tarifas base por región (en USD) - SOLO PARA RESPALDO
 const SHIPPING_RATES = {
   LOCAL: {
     name: 'Local (Perú)',
@@ -66,20 +67,16 @@ const COUNTRY_REGIONS = {
   'AU': 'OCEANIA', 'NZ': 'OCEANIA'
 };
 
-// POST /api/shipping/calculate - Calcular costo de envío
+// POST /api/shipping/calculate - Calcular costo de envío con CJ Dropshipping
 router.post('/calculate', async (req, res) => {
   try {
     const {
       countryCode,        // Código ISO del país (PE, US, ES, etc.)
-      weight,             // Peso en kg
-      length,             // Largo en cm
-      width,              // Ancho en cm
-      height,             // Alto en cm
-      shippingMethod,     // 'standard' | 'express'
-      items               // Array de productos (opcional)
+      items,              // Array de productos [{productId, variantId, quantity, weight}]
+      useCJ = true        // Usar CJ Dropshipping API (true) o tarifas fijas (false)
     } = req.body;
 
-    console.log('📦 Calculando envío:', { countryCode, weight, shippingMethod });
+    console.log('📦 Calculando envío:', { countryCode, itemsCount: items?.length, useCJ });
 
     // Validaciones
     if (!countryCode) {
@@ -89,89 +86,75 @@ router.post('/calculate', async (req, res) => {
       });
     }
 
-    // Determinar región
-    const region = COUNTRY_REGIONS[countryCode] || 'REST_OF_WORLD';
-    const rateInfo = SHIPPING_RATES[region];
-
-    // Calcular peso total (si no se proporciona, estimar por items)
-    let totalWeight = weight || 0;
-    if (!weight && items && items.length > 0) {
-      totalWeight = items.reduce((sum, item) => {
-        const itemWeight = item.weight || 0.3; // 300g por defecto (funda iPhone)
-        return sum + (itemWeight * item.quantity);
-      }, 0);
-    }
-
-    // Si aún no hay peso, usar peso mínimo
-    if (totalWeight === 0) {
-      totalWeight = 0.3; // Mínimo 300g
-    }
-
-    // Calcular volumen (dimensional weight)
-    let volumetricWeight = 0;
-    if (length && width && height) {
-      // Peso volumétrico = (L x W x H) / 5000
-      volumetricWeight = (length * width * height) / 5000;
-    }
-
-    // Usar el mayor entre peso real y volumétrico
-    const chargeableWeight = Math.max(totalWeight, volumetricWeight);
-
-    // Calcular costo base
-    let shippingCost = rateInfo.baseRate + (chargeableWeight * rateInfo.perKg);
-
-    // Ajustar por método de envío
-    let deliveryDays = rateInfo.deliveryDays;
-    if (shippingMethod === 'express') {
-      shippingCost *= 1.8; // Express es 80% más caro
-      deliveryDays = deliveryDays.replace(/\d+-\d+/, (match) => {
-        const [min, max] = match.split('-').map(Number);
-        return `${Math.ceil(min / 2)}-${Math.ceil(max / 2)}`;
+    if (!items || items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Productos requeridos para calcular envío'
       });
     }
 
-    // Descuento por peso (más de 2kg)
-    if (chargeableWeight > 2) {
-      const discount = Math.min(0.15, (chargeableWeight - 2) * 0.03); // Hasta 15% de descuento
-      shippingCost *= (1 - discount);
+    let shippingData;
+
+    // Intentar con CJ Dropshipping primero
+    if (useCJ) {
+      try {
+        console.log('🚢 Intentando calcular con CJ Dropshipping API...');
+
+        // Preparar productos para CJ (necesitan vid - variant ID de CJ)
+        const cjProducts = items.map(item => ({
+          vid: item.variantId || item.productId,
+          productId: item.productId,
+          quantity: item.quantity || 1,
+          weight: item.weight || 0.3 // 300g por defecto para carcasas
+        }));
+
+        shippingData = await calculateShippingCost({
+          products: cjProducts,
+          countryCode: countryCode
+        });
+
+        // Si CJ devolvió datos exitosamente
+        if (shippingData.success && shippingData.shippingOptions) {
+          console.log(`✅ CJ Dropshipping: ${shippingData.shippingOptions.length} opciones disponibles`);
+
+          // Retornar con opciones de CJ
+          return res.json({
+            success: true,
+            source: shippingData.fallback ? 'fallback' : 'cj_dropshipping',
+            data: {
+              shippingCost: shippingData.cheapest.cost,
+              currency: shippingData.currency,
+              deliveryDays: shippingData.cheapest.days,
+              shippingMethod: shippingData.cheapest.method,
+              carrier: shippingData.cheapest.carrier,
+              // Opciones adicionales
+              options: shippingData.shippingOptions,
+              cheapest: shippingData.cheapest,
+              fastest: shippingData.fastest
+            }
+          });
+        }
+      } catch (cjError) {
+        console.warn('⚠️ CJ Dropshipping falló, usando tarifas de respaldo:', cjError.message);
+      }
     }
 
-    // Redondear a 2 decimales
-    shippingCost = Math.round(shippingCost * 100) / 100;
+    // Si CJ falla o useCJ=false, usar tarifas fijas
+    console.log('📦 Usando tarifas de envío de respaldo...');
+    const fallbackRates = getFallbackShippingRates(countryCode);
 
-    // Calcular fecha estimada de entrega
-    const today = new Date();
-    const [minDays, maxDays] = deliveryDays.match(/\d+/g).map(Number);
-    const estimatedMinDate = new Date(today);
-    estimatedMinDate.setDate(estimatedMinDate.getDate() + minDays);
-    const estimatedMaxDate = new Date(today);
-    estimatedMaxDate.setDate(estimatedMaxDate.getDate() + maxDays);
-
-    console.log(`✅ Costo calculado: $${shippingCost} USD (${chargeableWeight}kg a ${rateInfo.name})`);
-
-    res.json({
+    return res.json({
       success: true,
+      source: 'fallback',
       data: {
-        shippingCost: shippingCost,
-        currency: 'USD',
-        region: rateInfo.name,
-        deliveryDays: deliveryDays,
-        estimatedDelivery: {
-          min: estimatedMinDate.toISOString().split('T')[0],
-          max: estimatedMaxDate.toISOString().split('T')[0],
-          formatted: `${estimatedMinDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} - ${estimatedMaxDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}`
-        },
-        weight: {
-          actual: totalWeight,
-          volumetric: volumetricWeight,
-          chargeable: chargeableWeight
-        },
-        shippingMethod: shippingMethod || 'standard',
-        breakdown: {
-          baseRate: rateInfo.baseRate,
-          weightCharge: (chargeableWeight * rateInfo.perKg).toFixed(2),
-          total: shippingCost
-        }
+        shippingCost: fallbackRates.cheapest.cost,
+        currency: fallbackRates.currency,
+        deliveryDays: fallbackRates.cheapest.days,
+        shippingMethod: fallbackRates.cheapest.method,
+        carrier: fallbackRates.cheapest.carrier,
+        options: fallbackRates.shippingOptions,
+        cheapest: fallbackRates.cheapest,
+        fastest: fallbackRates.fastest
       }
     });
 
