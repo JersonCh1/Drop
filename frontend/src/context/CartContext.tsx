@@ -4,8 +4,8 @@ import toast from 'react-hot-toast';
 
 export interface CartItem {
   id: string;
-  productId: number;
-  variantId?: number;
+  productId: string | number; // Soporta tanto string (PostgreSQL) como number (SQLite legacy)
+  variantId?: string | number;
   name: string;
   price: number;
   model: string;
@@ -50,7 +50,7 @@ interface CartContextType extends CartState {
   getItemCount: () => number;
   getTotalPrice: () => number;
   getFinalTotal: () => number;
-  isItemInCart: (productId: number, variantId?: number) => boolean;
+  isItemInCart: (productId: string | number, variantId?: string | number) => boolean;
   getCartForCheckout: () => any;
 }
 
@@ -339,9 +339,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return state.finalTotal;
   };
 
-  const isItemInCart = (productId: number, variantId?: number): boolean => {
-    return state.items.some(item => 
-      item.productId === productId && 
+  const isItemInCart = (productId: string | number, variantId?: string | number): boolean => {
+    // Check if item with given productId (and optionally variantId) exists in cart
+    return state.items.some(item =>
+      item.productId === productId &&
       (variantId ? item.variantId === variantId : true)
     );
   };
