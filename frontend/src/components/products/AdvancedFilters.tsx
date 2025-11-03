@@ -110,7 +110,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
       {/* Filtros expandidos */}
       {isExpanded && (
         <div className="p-6 space-y-6 bg-gray-50 dark:bg-gray-900">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Rango de Precio */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
@@ -176,7 +176,8 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
               </div>
             </div>
 
-            {/* Categorías */}
+            {/* Categorías - OCULTO para enfocarse en nichos específicos */}
+            {/*
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                 Categorías
@@ -195,6 +196,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                 ))}
               </div>
             </div>
+            */}
 
             {/* Ordenar por */}
             <div>

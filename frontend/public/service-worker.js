@@ -1,5 +1,5 @@
 // Service Worker for PWA
-const CACHE_NAME = 'iphone-cases-v4'; // Incrementado para forzar limpieza
+const CACHE_NAME = 'iphone-cases-v7'; // BYPASS completo para desarrollo
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -44,48 +44,10 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - BYPASS todo para permitir Izipay funcionar correctamente
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
-  if (event.request.method !== 'GET') {
-    return;
-  }
-
-  // IMPORTANTE: NO cachear peticiones a la API
-  // Esto previene que URLs antiguas (localhost) queden en cache
-  const url = new URL(event.request.url);
-  if (url.pathname.startsWith('/api/') ||
-      url.hostname.includes('railway.app') ||
-      url.hostname.includes('localhost')) {
-    // Peticiones API siempre van directo a la red, sin cache
-    event.respondWith(fetch(event.request));
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Return cached version or fetch from network
-        return response || fetch(event.request).then((fetchResponse) => {
-          // Only cache successful responses
-          if (!fetchResponse || fetchResponse.status !== 200 || fetchResponse.type === 'error') {
-            return fetchResponse;
-          }
-
-          // Cache new resources (only for static assets)
-          return caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, fetchResponse.clone());
-            return fetchResponse;
-          });
-        });
-      })
-      .catch(() => {
-        // Offline fallback
-        if (event.request.destination === 'document') {
-          return caches.match('/index.html');
-        }
-      })
-  );
+  // SIMPLEMENTE HACER BYPASS DE TODO - No cachear nada durante desarrollo
+  event.respondWith(fetch(event.request));
 });
 
 // Push notification support

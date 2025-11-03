@@ -5,7 +5,6 @@ import { useCart } from '../../context/CartContext';
 import { useI18n } from '../../context/I18nContext';
 import authService from '../../services/authService';
 import LanguageSwitcher from '../LanguageSwitcher';
-import ThemeToggle from './ThemeToggle';
 import CurrencySelector from './CurrencySelector';
 
 interface HeaderProps {}
@@ -224,11 +223,6 @@ const Header: React.FC<HeaderProps> = () => {
               </button>
             )}
 
-            {/* Theme Toggle - Hidden on mobile/tablet */}
-            <div className="hidden lg:block">
-              <ThemeToggle />
-            </div>
-
             {/* Currency Selector - Hidden on mobile/tablet */}
             <div className="hidden lg:block">
               <CurrencySelector />
@@ -281,11 +275,6 @@ const Header: React.FC<HeaderProps> = () => {
             <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-4">
               <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-3">Configuración</h4>
               <div className="space-y-3">
-                {/* Theme Toggle */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Tema</span>
-                  <ThemeToggle />
-                </div>
                 {/* Currency Selector */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Moneda</span>

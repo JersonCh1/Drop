@@ -67,6 +67,10 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
   const [showPaymentConfirmation, setShowPaymentConfirmation] = useState(false);
   const [operationCode, setOperationCode] = useState('');
   const [pendingOrderData, setPendingOrderData] = useState<any>(null);
+  const [lastOrderId, setLastOrderId] = useState<string | null>(null);
+  const [lastFormToken, setLastFormToken] = useState<string | null>(null);
+  const [paymentRetryCount, setPaymentRetryCount] = useState(0);
+  const MAX_PAYMENT_RETRIES = 3;
 
   // Estado del cupón
   const [couponCode, setCouponCode] = useState('');
@@ -103,8 +107,71 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
     },
     onError: (error) => {
       console.error('Error de Izipay:', error);
-      alert('Hubo un error al procesar el pago con Izipay. Por favor intenta de nuevo.');
       setIsSubmitting(false);
+
+      // Incrementar contador de reintentos
+      const newRetryCount = paymentRetryCount + 1;
+      setPaymentRetryCount(newRetryCount);
+
+      // Mensajes de error detallados según el código
+      let errorMessage = 'Hubo un error al procesar el pago. ';
+      let canRetry = false;
+
+      if (error.code) {
+        switch (error.code) {
+          case 'REFUSED':
+            errorMessage += 'La transacción fue rechazada por el banco. Por favor verifica los datos de tu tarjeta o intenta con otro método de pago.';
+            canRetry = newRetryCount < MAX_PAYMENT_RETRIES;
+            break;
+          case 'UNPAID':
+            errorMessage += 'El pago no pudo ser completado.';
+            canRetry = true;
+            break;
+          case 'ABANDONED':
+            errorMessage += 'El pago fue cancelado.';
+            canRetry = true;
+            break;
+          case 'EXPIRED':
+            errorMessage += 'La sesión de pago ha expirado.';
+            canRetry = false; // Necesita nuevo FormToken
+            break;
+          case 'INVALID_CARD':
+            errorMessage += 'Los datos de la tarjeta son inválidos. Por favor verifica el número de tarjeta, fecha de expiración y CVV.';
+            canRetry = newRetryCount < MAX_PAYMENT_RETRIES;
+            break;
+          case 'INSUFFICIENT_FUNDS':
+            errorMessage += 'Fondos insuficientes. Por favor intenta con otra tarjeta.';
+            canRetry = newRetryCount < MAX_PAYMENT_RETRIES;
+            break;
+          case 'CARD_BLOCKED':
+            errorMessage += 'Tu tarjeta está bloqueada. Por favor contacta a tu banco.';
+            canRetry = false;
+            break;
+          default:
+            errorMessage += error.message || 'Por favor intenta de nuevo o contacta a soporte.';
+            canRetry = newRetryCount < MAX_PAYMENT_RETRIES;
+        }
+      } else if (error.message) {
+        errorMessage += error.message;
+        canRetry = newRetryCount < MAX_PAYMENT_RETRIES;
+      } else {
+        errorMessage += 'Por favor intenta de nuevo más tarde.';
+        canRetry = newRetryCount < MAX_PAYMENT_RETRIES;
+      }
+
+      // Agregar opción de reintento si está disponible
+      if (canRetry && lastFormToken && lastOrderId) {
+        errorMessage += `\n\nIntentos restantes: ${MAX_PAYMENT_RETRIES - newRetryCount}`;
+
+        if (window.confirm(errorMessage + '\n\n¿Deseas intentar nuevamente?')) {
+          handleRetryPayment();
+        }
+      } else if (error.code === 'EXPIRED' && lastOrderId) {
+        errorMessage += '\n\nDeberás completar el proceso de checkout nuevamente.';
+        alert(errorMessage);
+      } else {
+        alert(errorMessage);
+      }
     }
   });
 
@@ -252,6 +319,41 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
     }
   };
 
+  // Función para reintentar el pago con el mismo FormToken
+  const handleRetryPayment = async () => {
+    if (!lastFormToken || !lastOrderId) {
+      alert('No hay un pago previo para reintentar.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await openCardPayment(
+        {
+          publicKey: process.env.REACT_APP_IZIPAY_PUBLIC_KEY || '',
+          amount: total,
+          currency: 'PEN',
+          orderId: lastOrderId,
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phoneNumber: formData.phone,
+          identityCode: formData.postalCode,
+          address: formData.address,
+          country: formData.country,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.postalCode
+        },
+        lastFormToken
+      );
+    } catch (error) {
+      console.error('Error en reintento de pago:', error);
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -339,6 +441,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
           body: JSON.stringify({
             customerInfo: formData,
             items: cart.map(item => ({
+              productId: item.productId, // ✅ Agregar productId
+              variantId: item.variantId || null,
               name: item.name,
               model: item.model || '',
               color: item.color || '',
@@ -358,7 +462,9 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
         }
 
         const orderResult = await orderResponse.json();
-        const orderId = orderResult.data?.id || orderResult.orderNumber;
+        const orderId = orderResult.data?.orderNumber || orderResult.data?.orderId;
+
+        console.log('✅ Orden creada:', orderId);
 
         // Obtener FormToken del backend
         const response = await fetch(`${API_URL}/izipay/formtoken`, {
@@ -387,6 +493,11 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
         if (response.ok) {
           const result = await response.json();
           console.log('Izipay formToken obtained:', result);
+
+          // Guardar FormToken y OrderId para reintentos
+          setLastFormToken(result.formToken);
+          setLastOrderId(orderId);
+          setPaymentRetryCount(0); // Resetear contador de reintentos
 
           // Abrir el formulario de pago de Izipay usando el hook
           await openCardPayment(
@@ -422,6 +533,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
           body: JSON.stringify({
             customerInfo: formData,
             items: cart.map(item => ({
+              productId: item.productId, // ✅ Agregar productId
+              variantId: item.variantId || null,
               name: item.name,
               model: item.model || '',
               color: item.color || '',
@@ -441,7 +554,9 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
         }
 
         const orderResult = await orderResponse.json();
-        const orderId = orderResult.data?.id || orderResult.orderNumber;
+        const orderId = orderResult.data?.orderNumber || orderResult.data?.orderId;
+
+        console.log('✅ Orden creada:', orderId);
 
         // Obtener FormToken del backend especificando el método de pago
         const response = await fetch(`${API_URL}/izipay/formtoken`, {

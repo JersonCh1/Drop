@@ -85,6 +85,10 @@ export const useIzipay = ({ onSuccess, onError }: UseIzipayProps) => {
         console.log('📥 Respuesta de pago:', paymentResponse);
 
         if (paymentResponse.clientAnswer && paymentResponse.clientAnswer.orderStatus === 'PAID') {
+          // Cerrar modal
+          const modal = document.getElementById('izipay-modal');
+          if (modal) modal.style.display = 'none';
+
           setIsProcessing(false);
           onSuccess({
             code: '00',
@@ -95,18 +99,119 @@ export const useIzipay = ({ onSuccess, onError }: UseIzipayProps) => {
           });
         } else {
           setIsProcessing(false);
+
+          // Mapear estados de Izipay a códigos de error más específicos
+          const orderStatus = paymentResponse.clientAnswer?.orderStatus;
+          let errorCode = orderStatus || 'ERROR';
+          let errorMessage = paymentResponse.clientAnswer?.orderStatusLabel || 'Error en el pago';
+
+          // Mejorar mensajes de error según el estado
+          if (orderStatus === 'REFUSED') {
+            errorCode = 'REFUSED';
+            errorMessage = 'Transacción rechazada por el banco';
+          } else if (orderStatus === 'UNPAID') {
+            errorCode = 'UNPAID';
+            errorMessage = 'Pago no completado';
+          } else if (orderStatus === 'ABANDONED') {
+            errorCode = 'ABANDONED';
+            errorMessage = 'Pago cancelado por el usuario';
+          } else if (orderStatus === 'EXPIRED') {
+            errorCode = 'EXPIRED';
+            errorMessage = 'Sesión de pago expirada';
+          }
+
           onError({
-            code: paymentResponse.clientAnswer?.orderStatus || 'ERROR',
-            message: paymentResponse.clientAnswer?.orderStatusLabel || 'Error en el pago'
+            code: errorCode,
+            message: errorMessage
           });
         }
 
         return false; // Prevenir redirección automática
       });
 
-      // Abrir el formulario de pago
+      // Crear modal si no existe
+      let modal = document.getElementById('izipay-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'izipay-modal';
+        modal.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 9999;
+        `;
+
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+          background: white;
+          padding: 30px;
+          border-radius: 10px;
+          max-width: 600px;
+          width: 90%;
+          max-height: 90vh;
+          overflow-y: auto;
+          position: relative;
+        `;
+
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '×';
+        closeBtn.style.cssText = `
+          position: absolute;
+          top: 10px;
+          right: 15px;
+          font-size: 30px;
+          border: none;
+          background: none;
+          cursor: pointer;
+          color: #666;
+          width: 30px;
+          height: 30px;
+          padding: 0;
+          line-height: 1;
+        `;
+        closeBtn.onclick = () => {
+          modal!.style.display = 'none';
+          setIsProcessing(false);
+        };
+
+        const formContainer = document.createElement('div');
+        formContainer.id = 'izipay-form-container';
+        formContainer.className = 'kr-embedded';
+        formContainer.setAttribute('kr-form-token', formToken);
+
+        modalContent.appendChild(closeBtn);
+        modalContent.appendChild(formContainer);
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+      } else {
+        // Actualizar token si el modal ya existe
+        const formContainer = document.getElementById('izipay-form-container');
+        if (formContainer) {
+          formContainer.setAttribute('kr-form-token', formToken);
+        }
+      }
+
+      // Mostrar modal
+      modal.style.display = 'flex';
+
+      // Renderizar el formulario
       console.log('🚀 Abriendo formulario de pago de Izipay');
-      window.KR.openPaymentForm();
+
+      // Intentar diferentes métodos según la versión del SDK
+      if (typeof window.KR.showEmbeddedForm === 'function') {
+        await window.KR.showEmbeddedForm('#izipay-form-container');
+      } else if (typeof window.KR.renderElements === 'function') {
+        await window.KR.renderElements('#izipay-form-container');
+      } else {
+        // Fallback: el formulario se renderiza automáticamente con el atributo kr-form-token
+        console.log('✅ Formulario configurado, se renderizará automáticamente');
+      }
 
     } catch (error) {
       console.error('❌ Error al abrir formulario de Izipay:', error);

@@ -20,20 +20,21 @@ class CJDropshippingService {
   constructor() {
     // Credenciales de CJ Dropshipping (obtener desde https://cjdropshipping.com/user/)
     this.email = process.env.CJ_EMAIL || '';
-    this.password = process.env.CJ_PASSWORD || '';
+    this.apiKey = process.env.CJ_API_KEY || '';
 
     // URL base de la API
     this.baseURL = 'https://developers.cjdropshipping.com/api2.0/v1';
 
     // Token de acceso (se renueva automáticamente)
     this.accessToken = null;
+    this.refreshToken = null;
     this.tokenExpiry = null;
 
-    this.isConfigured = !!(this.email && this.password);
+    this.isConfigured = !!(this.email && this.apiKey);
 
     if (!this.isConfigured) {
       console.log('⚠️  CJ Dropshipping no configurado - Variables faltantes:');
-      console.log('   CJ_EMAIL, CJ_PASSWORD');
+      console.log('   CJ_EMAIL, CJ_API_KEY');
       console.log('   Para usar CJ, regístrate en: https://www.cjdropshipping.com/');
     } else {
       console.log('✅ CJ Dropshipping configurado');
@@ -52,15 +53,17 @@ class CJDropshippingService {
     try {
       const response = await axios.post(`${this.baseURL}/authentication/getAccessToken`, {
         email: this.email,
-        password: this.password
+        apiKey: this.apiKey
       });
 
-      if (response.data.code === 200 && response.data.data) {
+      if (response.data.code === 200 && response.data.data && response.data.result) {
         this.accessToken = response.data.data.accessToken;
-        // Token válido por 24 horas
-        this.tokenExpiry = Date.now() + (24 * 60 * 60 * 1000);
+        this.refreshToken = response.data.data.refreshToken;
+        // Token válido según la respuesta (usualmente 15 días)
+        this.tokenExpiry = new Date(response.data.data.accessTokenExpiryDate).getTime();
 
         console.log('✅ Token de CJ Dropshipping obtenido');
+        console.log(`📅 Token expira: ${new Date(this.tokenExpiry).toLocaleString()}`);
         return this.accessToken;
       } else {
         throw new Error(response.data.message || 'Error obteniendo token');
@@ -161,18 +164,91 @@ class CJDropshippingService {
     try {
       const result = await this.apiRequest('/product/query', {
         pid: productId
-      });
+      }, 'GET');
 
       if (!result) {
         throw new Error('Producto no encontrado');
       }
 
+      // Traducir nombre y descripción al español
+      const translatedName = await this.translateToSpanish(result.productNameEn);
+
+      // Limpiar descripción HTML de CJ
+      let cleanDescription = result.description || '';
+      if (cleanDescription) {
+        cleanDescription = cleanDescription
+          // Remover script y style
+          .replace(/<script[^>]*>.*?<\/script>/gi, '')
+          .replace(/<style[^>]*>.*?<\/style>/gi, '')
+          // Remover imágenes
+          .replace(/<img[^>]*>/gi, '')
+          .replace(/https?:\/\/[^\s<>"]+?\.(jpg|jpeg|png|gif|webp|bmp)(\?[^\s<>"]*)?/gi, '')
+          // Convertir tags HTML a texto
+          .replace(/<div[^>]*>/gi, '\n')
+          .replace(/<\/div>/gi, '\n')
+          .replace(/<p[^>]*>/gi, '\n')
+          .replace(/<\/p>/gi, '\n')
+          .replace(/<br\s*\/?>/gi, '\n')
+          .replace(/<li[^>]*>/gi, '\n• ')
+          .replace(/<\/li>/gi, '')
+          .replace(/<ul[^>]*>/gi, '\n')
+          .replace(/<\/ul>/gi, '\n')
+          .replace(/<ol[^>]*>/gi, '\n')
+          .replace(/<\/ol>/gi, '\n')
+          .replace(/<h[1-6][^>]*>/gi, '\n\n')
+          .replace(/<\/h[1-6]>/gi, '\n')
+          .replace(/<strong[^>]*>/gi, '')
+          .replace(/<\/strong>/gi, '')
+          .replace(/<b[^>]*>/gi, '')
+          .replace(/<\/b>/gi, '')
+          .replace(/<em[^>]*>/gi, '')
+          .replace(/<\/em>/gi, '')
+          .replace(/<i[^>]*>/gi, '')
+          .replace(/<\/i>/gi, '')
+          .replace(/<font[^>]*>/gi, '')
+          .replace(/<\/font>/gi, '')
+          // Remover cualquier otro tag
+          .replace(/<[^>]+>/g, '')
+          // Limpiar entidades HTML
+          .replace(/&nbsp;/g, ' ')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          // Limpiar espacios
+          .replace(/\t/g, '')
+          .replace(/  +/g, ' ')
+          // Filtrar líneas
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => {
+            if (line.length === 0) return false;
+            if (/^https?:\/\//i.test(line)) return false;
+            if (line.length < 3) return false;
+            if (/^[^a-zA-Z0-9]+$/.test(line)) return false;
+            return true;
+          })
+          .join('\n')
+          .trim();
+
+        // Si quedó vacío, usar nombre del producto
+        if (!cleanDescription || cleanDescription.length < 10) {
+          cleanDescription = `${result.productNameEn}\n\nProducto importado desde CJ Dropshipping con envío directo.`;
+        }
+      }
+
+      // Traducir descripción al español
+      const translatedDescription = await this.translateToSpanish(cleanDescription);
+
       return {
         success: true,
         product: {
           id: result.pid,
-          name: result.productNameEn,
-          description: result.description,
+          name: translatedName || result.productNameEn,
+          nameEn: result.productNameEn, // Mantener nombre original
+          description: translatedDescription || cleanDescription,
+          descriptionEn: cleanDescription, // Mantener descripción original
           price: parseFloat(result.sellPrice),
           originalPrice: parseFloat(result.originalPrice),
           images: result.productImage || [],
@@ -194,33 +270,61 @@ class CJDropshippingService {
   }
 
   /**
-   * 💰 Calcular costos de envío
+   * 💰 Calcular costos de envío (con tarifas promocionales si están disponibles)
    */
-  async calculateShipping(products, destinationCountry = 'PE') {
+  async calculateShipping(products, destinationCountry = 'PE', shippingAddress = {}) {
     try {
+      // Preparar productos para el cálculo
       const items = products.map(p => ({
-        productId: p.productId,
-        variantId: p.variantId || null,
+        vid: p.variantId || '',
         quantity: p.quantity
       }));
 
-      const result = await this.apiRequest('/logistic/freightCalculate', {
-        products: items,
-        country: destinationCountry
+      // Usar el endpoint avanzado que incluye descuentos
+      const payload = {
+        startCountryCode: 'CN', // CJ envía desde China
+        endCountryCode: destinationCountry,
+        products: items
+      };
+
+      // Agregar dirección de envío si está disponible (mejora precisión)
+      if (shippingAddress.zipCode) {
+        payload.zipCode = shippingAddress.zipCode;
+      }
+      if (shippingAddress.houseNumber) {
+        payload.houseNumber = shippingAddress.houseNumber;
+      }
+
+      const result = await this.apiRequest('/logistic/freightCalculateTip', payload);
+
+      // Procesar opciones de envío con descuentos
+      const shippingOptions = (result.list || []).map(option => {
+        const hasDiscount = option.discountFreight && parseFloat(option.discountFreight) < parseFloat(option.freight);
+
+        return {
+          carrier: option.logisticName,
+          logisticId: option.logisticId,
+          cost: hasDiscount ? parseFloat(option.discountFreight) : parseFloat(option.freight),
+          originalCost: parseFloat(option.freight),
+          discount: hasDiscount ? parseFloat(option.freight) - parseFloat(option.discountFreight) : 0,
+          deliveryTime: option.logisticAging,
+          deliveryTimeMin: option.logisticAging?.split('-')[0] || null,
+          deliveryTimeMax: option.logisticAging?.split('-')[1] || null,
+          channel: option.channelName || option.logisticName,
+          isPromotional: hasDiscount
+        };
       });
 
-      const shippingOptions = result.map(option => ({
-        carrier: option.logisticName,
-        cost: parseFloat(option.freight),
-        deliveryTime: option.logisticAging,
-        logisticId: option.logisticId
-      }));
+      // Ordenar por precio (más barato primero)
+      shippingOptions.sort((a, b) => a.cost - b.cost);
 
       return {
         success: true,
-        options: shippingOptions
+        options: shippingOptions,
+        cheapestOption: shippingOptions[0] || null
       };
     } catch (error) {
+      console.error('❌ Error calculando envío:', error.response?.data || error.message);
       return {
         success: false,
         error: error.message,
@@ -432,7 +536,7 @@ class CJDropshippingService {
       const result = await this.apiRequest('/product/variant/query', {
         pid: productId,
         vid: variantId
-      });
+      }, 'GET');
 
       return {
         success: true,
@@ -488,6 +592,38 @@ class CJDropshippingService {
   }
 
   /**
+   * 🌐 Traducir texto del inglés al español usando Google Translate (gratuito)
+   */
+  async translateToSpanish(text) {
+    if (!text || text.trim().length === 0) {
+      return text;
+    }
+
+    try {
+      // Usar la API gratuita de Google Translate
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=es&dt=t&q=${encodeURIComponent(text)}`;
+
+      const response = await axios.get(url);
+
+      // La respuesta es un array complejo, extraer solo el texto traducido
+      if (response.data && response.data[0]) {
+        const translated = response.data[0]
+          .map(item => item[0])
+          .filter(item => item)
+          .join('');
+
+        return translated || text;
+      }
+
+      return text;
+    } catch (error) {
+      console.error('⚠️  Error traduciendo texto:', error.message);
+      // Si falla la traducción, retornar el texto original
+      return text;
+    }
+  }
+
+  /**
    * ℹ️ Información del servicio
    */
   getServiceInfo() {
@@ -501,7 +637,8 @@ class CJDropshippingService {
         'Creación automática de órdenes',
         'Tracking de órdenes',
         'Consulta de inventario',
-        'Sincronización de productos'
+        'Sincronización de productos',
+        'Traducción automática al español'
       ],
       apiUrl: this.baseURL,
       docs: 'https://developers.cjdropshipping.com/'

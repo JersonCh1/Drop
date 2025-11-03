@@ -129,6 +129,7 @@ model Product {
   // Estado
   isActive    Boolean @default(true)
   isFeatured  Boolean @default(false)
+  isHeroBanner Boolean @default(false)
   inStock     Boolean @default(true)
   stockCount  Int     @default(0)
 

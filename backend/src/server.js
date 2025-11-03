@@ -944,6 +944,7 @@ app.use('/api/webhooks', webhooksRoutes);
 // =================== RUTAS DE CJ DROPSHIPPING ===================
 const cjDropshippingRoutes = require('./routes/cjDropshipping');
 app.use('/api/cj', cjDropshippingRoutes);
+app.use('/api/cj-dropshipping', cjDropshippingRoutes); // Alias para compatibilidad con frontend
 
 // =================== RUTAS DE REFERIDOS ===================
 const referralsRoutes = require('./routes/referrals');

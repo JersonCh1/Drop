@@ -77,6 +77,63 @@ router.post('/', async (req, res) => {
     // Generar número de orden único
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
 
+    // DEBUG: Ver qué productIds están llegando
+    console.log('🔍 Items recibidos:', JSON.stringify(items, null, 2));
+
+    // WORKAROUND: Validar y crear productos que no existan
+    for (const item of items) {
+      if (item.productId) {
+        try {
+          // Verificar si el producto existe
+          const product = await prisma.product.findUnique({
+            where: { id: item.productId }
+          });
+
+          if (!product) {
+            console.log(`⚠️ Producto ${item.productId} no existe, creando...`);
+
+            // Obtener o crear categoría
+            let category = await prisma.category.findFirst({
+              where: { slug: 'carcasas-iphone' }
+            });
+
+            if (!category) {
+              category = await prisma.category.create({
+                data: {
+                  id: 'cat_iphone_cases',
+                  name: 'Carcasas iPhone',
+                  slug: 'carcasas-iphone',
+                  description: 'Carcasas para iPhone',
+                  isActive: true,
+                  sortOrder: 1
+                }
+              });
+            }
+
+            // Crear el producto
+            await prisma.product.create({
+              data: {
+                id: item.productId,
+                name: item.name || 'Carcasa iPhone',
+                slug: `carcasa-${item.productId}`,
+                description: `Carcasa ${item.model || 'iPhone'} - ${item.color || 'Color'}`,
+                basePrice: item.price || 19.99, // Solo basePrice, no price
+                stockCount: 9999,
+                categoryId: category.id,
+                isActive: true,
+                inStock: true,
+                model: item.model || 'iPhone',
+                brand: 'Premium Cases'
+              }
+            });
+            console.log(`✅ Producto ${item.productId} creado automáticamente`);
+          }
+        } catch (err) {
+          console.log(`⚠️ Error verificando/creando producto ${item.productId}:`, err.message);
+        }
+      }
+    }
+
     // Crear orden con Prisma
     const order = await prisma.order.create({
       data: {
@@ -99,7 +156,7 @@ router.post('/', async (req, res) => {
         paymentStatus: 'PENDING',
         items: {
           create: items.map(item => ({
-            productId: item.productId || '1',
+            productId: item.productId, // Ya validamos/creamos el producto antes
             variantId: item.variantId,
             productName: item.name,
             productModel: item.model || '',

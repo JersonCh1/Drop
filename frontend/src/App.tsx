@@ -22,6 +22,7 @@ import Footer from './components/layout/Footer';
 import ProductCard from './components/products/ProductCard';
 import CartSidebar from './components/cart/CartSidebar';
 import Checkout from './components/checkout/Checkout';
+import HeroBanner from './components/home/HeroBanner';
 
 // Services
 import analyticsService from './services/analyticsService';
@@ -30,7 +31,6 @@ import type { Product as ProductType } from './services/productService';
 import { trackingPixels } from './utils/trackingPixels';
 
 // Marketing
-import NewsletterPopup from './components/marketing/NewsletterPopup';
 import SocialProof from './components/marketing/SocialProof';
 import WhatsAppWidget from './components/chat/WhatsAppWidget';
 
@@ -57,8 +57,8 @@ const HealthCheckPage = React.lazy(() => import('./pages/HealthCheckPage'));
 // Types
 export interface CartItem {
   id: string;
-  productId: number;
-  variantId?: number;
+  productId: string | number; // Soporta tanto string (PostgreSQL) como number (SQLite legacy)
+  variantId?: string | number;
   name: string;
   price: number;
   model: string;
@@ -216,9 +216,6 @@ const AppContent: React.FC<{
               />
             )}
 
-            {/* Newsletter Popup */}
-            <NewsletterPopup />
-
             {/* Social Proof Notifications */}
             <SocialProof />
 
@@ -267,9 +264,28 @@ function App() {
 
   // Función para crear item del carrito
   const createCartItem = (): CartItem => {
+    // Mapear modelo y color a productId de la base de datos
+    const getProductId = () => {
+      const modelKey = selectedModel.replace(/\s+/g, '').toLowerCase(); // "iPhone 15" -> "iphone15"
+      const colorKey = selectedColor.toLowerCase(); // "Negro" -> "negro"
+
+      // Mapeo basado en los productos en la base de datos (seed.js)
+      const productMap: { [key: string]: string } = {
+        'iphone15_transparente': 'prod_case_iphone15_trans',
+        'iphone15_negro': 'prod_case_iphone15_black',
+        'iphone14_silicona': 'prod_case_iphone14_silicone',
+        'iphone14_negro': 'prod_case_iphone14_black',
+        'iphone13_transparente': 'prod_case_iphone13_trans',
+        'iphone13_negro': 'prod_case_iphone13_black',
+      };
+
+      const key = `${modelKey}_${colorKey}`;
+      return productMap[key] || 'prod_case_iphone15_trans'; // Default
+    };
+
     return {
       id: `${selectedModel}-${selectedColor}`,
-      productId: 1, // ID real del producto
+      productId: getProductId(), // ID real del producto de la base de datos
       name: 'Carcasa iPhone Premium',
       price: basePrice,
       model: selectedModel,
@@ -351,157 +367,8 @@ const HomePage: React.FC<HomePageProps> = ({
 }) => {
   return (
     <div>
-      {/* Hero Section - Futuristic Design */}
-      <div className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 animate-pulse"></div>
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%), radial-gradient(circle at 80% 80%, rgba(239, 68, 155, 0.3), transparent 50%)',
-          }}></div>
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left Content */}
-            <div className="text-white space-y-8">
-              <div className="space-y-4">
-                <div className="inline-flex items-center space-x-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-                  <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                  </span>
-                  <span className="text-sm font-medium">Nueva Colección Disponible</span>
-                </div>
-
-                <h1 className="text-5xl lg:text-7xl font-extrabold leading-tight">
-                  <span className="bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
-                    Protege tu
-                  </span>
-                  <br />
-                  <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    iPhone
-                  </span>
-                  <br />
-                  <span className="text-white">con Estilo</span>
-                </h1>
-
-                <p className="text-xl text-gray-300 leading-relaxed max-w-xl">
-                  Descubre nuestra colección premium de carcasas iPhone. Diseño elegante,
-                  protección superior y calidad garantizada.
-                </p>
-              </div>
-
-              {/* Features */}
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z', text: 'Protección Premium' },
-                  { icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', text: 'Envío Gratis' },
-                  { icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z', text: '98% Satisfacción' },
-                  { icon: 'M13 10V3L4 14h7v7l9-11h-7z', text: 'Entrega Express' }
-                ].map((feature, index) => (
-                  <div key={index} className="flex items-center space-x-3 bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={feature.icon} />
-                      </svg>
-                    </div>
-                    <span className="text-sm font-medium">{feature.text}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <a
-                  href="/products"
-                  className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105 overflow-hidden text-center"
-                >
-                  <span className="relative z-10 flex items-center justify-center space-x-2">
-                    <span>Ver Catálogo</span>
-                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                </a>
-
-                <a
-                  href="#productos-destacados"
-                  className="px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-bold rounded-2xl border-2 border-white/20 hover:border-white/40 transition-all duration-300 text-center"
-                >
-                  Explorar Más
-                </a>
-              </div>
-            </div>
-
-            {/* Right - Product Showcase */}
-            <div className="relative">
-              {/* Glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl blur-3xl opacity-30"></div>
-
-              <div className="relative bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
-                <div className="aspect-square bg-gradient-to-br from-white/10 to-white/5 rounded-2xl flex items-center justify-center relative overflow-hidden">
-                  {/* Decorative elements */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10"></div>
-
-                  <div className="relative text-center z-10">
-                    <div className="w-64 h-64 mx-auto bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-sm rounded-3xl mb-6 flex items-center justify-center border border-white/20 shadow-xl">
-                      <div className="text-center">
-                        <svg className="w-32 h-32 mx-auto text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        <p className="text-white font-semibold mt-4">{selectedModel}</p>
-                      </div>
-                    </div>
-                    <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full text-white font-medium shadow-lg">
-                      <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-                      <span>Color: {selectedColor}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick Stats */}
-                <div className="grid grid-cols-3 gap-4 mt-8">
-                  {[
-                    { label: 'Modelos', value: '15+' },
-                    { label: 'Colores', value: '12+' },
-                    { label: 'Reviews', value: '4.9★' }
-                  ].map((stat, index) => (
-                    <div key={index} className="text-center p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                      <p className="text-2xl font-bold text-white mb-1">{stat.value}</p>
-                      <p className="text-sm text-gray-300">{stat.label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Wave separator */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 0L60 10C120 20 240 40 360 46.7C480 53 600 47 720 43.3C840 40 960 40 1080 46.7C1200 53 1320 67 1380 73.3L1440 80V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0V0Z" fill="rgb(249, 250, 251)"/>
-          </svg>
-        </div>
-      </div>
-
-      {/* Product Card Section - More compact */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10 mb-16">
-        <div className="max-w-3xl mx-auto">
-          <ProductCard
-            selectedModel={selectedModel}
-            selectedColor={selectedColor}
-            models={models}
-            colors={colors}
-            price={price}
-            onModelChange={onModelChange}
-            onColorChange={onColorChange}
-            createCartItem={createCartItem}
-          />
-        </div>
-      </div>
+      {/* Hero Banner - Dynamic Product Display */}
+      <HeroBanner />
 
       {/* Featured Products Section */}
       <div id="productos-destacados">

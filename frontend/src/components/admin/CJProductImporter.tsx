@@ -2,12 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
-interface Supplier {
-  id: string;
-  name: string;
-  slug: string;
-}
-
 interface Category {
   id: string;
   name: string;
@@ -15,23 +9,32 @@ interface Category {
 }
 
 interface CJProduct {
-  pid: string;
-  productNameEn: string;
-  productImage: string;
-  sellPrice: number;
-  productWeight: number;
-  productType: string;
+  id?: string;
+  pid?: string;
+  name?: string;
+  productNameEn?: string;
+  productImage?: string;
+  images?: string | string[];
+  price?: number;
+  sellPrice?: number;
+  description?: string;
+  productWeight?: number;
+  weight?: number;
+  productType?: string;
+  categoryName?: string;
   variants?: any[];
 }
 
 const CJProductImporter: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [cjSupplier, setCjSupplier] = useState<Supplier | null>(null);
   const [loading, setLoading] = useState(false);
-  const [searching, setSearching] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  // Search mode: 'keyword' or 'pid'
+  const [searchMode, setSearchMode] = useState<'keyword' | 'pid'>('keyword');
 
   // Search state
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [searchResults, setSearchResults] = useState<CJProduct[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<CJProduct | null>(null);
 
@@ -49,7 +52,6 @@ const CJProductImporter: React.FC = () => {
 
   useEffect(() => {
     loadCategories();
-    loadCJSupplier();
   }, []);
 
   useEffect(() => {
@@ -73,83 +75,95 @@ const CJProductImporter: React.FC = () => {
     }
   };
 
-  const loadCJSupplier = async () => {
-    try {
-      const response = await fetch(`${API_URL}/suppliers?active=true`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!response.ok) throw new Error('Error cargando proveedores');
-      const result = await response.json();
-      const cj = result.data?.find((s: Supplier) => s.slug === 'cj-dropshipping');
-      setCjSupplier(cj || null);
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
   const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      toast.error('Ingresa un término de búsqueda');
+    if (!searchKeyword.trim()) {
+      toast.error(searchMode === 'keyword' ? 'Ingresa una palabra clave' : 'Ingresa el PID del producto');
       return;
     }
 
-    setSearching(true);
+    setSearchLoading(true);
+    setSearchResults([]);
+    setSelectedProduct(null);
+
     try {
-      const response = await fetch(`${API_URL}/cj-dropshipping/search?keyword=${encodeURIComponent(searchQuery)}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      if (searchMode === 'keyword') {
+        // Búsqueda por palabra clave
+        const response = await fetch(`${API_URL}/cj/search?keyword=${encodeURIComponent(searchKeyword)}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-      if (!response.ok) throw new Error('Error buscando en CJ');
+        if (!response.ok) throw new Error('Error buscando productos');
 
-      const result = await response.json();
+        const result = await response.json();
 
-      if (result.success && result.products?.length > 0) {
-        setSearchResults(result.products);
-        toast.success(`${result.products.length} productos encontrados`);
+        if (result.success && result.products && result.products.length > 0) {
+          setSearchResults(result.products);
+          toast.success(`Se encontraron ${result.products.length} productos`);
+        } else {
+          toast.error('No se encontraron productos con esa palabra clave');
+        }
       } else {
-        setSearchResults([]);
-        toast.error('No se encontraron productos');
+        // Búsqueda por PID
+        const response = await fetch(`${API_URL}/cj/product/${encodeURIComponent(searchKeyword)}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Error obteniendo producto');
+
+        const result = await response.json();
+
+        if (result.success && result.product) {
+          setSearchResults([result.product]);
+          handleSelectProduct(result.product);
+          toast.success('Producto encontrado!');
+        } else {
+          toast.error('No se encontró el producto con ese PID');
+        }
       }
     } catch (error: any) {
       console.error('Error:', error);
-      toast.error(error.message || 'Error al buscar productos en CJ');
+      toast.error(error.message || 'Error en la búsqueda');
     } finally {
-      setSearching(false);
+      setSearchLoading(false);
     }
   };
 
-  const handleSelectProduct = async (product: CJProduct) => {
+  const handleSelectProduct = (product: CJProduct) => {
     setSelectedProduct(product);
 
-    // Cargar detalles completos del producto
-    try {
-      const response = await fetch(`${API_URL}/cj-dropshipping/product/${product.pid}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+    // Manejar nombre del producto (soporta ambos formatos)
+    const productName = product.name || product.productNameEn || '';
+    setProductName(productName);
 
-      if (!response.ok) throw new Error('Error obteniendo detalles');
+    // Descripción
+    const productDesc = product.description || `Producto importado desde CJ Dropshipping: ${productName}`;
+    setDescription(productDesc);
 
-      const result = await response.json();
+    // Precio (soporta ambos formatos)
+    const price = product.price || product.sellPrice || 0;
+    setSupplierPrice(price);
 
-      if (result.success && result.product) {
-        const details = result.product;
-
-        setProductName(details.productNameEn || product.productNameEn);
-        setDescription(details.description || `Producto importado desde CJ Dropshipping: ${details.productNameEn}`);
-        setSupplierPrice(details.sellPrice || product.sellPrice || 0);
-        setImages(details.productImage ? [details.productImage] : [product.productImage]);
-
-        toast.success('Detalles cargados');
+    // Imágenes (soporta ambos formatos: string con array JSON o array directo)
+    let imageArray: string[] = [];
+    if (product.images) {
+      if (typeof product.images === 'string') {
+        try {
+          imageArray = JSON.parse(product.images);
+        } catch {
+          imageArray = [product.images];
+        }
+      } else if (Array.isArray(product.images)) {
+        imageArray = product.images;
       }
-    } catch (error: any) {
-      console.error('Error:', error);
-      toast.error('Error al cargar detalles del producto');
+    } else if (product.productImage) {
+      imageArray = [product.productImage];
     }
+    setImages(imageArray);
   };
 
   const handleSaveProduct = async () => {
     // Validación
-    if (!productName || !selectedCategory || !cjSupplier || supplierPrice <= 0 || salePrice <= 0) {
+    if (!productName || !selectedCategory || supplierPrice <= 0 || salePrice <= 0) {
       toast.error('Completa todos los campos requeridos');
       return;
     }
@@ -169,18 +183,21 @@ const CJProductImporter: React.FC = () => {
         salePrice: salePrice,
         supplierPrice: supplierPrice,
         categoryId: selectedCategory,
-        supplierId: cjSupplier.id,
+        supplier: 'CJ_DROPSHIPPING',
         stock: 9999, // CJ tiene stock ilimitado
         isActive: true,
         isFeatured: false,
-        externalId: selectedProduct.pid, // ID de CJ
-        cjProductId: selectedProduct.pid,
-        images: images.length > 0 ? images : [selectedProduct.productImage],
+        cjProductId: selectedProduct.id || selectedProduct.pid || '',
+        images: images.length > 0 ? images : (selectedProduct.productImage ? [selectedProduct.productImage] : []),
+        variants: selectedProduct.variants || [], // Incluir variantes del producto CJ
         tags: ['cj-dropshipping', 'importado'],
         specifications: {
-          peso: selectedProduct.productWeight || 0,
+          peso: selectedProduct.weight || selectedProduct.productWeight || 0,
           tipo: selectedProduct.productType || '',
-          proveedor: 'CJ Dropshipping'
+          categoria: selectedProduct.categoryName || '',
+          proveedor: 'CJ Dropshipping',
+          pid: selectedProduct.id || selectedProduct.pid || '',
+          variantes: selectedProduct.variants?.length || 0
         }
       };
 
@@ -198,19 +215,17 @@ const CJProductImporter: React.FC = () => {
         throw new Error(error.message || 'Error al guardar producto');
       }
 
-      const result = await response.json();
-
-      toast.success('Producto guardado exitosamente!');
+      toast.success('¡Producto guardado exitosamente en tu tienda!');
 
       // Limpiar form
       setSelectedProduct(null);
+      setSearchResults([]);
       setProductName('');
       setDescription('');
       setSupplierPrice(0);
       setSalePrice(0);
       setImages([]);
-      setSearchResults([]);
-      setSearchQuery('');
+      setSearchKeyword('');
 
     } catch (error: any) {
       console.error('Error:', error);
@@ -220,58 +235,110 @@ const CJProductImporter: React.FC = () => {
     }
   };
 
-  if (!cjSupplier) {
-    return (
-      <div className="p-8 bg-red-50 rounded-lg border-2 border-red-200">
-        <h3 className="text-xl font-bold text-red-700 mb-2">CJ Dropshipping no configurado</h3>
-        <p className="text-red-600">
-          Necesitas crear el proveedor "CJ Dropshipping" en el panel de proveedores primero.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-lg shadow-lg">
         <h1 className="text-3xl font-bold mb-2">Importador CJ Dropshipping</h1>
-        <p className="text-blue-100">Busca productos en CJ Dropshipping y agrégalos a tu tienda</p>
+        <p className="text-blue-100">Busca e importa productos directamente desde CJ Dropshipping</p>
       </div>
 
-      {/* Búsqueda */}
+      {/* Search Mode Toggle */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">1. Buscar Productos en CJ</h2>
+        <h2 className="text-xl font-bold mb-4 text-gray-800">Método de Búsqueda</h2>
+        <div className="flex gap-4">
+          <button
+            onClick={() => {
+              setSearchMode('keyword');
+              setSearchKeyword('');
+              setSearchResults([]);
+              setSelectedProduct(null);
+            }}
+            className={`flex-1 px-6 py-4 rounded-lg font-semibold transition-all ${
+              searchMode === 'keyword'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <div className="text-lg">🔍 Buscar por Palabra Clave</div>
+            <div className="text-sm mt-1 opacity-90">Busca productos por nombre o descripción</div>
+          </button>
+          <button
+            onClick={() => {
+              setSearchMode('pid');
+              setSearchKeyword('');
+              setSearchResults([]);
+              setSelectedProduct(null);
+            }}
+            className={`flex-1 px-6 py-4 rounded-lg font-semibold transition-all ${
+              searchMode === 'pid'
+                ? 'bg-purple-600 text-white shadow-lg'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <div className="text-lg">🔖 Buscar por PID</div>
+            <div className="text-sm mt-1 opacity-90">Si ya conoces el ID del producto</div>
+          </button>
+        </div>
+      </div>
+
+      {/* Search Input */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-xl font-bold mb-4 text-gray-800">
+          {searchMode === 'keyword' ? '1. Buscar Productos' : '1. Ingresar PID del Producto'}
+        </h2>
+
+        {searchMode === 'keyword' ? (
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-4">
+            <p className="text-blue-800 text-sm">
+              💡 <strong>Consejo:</strong> Busca por nombre en inglés (ej: "iPhone case", "wireless charger", "bluetooth headphones")
+            </p>
+          </div>
+        ) : (
+          <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4 mb-4">
+            <p className="text-purple-800 text-sm mb-2">
+              📋 <strong>Cómo obtener el PID:</strong>
+            </p>
+            <ol className="list-decimal list-inside text-purple-700 text-sm space-y-1 ml-4">
+              <li>Ve a <a href="https://cjdropshipping.com/" target="_blank" rel="noopener noreferrer" className="underline font-semibold">cjdropshipping.com</a></li>
+              <li>Busca el producto y copia su PID de la URL</li>
+              <li>Formato: <code className="bg-purple-200 px-2 py-1 rounded">000B9312-456A-4D31-94BD-B083E2A198E8</code></li>
+            </ol>
+          </div>
+        )}
 
         <div className="flex gap-3">
           <input
             type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="Ej: iPhone case, wireless earbuds, phone holder..."
+            placeholder={searchMode === 'keyword' ? 'Ej: iPhone 15 case' : 'Ej: 000B9312-456A-4D31-94BD-B083E2A198E8'}
             className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
           />
           <button
             onClick={handleSearch}
-            disabled={searching}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400"
+            disabled={searchLoading}
+            className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
           >
-            {searching ? 'Buscando...' : 'Buscar'}
+            {searchLoading ? 'Buscando...' : 'Buscar'}
           </button>
         </div>
+      </div>
 
-        {/* Resultados */}
-        {searchResults.length > 0 && (
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Search Results */}
+      {searchResults.length > 0 && searchMode === 'keyword' && (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-bold mb-4 text-gray-800">Resultados de Búsqueda ({searchResults.length})</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {searchResults.map((product) => (
               <div
                 key={product.pid}
                 onClick={() => handleSelectProduct(product)}
-                className={`cursor-pointer border-2 rounded-lg p-4 transition-all ${
+                className={`border-2 rounded-lg p-4 cursor-pointer transition-all hover:shadow-lg ${
                   selectedProduct?.pid === product.pid
                     ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-blue-300'
+                    : 'border-gray-300 hover:border-blue-300'
                 }`}
               >
                 <img
@@ -279,18 +346,18 @@ const CJProductImporter: React.FC = () => {
                   alt={product.productNameEn}
                   className="w-full h-48 object-cover rounded-lg mb-3"
                 />
-                <h3 className="font-semibold text-sm mb-2 line-clamp-2">{product.productNameEn}</h3>
-                <div className="text-sm text-gray-600">
-                  <p>Precio: ${product.sellPrice}</p>
-                  <p className="text-xs text-gray-500 mt-1">ID: {product.pid}</p>
-                </div>
+                <h3 className="font-semibold text-gray-800 line-clamp-2 mb-2">
+                  {product.productNameEn}
+                </h3>
+                <p className="text-lg font-bold text-green-600">${product.sellPrice}</p>
+                <p className="text-xs text-gray-500 mt-1">PID: {product.pid}</p>
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Form de Producto */}
+      {/* Product Form */}
       {selectedProduct && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-bold mb-4 text-gray-800">2. Configurar Producto</h2>
@@ -384,7 +451,7 @@ const CJProductImporter: React.FC = () => {
 
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <p className="text-sm text-blue-800">
-                  <strong>ID de CJ:</strong> {selectedProduct.pid}
+                  <strong>PID de CJ:</strong> <code className="font-mono text-xs">{selectedProduct.pid}</code>
                 </p>
               </div>
             </div>
@@ -411,22 +478,22 @@ const CJProductImporter: React.FC = () => {
               disabled={loading}
               className="w-full px-6 py-4 bg-green-600 text-white text-lg font-bold rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-colors"
             >
-              {loading ? 'Guardando...' : 'Guardar Producto en la Tienda'}
+              {loading ? 'Guardando...' : '✓ Guardar Producto en la Tienda'}
             </button>
           </div>
         </div>
       )}
 
-      {/* Ayuda */}
+      {/* Info Adicional */}
       <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
-        <h3 className="font-bold text-yellow-800 mb-2">Cómo funciona:</h3>
-        <ol className="list-decimal list-inside text-sm text-yellow-700 space-y-1">
-          <li>Busca productos en CJ Dropshipping usando palabras clave</li>
-          <li>Selecciona el producto que quieres importar</li>
-          <li>Configura el nombre, categoría y margen de ganancia</li>
-          <li>Guarda el producto en tu tienda</li>
-          <li>Cuando un cliente compre, automáticamente se crea la orden en CJ</li>
-        </ol>
+        <h3 className="font-bold text-yellow-800 mb-2">💡 Importante:</h3>
+        <ul className="list-disc list-inside text-sm text-yellow-700 space-y-1">
+          <li>Los productos se importan directamente desde CJ Dropshipping</li>
+          <li>CJ maneja el inventario automáticamente (stock ilimitado)</li>
+          <li>Cuando un cliente compre, la orden se creará automáticamente en CJ</li>
+          <li>CJ se encarga del envío directo al cliente</li>
+          <li>Tú solo cobras la diferencia entre el precio de venta y el costo de CJ</li>
+        </ul>
       </div>
     </div>
   );

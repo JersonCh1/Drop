@@ -7,7 +7,6 @@ import { useCurrency } from '../context/CurrencyContext';
 import toast from 'react-hot-toast';
 import { trackingPixels } from '../utils/trackingPixels';
 import ProductReviews from '../components/products/ProductReviews';
-import UpsellCrossSell from '../components/products/UpsellCrossSell';
 import WishlistButton from '../components/wishlist/WishlistButton';
 import CompareButton from '../components/compare/CompareButton';
 
@@ -387,11 +386,6 @@ const ProductDetailPage: React.FC = () => {
         {/* Reviews Section */}
         <div className="mt-12 bg-white rounded-lg shadow-md p-8">
           <ProductReviews productId={product.id} />
-        </div>
-
-        {/* Upsell/Cross-sell */}
-        <div className="mt-12">
-          <UpsellCrossSell />
         </div>
 
       </div>

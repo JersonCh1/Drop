@@ -3,3 +3,6 @@
 *.log
 .DS_Store
 package-lock.json
+*.cj_token_cache.json
+nul
+**/nul

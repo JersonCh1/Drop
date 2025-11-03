@@ -275,44 +275,47 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   const isAvailable = productService.isAvailable(product);
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 group">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group transform hover:scale-105 hover:-translate-y-1">
       <Link to={`/products/${product.slug}`}>
-        <div className="relative aspect-square bg-gray-100">
+        <div className="relative aspect-square bg-gray-100 dark:bg-gray-700 overflow-hidden">
           <LazyImage
             src={mainImage}
             alt={product.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
 
           {/* Action Buttons - Show on hover */}
-          <div className="absolute top-2 left-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <div className="absolute top-3 left-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-x-0 -translate-x-4">
             <WishlistButton productId={product.id} variant="icon" size="md" />
             <CompareButton product={product} variant="icon" size="md" />
           </div>
 
           {product.isFeatured && (
-            <div className="absolute top-2 right-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-md text-xs font-semibold">
+            <div className="absolute top-3 right-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg animate-pulse">
               ⭐ Destacado
             </div>
           )}
           {!isAvailable && (
-            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-              <span className="bg-red-600 text-white px-4 py-2 rounded-md font-semibold">
+            <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center backdrop-blur-sm">
+              <span className="bg-red-600 text-white px-6 py-3 rounded-lg font-bold shadow-xl">
                 Agotado
               </span>
             </div>
           )}
+
+          {/* Overlay gradient on hover */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </div>
       </Link>
 
-      <div className="p-4">
+      <div className="p-5">
         <Link to={`/products/${product.slug}`}>
-          <h3 className="font-semibold text-lg text-gray-900 mb-2 hover:text-blue-600 transition-colors">
+          <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors line-clamp-2 min-h-[56px]">
             {product.name}
           </h3>
         </Link>
 
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
           {product.description || 'Carcasa de alta calidad para tu iPhone'}
         </p>
 
@@ -324,18 +327,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
 
             if (Array.isArray(compatArray) && compatArray.length > 0) {
               return (
-                <div className="mb-3">
-                  <div className="flex flex-wrap gap-1">
+                <div className="mb-4">
+                  <div className="flex flex-wrap gap-1.5">
                     {compatArray.slice(0, 2).map(model => (
                       <span
                         key={model}
-                        className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded"
+                        className="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-full font-medium"
                       >
                         {model}
                       </span>
                     ))}
                     {compatArray.length > 2 && (
-                      <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                      <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2.5 py-1 rounded-full font-medium">
                         +{compatArray.length - 2}
                       </span>
                     )}
@@ -349,13 +352,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
           return null;
         })()}
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-end justify-between mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
           <div>
-            <span className="text-2xl font-bold text-blue-600">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Precio desde</p>
+            <span className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               ${lowestPrice.toFixed(2)}
             </span>
             {product.variants.length > 0 && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {product.variants.length} variantes
               </p>
             )}
@@ -364,9 +368,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
           <button
             onClick={() => onAddToCart(product)}
             disabled={!isAvailable}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg transition-all duration-300 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-sm font-bold shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
           >
-            {isAvailable ? 'Agregar' : 'Agotado'}
+            {isAvailable ? '+ Agregar' : 'Agotado'}
           </button>
         </div>
       </div>

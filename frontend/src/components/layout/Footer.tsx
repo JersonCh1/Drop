@@ -1,55 +1,11 @@
 // frontend/src/components/layout/Footer.tsx
-import React, { useState } from 'react';
+import React from 'react';
 import { useI18n } from '../../context/I18nContext';
-import toast from 'react-hot-toast';
 
 const Footer: React.FC = () => {
   const { t } = useI18n();
   const currentYear = new Date().getFullYear();
   const whatsappNumber = process.env.REACT_APP_WHATSAPP_NUMBER || '51917780708';
-  const [newsletterEmail, setNewsletterEmail] = useState('');
-  const [isSubscribing, setIsSubscribing] = useState(false);
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
-
-  const handleNewsletterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(newsletterEmail)) {
-      toast.error('Por favor ingresa un email válido');
-      return;
-    }
-
-    setIsSubscribing(true);
-
-    try {
-      const response = await fetch(`${API_URL}/email/welcome`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: newsletterEmail.trim(),
-          firstName: 'Usuario', // Nombre genérico para footer form
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success('¡Gracias por suscribirte! 📧');
-        setNewsletterEmail('');
-        localStorage.setItem('newsletter_subscribed', 'true');
-      } else {
-        toast.error(data.message || 'Error al suscribirte');
-      }
-    } catch (error) {
-      console.error('Error subscribing:', error);
-      toast.error('Error al suscribirte');
-    } finally {
-      setIsSubscribing(false);
-    }
-  };
 
   return (
     <footer className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
@@ -144,42 +100,6 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Newsletter Section */}
-        <div className="border-t border-white/10 mt-12 pt-12">
-          <div className="max-w-2xl mx-auto text-center mb-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full mb-6 shadow-lg">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76" />
-              </svg>
-            </div>
-            <h3 className="text-3xl font-black bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-3">
-              ¡Obtén 10% OFF en tu primera compra!
-            </h3>
-            <p className="text-gray-400 mb-6">
-              Suscríbete para recibir ofertas exclusivas y novedades
-            </p>
-            <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                value={newsletterEmail}
-                onChange={(e) => setNewsletterEmail(e.target.value)}
-                placeholder="tu@email.com"
-                className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all"
-                required
-              />
-              <button
-                type="submit"
-                disabled={isSubscribing}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-              >
-                {isSubscribing ? 'Suscribiendo...' : 'Suscribirme'}
-              </button>
-            </form>
-            <p className="text-xs text-gray-500 mt-4">
-              No spam. Puedes cancelar tu suscripción en cualquier momento.
-            </p>
-          </div>
-        </div>
 
         {/* Trust Badges - Simplified */}
         <div className="border-t border-white/10 pt-12">

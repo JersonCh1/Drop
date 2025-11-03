@@ -102,7 +102,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
     return colorMap[color] || 'bg-gradient-to-br from-gray-500 to-gray-400';
   };
 
-  const isInCart = isItemInCart(1);
+  // Check if this specific variant is in cart (based on id which includes model+color)
+  const item = createCartItem();
+  const isInCart = isItemInCart(item.productId, item.variantId);
 
   return (
     <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl shadow-gray-200/50 p-8 border border-gray-100 hover:shadow-3xl hover:shadow-blue-200/30 transition-all duration-300">
@@ -133,18 +135,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-2xl"></div>
           <div className="relative flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Precio especial</p>
               <div className="flex items-baseline space-x-3">
                 <span className="text-4xl font-black bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   {formatPrice(price)}
                 </span>
-                <span className="text-xl text-gray-400 line-through font-medium">
-                  {formatPrice(price * 1.4)}
-                </span>
               </div>
-            </div>
-            <div className="bg-gradient-to-br from-red-500 to-pink-500 text-white px-4 py-2 rounded-xl font-bold text-lg shadow-lg shadow-red-500/30 transform -rotate-3">
-              -30%
             </div>
           </div>
           <p className="text-sm text-blue-600 font-medium mt-3 flex items-center">

@@ -2,6 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const cjService = require('../services/cjDropshippingService');
+const cjAuthService = require('../services/cjAuthService');
+const axios = require('axios');
 const { PrismaClient } = require('@prisma/client');
 const jwt = require('jsonwebtoken');
 
@@ -62,6 +64,84 @@ router.get('/info', verifyAdmin, (req, res) => {
 });
 
 /**
+ * GET /api/cj/search - Buscar productos en CJ (ruta compatible con frontend)
+ */
+router.get('/search', verifyAdmin, async (req, res) => {
+  try {
+    if (!cjAuthService.isConfigured()) {
+      return res.status(400).json({
+        success: false,
+        message: 'CJ Dropshipping no está configurado. Verifica CJ_EMAIL y CJ_API_KEY en .env',
+        products: [],
+        total: 0
+      });
+    }
+
+    const {
+      keyword = '',
+      page = 1,
+      pageSize = 20
+    } = req.query;
+
+    console.log('🔍 Buscando en CJ:', keyword);
+
+    // Obtener token válido
+    const accessToken = await cjAuthService.getValidAccessToken();
+
+    // Llamar a la API de CJ directamente
+    const CJ_API_URL = process.env.CJ_API_URL || 'https://developers.cjdropshipping.com/api2.0/v1';
+
+    // Usar /product/list con GET según documentación oficial
+    const params = new URLSearchParams();
+    if (keyword) params.append('productNameEn', keyword); // productNameEn para búsqueda en inglés
+    params.append('pageNum', page.toString());
+    params.append('pageSize', Math.min(parseInt(pageSize), 50).toString());
+
+    const response = await axios.get(
+      `${CJ_API_URL}/product/list?${params.toString()}`,
+      {
+        headers: {
+          'CJ-Access-Token': accessToken
+        }
+      }
+    );
+
+    console.log('✅ Respuesta de CJ:', response.data.code, response.data.message);
+
+    if (response.data.result && response.data.code === 200) {
+      const products = response.data.data?.list || [];
+      const total = response.data.data?.total || 0;
+
+      console.log(`📦 Encontrados ${products.length} productos de ${total} totales`);
+
+      res.json({
+        success: true,
+        products: products,
+        total: total,
+        pages: Math.ceil(total / pageSize),
+        currentPage: parseInt(page)
+      });
+    } else {
+      res.json({
+        success: false,
+        message: response.data.message || 'No se encontraron productos',
+        products: [],
+        total: 0
+      });
+    }
+  } catch (error) {
+    console.error('❌ Error buscando en CJ:', error.response?.data || error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error buscando productos',
+      error: error.response?.data?.message || error.message,
+      products: [],
+      total: 0
+    });
+  }
+});
+
+/**
  * GET /api/cj/products/search - Buscar productos en CJ
  */
 router.get('/products/search', verifyAdmin, async (req, res) => {
@@ -99,6 +179,29 @@ router.get('/products/search', verifyAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error buscando productos',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/cj/product/:id - Obtener detalles de un producto (ruta compatible con frontend)
+ */
+router.get('/product/:id', verifyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await cjService.getProductDetails(id);
+
+    res.json({
+      success: result.success,
+      product: result.product,
+      error: result.error
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error obteniendo detalles del producto',
       error: error.message
     });
   }

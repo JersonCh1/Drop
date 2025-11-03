@@ -215,15 +215,25 @@ router.post('/', verifyAdminToken, async (req, res) => {
       slug,
       description,
       basePrice,
+      salePrice,
+      supplierPrice,
       categoryId,
       brand,
       model,
       compatibility,
       isFeatured,
+      isActive,
       inStock,
+      stock,
       stockCount,
       metaTitle,
-      metaDescription
+      metaDescription,
+      images,
+      supplier,
+      cjProductId,
+      tags,
+      specifications,
+      variants
     } = req.body;
 
     // Validaciones básicas
@@ -234,31 +244,162 @@ router.post('/', verifyAdminToken, async (req, res) => {
       });
     }
 
+    // Limpiar descripción HTML si es producto de CJ
+    let cleanDescription = description;
+    if (supplier === 'CJ_DROPSHIPPING' && description) {
+      // Extraer solo el texto sin HTML, pero mantener la estructura básica
+      cleanDescription = description
+        // Primero remover todos los tags de script y style
+        .replace(/<script[^>]*>.*?<\/script>/gi, '')
+        .replace(/<style[^>]*>.*?<\/style>/gi, '')
+        // Remover todos los tags de imagen completamente (incluyendo URLs)
+        .replace(/<img[^>]*>/gi, '')
+        // Remover URLs de imagen sueltas (http/https que terminan en .jpg, .png, etc)
+        .replace(/https?:\/\/[^\s<>"]+?\.(jpg|jpeg|png|gif|webp|bmp)(\?[^\s<>"]*)?/gi, '')
+        // Remover otros tags HTML pero preservar su contenido
+        .replace(/<div[^>]*>/gi, '\n')
+        .replace(/<\/div>/gi, '\n')
+        .replace(/<p[^>]*>/gi, '\n')
+        .replace(/<\/p>/gi, '\n')
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<li[^>]*>/gi, '\n• ')
+        .replace(/<\/li>/gi, '')
+        .replace(/<ul[^>]*>/gi, '\n')
+        .replace(/<\/ul>/gi, '\n')
+        .replace(/<ol[^>]*>/gi, '\n')
+        .replace(/<\/ol>/gi, '\n')
+        .replace(/<h[1-6][^>]*>/gi, '\n\n')
+        .replace(/<\/h[1-6]>/gi, '\n')
+        .replace(/<strong[^>]*>/gi, '')
+        .replace(/<\/strong>/gi, '')
+        .replace(/<b[^>]*>/gi, '')
+        .replace(/<\/b>/gi, '')
+        .replace(/<em[^>]*>/gi, '')
+        .replace(/<\/em>/gi, '')
+        .replace(/<i[^>]*>/gi, '')
+        .replace(/<\/i>/gi, '')
+        // Remover cualquier otro tag HTML restante
+        .replace(/<[^>]+>/g, '')
+        // Limpiar entidades HTML
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        // Remover tabs y espacios múltiples
+        .replace(/\t/g, '')
+        .replace(/  +/g, ' ')
+        // Dividir en líneas, limpiar y filtrar
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => {
+          // Filtrar líneas vacías
+          if (line.length === 0) return false;
+          // Filtrar líneas que son solo URLs
+          if (/^https?:\/\//i.test(line)) return false;
+          // Filtrar líneas que son códigos extraños (menos de 3 caracteres o solo símbolos)
+          if (line.length < 3) return false;
+          if (/^[^a-zA-Z0-9]+$/.test(line)) return false;
+          return true;
+        })
+        .join('\n')
+        .trim();
+
+      // Si la descripción limpia está vacía o muy corta, usar el nombre del producto
+      if (!cleanDescription || cleanDescription.length < 10) {
+        cleanDescription = `${name}\n\nProducto importado desde CJ Dropshipping con envío directo.`;
+      }
+    }
+
+    // Verificar si el slug ya existe y agregar sufijo si es necesario
+    let finalSlug = slug;
+    const existingProduct = await prisma.product.findUnique({
+      where: { slug: finalSlug }
+    });
+
+    if (existingProduct) {
+      // Agregar timestamp para hacer el slug único
+      finalSlug = `${slug}-${Date.now()}`;
+    }
+
     // Crear producto
     const product = await prisma.product.create({
       data: {
         name,
-        slug,
-        description,
-        basePrice: parseFloat(basePrice),
+        slug: finalSlug,
+        description: cleanDescription,
+        basePrice: parseFloat(salePrice || basePrice),
+        supplierPrice: supplierPrice ? parseFloat(supplierPrice) : null,
         categoryId,
         brand,
         model,
         compatibility,
         isFeatured: isFeatured || false,
+        isActive: isActive !== false,
         inStock: inStock !== false,
-        stockCount: stockCount || 0,
+        stockCount: stock || stockCount || 9999,
         metaTitle: metaTitle || name,
-        metaDescription: metaDescription || description
+        metaDescription: metaDescription || cleanDescription?.substring(0, 160),
+        supplierProductId: cjProductId || null,
+        supplierUrl: supplier === 'CJ_DROPSHIPPING' && cjProductId
+          ? `https://www.cjdropshipping.com/product/${cjProductId}.html`
+          : null
       }
     });
 
-    console.log(`✅ Producto creado: ${product.name}`);
+    // Crear imágenes si se proporcionaron
+    if (images && Array.isArray(images) && images.length > 0) {
+      const imageData = images.map((url, index) => ({
+        productId: product.id,
+        url,
+        position: index,
+        altText: `${name} - imagen ${index + 1}`,
+        isMain: index === 0
+      }));
+
+      await prisma.productImage.createMany({
+        data: imageData
+      });
+    }
+
+    // Crear variantes si se proporcionaron (para productos de CJ)
+    if (variants && Array.isArray(variants) && variants.length > 0) {
+      const variantData = variants.map((variant) => ({
+        productId: product.id,
+        sku: variant.variantSku || variant.sku || `${product.id}-${variant.variantKey || Math.random().toString(36).substring(7)}`,
+        name: variant.variantNameEn || variant.name || variant.variantKey || 'Default',
+        price: parseFloat(variant.variantSellPrice || variant.price || product.basePrice),
+        stockQuantity: 9999, // CJ tiene stock ilimitado
+        color: variant.variantKey || null,
+        supplierProductId: variant.vid || null
+      }));
+
+      await prisma.productVariant.createMany({
+        data: variantData
+      });
+    }
+
+    console.log(`✅ Producto creado: ${product.name} (${images?.length || 0} imágenes, ${variants?.length || 0} variantes)`);
+
+    // Obtener el producto completo con imágenes y variantes
+    const fullProduct = await prisma.product.findUnique({
+      where: { id: product.id },
+      include: {
+        category: true,
+        images: {
+          orderBy: { position: 'asc' }
+        },
+        variants: {
+          where: { isActive: true }
+        }
+      }
+    });
 
     res.status(201).json({
       success: true,
       message: 'Producto creado exitosamente',
-      data: product
+      data: fullProduct
     });
 
   } catch (error) {
@@ -463,6 +604,86 @@ router.post('/:id/variants', verifyAdminToken, async (req, res) => {
       });
     }
 
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: error.message
+    });
+  }
+});
+
+// POST /api/products/:id/set-hero-banner - Establecer producto como banner principal
+router.post('/:id/set-hero-banner', verifyAdminToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // First, remove isHeroBanner from all products
+    await prisma.product.updateMany({
+      where: { isHeroBanner: true },
+      data: { isHeroBanner: false }
+    });
+
+    // Then set this product as the hero banner
+    const product = await prisma.product.update({
+      where: { id },
+      data: { isHeroBanner: true },
+      include: {
+        images: {
+          orderBy: { position: 'asc' }
+        },
+        variants: true,
+        category: true
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Producto establecido como banner principal',
+      data: product
+    });
+
+  } catch (error) {
+    console.error('❌ Error estableciendo producto como banner:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: error.message
+    });
+  }
+});
+
+// GET /api/products/hero-banner - Obtener producto del banner principal
+router.get('/hero-banner/current', async (req, res) => {
+  try {
+    const heroBannerProduct = await prisma.product.findFirst({
+      where: {
+        isHeroBanner: true,
+        isActive: true
+      },
+      include: {
+        images: {
+          orderBy: { position: 'asc' }
+        },
+        variants: true,
+        category: true
+      }
+    });
+
+    if (!heroBannerProduct) {
+      return res.json({
+        success: true,
+        message: 'No hay producto establecido como banner principal',
+        data: null
+      });
+    }
+
+    res.json({
+      success: true,
+      data: heroBannerProduct
+    });
+
+  } catch (error) {
+    console.error('❌ Error obteniendo producto banner:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',

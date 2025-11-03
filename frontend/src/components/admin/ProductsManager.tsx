@@ -15,6 +15,7 @@ interface Product {
   category?: { name: string };
   isActive: boolean;
   isFeatured: boolean;
+  isHeroBanner: boolean;
   stockCount: number;
   images: any[];
   variants: any[];
@@ -32,6 +33,7 @@ const ProductsManager: React.FC<ProductsManagerProps> = ({ adminToken }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     loadProducts();
@@ -53,18 +55,19 @@ const ProductsManager: React.FC<ProductsManagerProps> = ({ adminToken }) => {
     }
   };
 
-  const handleDelete = async (productId: string) => {
-    if (!window.confirm('¿Estás seguro de desactivar este producto?')) return;
+  const handleDelete = async () => {
+    if (!deletingProduct) return;
 
     try {
-      await axios.delete(`${API_URL}/products/${productId}`, {
+      await axios.delete(`${API_URL}/products/${deletingProduct.id}`, {
         headers: { Authorization: `Bearer ${adminToken}` }
       });
-      toast.success('Producto desactivado');
+      toast.success('Producto eliminado correctamente');
+      setDeletingProduct(null);
       loadProducts();
     } catch (error) {
       console.error('Error deleting product:', error);
-      toast.error('Error al desactivar producto');
+      toast.error('Error al eliminar producto');
     }
   };
 
@@ -80,6 +83,21 @@ const ProductsManager: React.FC<ProductsManagerProps> = ({ adminToken }) => {
     } catch (error) {
       console.error('Error updating product:', error);
       toast.error('Error al actualizar producto');
+    }
+  };
+
+  const handleSetHeroBanner = async (product: Product) => {
+    try {
+      await axios.post(
+        `${API_URL}/products/${product.id}/set-hero-banner`,
+        {},
+        { headers: { Authorization: `Bearer ${adminToken}` } }
+      );
+      toast.success('Producto establecido como banner principal');
+      loadProducts();
+    } catch (error) {
+      console.error('Error setting hero banner:', error);
+      toast.error('Error al establecer banner principal');
     }
   };
 
@@ -117,22 +135,16 @@ const ProductsManager: React.FC<ProductsManagerProps> = ({ adminToken }) => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-64">
                   Producto
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Precio
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Stock
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Variantes
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
@@ -140,94 +152,99 @@ const ProductsManager: React.FC<ProductsManagerProps> = ({ adminToken }) => {
             <tbody className="bg-white divide-y divide-gray-200">
               {products.map((product) => (
                 <tr key={product.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="h-12 w-12 flex-shrink-0">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center max-w-xs">
+                      <div className="h-10 w-10 flex-shrink-0">
                         {product.images[0] ? (
                           <img
-                            className="h-12 w-12 rounded object-cover"
+                            className="h-10 w-10 rounded object-cover"
                             src={product.images[0].url}
                             alt={product.name}
                           />
                         ) : (
-                          <div className="h-12 w-12 bg-gray-200 rounded flex items-center justify-center">
-                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="h-10 w-10 bg-gray-200 rounded flex items-center justify-center">
+                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                           </div>
                         )}
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                        <div className="text-sm text-gray-500">{product.category_name}</div>
+                      <div className="ml-3 min-w-0 flex-1">
+                        <div className="text-sm font-medium text-gray-900 truncate" title={product.name}>
+                          {product.name.length > 40 ? product.name.substring(0, 40) + '...' : product.name}
+                        </div>
+                        <div className="text-xs text-gray-500 flex items-center gap-2">
+                          <span>${typeof product.basePrice === 'number' ? product.basePrice.toFixed(2) : parseFloat(String(product.basePrice)).toFixed(2)}</span>
+                          {product.isFeatured && <span className="text-yellow-600">⭐</span>}
+                        </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <div className="text-sm font-semibold text-gray-900">
                       ${typeof product.basePrice === 'number' ? product.basePrice.toFixed(2) : parseFloat(String(product.basePrice)).toFixed(2)}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{product.stockCount}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{product.variants.length}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex flex-col space-y-1">
-                      {product.isActive ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Activo
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          Inactivo
-                        </span>
-                      )}
-                      {product.isFeatured && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          ⭐ Destacado
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end space-x-2">
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={() => setEditingProduct(product)}
+                        className="inline-flex items-center justify-center px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-xs font-medium"
+                        title="Editar producto"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+
                       <button
                         onClick={() => setSelectedProduct(product)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="inline-flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-xs font-medium"
                         title="Ver detalles"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
                       </button>
-                      <button
-                        onClick={() => setEditingProduct(product)}
-                        className="text-indigo-600 hover:text-indigo-900"
-                        title="Editar"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
+
                       <button
                         onClick={() => handleToggleFeatured(product)}
-                        className="text-yellow-600 hover:text-yellow-900"
-                        title={product.isFeatured ? 'Quitar de destacados' : 'Marcar como destacado'}
+                        className={`inline-flex items-center justify-center px-3 py-2 rounded-md transition-colors text-xs font-medium ${
+                          product.isFeatured
+                            ? 'bg-yellow-500 text-white hover:bg-yellow-600'
+                            : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                        }`}
+                        title={product.isFeatured ? 'Quitar destacado' : 'Marcar destacado'}
                       >
-                        <svg className="w-5 h-5" fill={product.isFeatured ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill={product.isFeatured ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                         </svg>
                       </button>
+
                       <button
-                        onClick={() => handleDelete(product.id)}
-                        className="text-red-600 hover:text-red-900"
-                        title="Desactivar"
+                        onClick={() => handleSetHeroBanner(product)}
+                        className={`inline-flex items-center justify-center px-3 py-2 rounded-md transition-colors text-xs font-medium ${
+                          product.isHeroBanner
+                            ? 'bg-purple-600 text-white hover:bg-purple-700'
+                            : 'bg-purple-200 text-purple-700 hover:bg-purple-300'
+                        }`}
+                        title={product.isHeroBanner ? 'Banner Principal Activo' : 'Usar como Banner Principal'}
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill={product.isHeroBanner ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                        </svg>
+                      </button>
+
+                      <button
+                        onClick={() => setDeletingProduct(product)}
+                        className="inline-flex items-center justify-center px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-xs font-medium"
+                        title="Eliminar producto"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                       </button>
@@ -285,6 +302,57 @@ const ProductsManager: React.FC<ProductsManagerProps> = ({ adminToken }) => {
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingProduct && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4">
+            <div className="fixed inset-0 bg-black opacity-50" onClick={() => setDeletingProduct(null)}></div>
+
+            <div className="relative bg-white rounded-lg max-w-md w-full p-6">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+
+              <h3 className="text-xl font-bold text-center text-gray-900 mb-2">
+                Eliminar Producto
+              </h3>
+
+              <p className="text-center text-gray-600 mb-2">
+                ¿Estás seguro de que deseas eliminar este producto?
+              </p>
+
+              <div className="bg-gray-50 p-3 rounded-lg mb-4">
+                <p className="font-semibold text-gray-900">{deletingProduct.name}</p>
+                <p className="text-sm text-gray-600">
+                  Precio: ${typeof deletingProduct.basePrice === 'number' ? deletingProduct.basePrice.toFixed(2) : parseFloat(String(deletingProduct.basePrice)).toFixed(2)}
+                </p>
+              </div>
+
+              <p className="text-sm text-red-600 text-center mb-6">
+                Esta acción no se puede deshacer.
+              </p>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setDeletingProduct(null)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
