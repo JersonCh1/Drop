@@ -6,3 +6,4 @@ package-lock.json
 *.cj_token_cache.json
 nul
 **/nul
+frontend/build/
