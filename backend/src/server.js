@@ -21,7 +21,6 @@ const {
 
 // Servicios
 const emailService = require('./services/emailService');
-const stripeService = require('./services/stripeService');
 const analyticsService = require('./services/analyticsService');
 const notificationService = require('./services/notificationService');
 const cloudinaryService = require('./services/cloudinaryService');
@@ -144,7 +143,8 @@ app.get('/health/full', async (req, res) => {
     services: {
       database: 'checking...',
       email: emailService.getServiceInfo().isConfigured,
-      stripe: !!process.env.STRIPE_SECRET_KEY,
+      izipay: !!process.env.IZIPAY_USERNAME,
+      cjDropshipping: !!process.env.CJ_API_KEY,
       cloudinary: !!process.env.CLOUDINARY_CLOUD_NAME
     },
     endpoints: {
@@ -873,31 +873,7 @@ app.use('/api/products', productsRoutes);
 const ordersRoutes = require('./routes/orders-prisma'); // Using Prisma for SQLite
 app.use('/api/orders', ordersRoutes);
 
-// =================== RUTAS DE STRIPE ===================
-const stripeRoutes = require('./routes/stripe');
-app.use('/api/stripe', stripeRoutes);
-
-// =================== RUTAS DE MERCADOPAGO ===================
-const mercadopagoRoutes = require('./routes/mercadopago');
-app.use('/api/mercadopago', mercadopagoRoutes);
-
-// =================== RUTAS DE CULQI ===================
-const culqiRoutes = require('./routes/culqi');
-app.use('/api/culqi', culqiRoutes);
-
-// =================== RUTAS DE NIUBIZ (VISANET) ===================
-const niubizRoutes = require('./routes/niubiz');
-app.use('/api/niubiz', niubizRoutes);
-
-// =================== RUTAS DE PAGOEFECTIVO ===================
-const pagoefectivoRoutes = require('./routes/pagoefectivo');
-app.use('/api/pagoefectivo', pagoefectivoRoutes);
-
-// =================== RUTAS DE SAFETYPAY ===================
-const safetypayRoutes = require('./routes/safetypay');
-app.use('/api/safetypay', safetypayRoutes);
-
-// =================== RUTAS DE IZIPAY (TARJETAS LATAM) ===================
+// =================== RUTAS DE IZIPAY (PASARELA PRINCIPAL) ===================
 const izipayRoutes = require('./routes/izipay');
 app.use('/api/izipay', izipayRoutes);
 
@@ -1056,12 +1032,6 @@ async function startServer() {
     await emailService.initialize();
     await cloudinaryService.initialize();
 
-    if (process.env.STRIPE_SECRET_KEY) {
-      await stripeService.initialize();
-    } else {
-      console.log('⚠️  Stripe no configurado - STRIPE_SECRET_KEY no encontrada');
-    }
-
     // 🤖 Iniciar cron job de CJ Dropshipping (sincronización automática de tracking)
     const { startCJTrackingSyncJob } = require('./cron/syncCJTracking');
     startCJTrackingSyncJob();
@@ -1079,11 +1049,15 @@ async function startServer() {
       console.log(`📦 Orders: http://localhost:${PORT}/api/orders`);
       console.log(`🔑 Admin: http://localhost:${PORT}/api/admin/login`);
       console.log(`📊 Stats: http://localhost:${PORT}/api/admin/stats`);
-      
-      if (process.env.STRIPE_SECRET_KEY) {
-        console.log(`💳 Stripe: Configurado`);
+
+      if (process.env.IZIPAY_USERNAME) {
+        console.log(`💳 Izipay (BCP): Configurado`);
       }
-      
+
+      if (process.env.CJ_API_KEY) {
+        console.log(`📦 CJ Dropshipping: Configurado`);
+      }
+
       if (emailService.getServiceInfo().isConfigured) {
         console.log(`📧 Email: Configurado (${emailService.getServiceInfo().host})`);
       } else {

@@ -61,7 +61,8 @@
       "Bash(copy \"C:\\Users\\Jerson\\Desktop\\DROP\\dropshipping-iphone\\frontend\\src\\pages\\ProductDetailPage.tsx\" +,,)",
       "Bash(del nul \"backend\\nul\" \"frontend\\nul\" \"frontend\\src\\components\\admin\\nul\" 2)",
       "Bash(.gitignore)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

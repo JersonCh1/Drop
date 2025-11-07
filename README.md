@@ -1,15 +1,20 @@
-# 📱 iPhone Cases Store - E-commerce Dropshipping
+# 📱 Tienda Dropshipping - Carcasas iPhone
 
-> Plataforma e-commerce completa para venta de carcasas iPhone con panel de administración, múltiples métodos de pago y automatización de dropshipping.
+> E-commerce completo con panel admin, pagos automatizados y dropshipping integrado.
 
 [![Producción](https://img.shields.io/badge/Estado-Producción-success)](https://github.com/JersonCh1/Drop)
 [![React](https://img.shields.io/badge/React-18-blue)](https://reactjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20-green)](https://nodejs.org/)
+
+## 🚀 URLs en Producción
+
+- **Frontend:** https://flashfunded-frontend.vercel.app
+- **Backend:** https://drop-production-cd2b.up.railway.app
+- **Repositorio:** https://github.com/JersonCh1/Drop
 
 ---
 
-## 🚀 Quick Start
+## 🎯 Quick Start
 
 ```bash
 # Clonar repositorio
@@ -21,7 +26,6 @@ cd backend
 npm install
 npx prisma generate
 npx prisma db push
-node prisma/seed.js
 npm start
 
 # Frontend (nueva terminal)
@@ -37,96 +41,75 @@ npm start
 
 ---
 
-## 📚 Documentación Completa
-
-**→ Ver [`PROJECT_MASTER.md`](./PROJECT_MASTER.md) para documentación detallada**
-
-Este archivo contiene:
-- ✅ Stack tecnológico completo
-- ✅ Todas las funcionalidades implementadas
-- ✅ Estructura del proyecto
-- ✅ Variables de entorno necesarias
-- ✅ API endpoints completos
-- ✅ Guías de despliegue
-- ✅ Credenciales y configuraciones
-
----
-
-## ✨ Características Principales
+## ✨ Características
 
 ### 🛍️ E-commerce
-- Catálogo de productos con filtros y búsqueda
-- Sistema de reviews y ratings
-- Carrito persistente y checkout multi-paso
-- Tracking de órdenes en tiempo real
-- Sistema de cupones y descuentos
-- Programa de referidos
+- ✅ Catálogo de productos con filtros
+- ✅ Carrito persistente y checkout
+- ✅ Sistema de reviews (5 estrellas)
+- ✅ Tracking de órdenes
+- ✅ Cupones y descuentos
+- ✅ Wishlist/Favoritos
+- ✅ Comparador de productos
+- ✅ Dark mode
 
-### 💳 Pagos (7 métodos)
-- **Stripe** - Tarjetas internacionales
-- **Culqi** - Principal para Perú
-- **Niubiz** - Visa/Mastercard Perú
-- **MercadoPago** - América Latina
-- **Yape/Plin** - Billeteras digitales
-- **PagoEfectivo** - Efectivo en agencias
-- **SafetyPay** - Transferencias bancarias
+### 💳 Pagos
+- ✅ **Izipay (BCP)** - Tarjetas + Yape + Plin *(Principal)*
+- ✅ WhatsApp para consultas
 
-### 📊 Admin Panel
-- Dashboard con analytics en tiempo real
-- Gestión completa de productos y órdenes
-- Email marketing automatizado
-- Integración con CJ Dropshipping
-- Sistema de moderación de reviews
+### 📦 Dropshipping
+- ✅ **CJ Dropshipping** - Automatización completa
+- ✅ Cálculo automático de envío
+- ✅ Creación automática de órdenes
+- ✅ Tracking automático
 
-### 📈 Marketing & SEO
-- Email marketing automatizado
-- Newsletter popup y social proof
-- Tracking pixels (Facebook, TikTok)
-- Google Analytics integrado
-- SEO optimizado (meta tags, sitemap, robots.txt)
-- Sistema de referidos
+### ⚙️ Admin Panel
+- ✅ Dashboard con estadísticas
+- ✅ Gestión de productos y órdenes
+- ✅ Importador de productos CJ
+- ✅ Analytics integrado
 
-### 🌐 Multi-idioma & PWA
-- Español e Inglés
-- Progressive Web App
-- Instalable en móviles
-- Modo offline
+### 🌐 Otros
+- ✅ Multi-idioma (ES/EN)
+- ✅ Multi-currency (USD/PEN)
+- ✅ SEO optimizado
+- ✅ PWA (instalable)
+- ✅ Sistema de lealtad/puntos
 
 ---
 
 ## 🏗️ Stack Tecnológico
 
-**Frontend:** React 18 + TypeScript + TailwindCSS + React Query
+**Frontend:** React 18 + TypeScript + TailwindCSS
 **Backend:** Node.js + Express + Prisma ORM
-**Database:** PostgreSQL (Producción) / SQLite (Desarrollo)
-**Despliegue:** Vercel (Frontend) + Railway (Backend)
-**Pagos:** Stripe, Culqi, Niubiz, MercadoPago, etc.
+**Database:** PostgreSQL (Railway)
+**Hosting:** Vercel + Railway
+**Pagos:** Izipay (BCP)
 **Dropshipping:** CJ Dropshipping API
 
 ---
 
-## 📦 Estructura
+## 📂 Estructura
 
 ```
 dropshipping-iphone/
-├── backend/          # API + Base de datos
-│   ├── prisma/       # Schema y migrations
+├── backend/
+│   ├── prisma/schema.prisma
 │   ├── src/
-│   │   ├── routes/   # Endpoints REST
-│   │   ├── services/ # Lógica de negocio
-│   │   └── server.js # Servidor Express
+│   │   ├── routes/          # API endpoints
+│   │   ├── services/        # Lógica de negocio
+│   │   └── server.js
 │   └── .env
 │
-├── frontend/         # React App
+├── frontend/
 │   ├── src/
-│   │   ├── components/  # Componentes React
-│   │   ├── pages/       # Páginas principales
-│   │   ├── context/     # State management
-│   │   └── services/    # API clients
+│   │   ├── components/      # Componentes React
+│   │   ├── pages/          # Páginas
+│   │   ├── context/        # State management
+│   │   └── services/       # API clients
 │   └── .env
 │
-├── PROJECT_MASTER.md    # 📚 Documentación completa
-└── README.md           # Este archivo
+└── README.md               # Este archivo
 ```
 
 ---
@@ -135,22 +118,44 @@ dropshipping-iphone/
 
 ### Backend (.env)
 ```env
+# Base de datos
 DATABASE_URL="postgresql://..."
+
+# Server
 PORT=3001
-JWT_SECRET=your-secret-key
-STRIPE_SECRET_KEY=sk_...
-CULQI_SECRET_KEY=sk_...
-# Ver PROJECT_MASTER.md para lista completa
+NODE_ENV=production
+FRONTEND_URL=https://flashfunded-frontend.vercel.app
+BACKEND_URL=https://drop-production-cd2b.up.railway.app
+
+# JWT
+JWT_SECRET=dropshipping-super-secret-key-2024
+
+# Izipay (BCP - Pagos)
+IZIPAY_USERNAME=81996279
+IZIPAY_PASSWORD=prodpassword_...
+IZIPAY_PUBLIC_KEY=81996279:publickey_...
+IZIPAY_HMACSHA256=8pV9oAPoL3JjU0uD6qeVGUlW4qXfSqLepGoeulLw1m6xt
+IZIPAY_API_URL=https://api.micuentaweb.pe/api-payment
+
+# CJ Dropshipping
+CJ_EMAIL=echurapacci@gmail.com
+CJ_API_KEY=9a5b7fe7079a4d699c81f6b818ae2405
+CJ_API_URL=https://developers.cjdropshipping.com/api2.0/v1
+
+# WhatsApp
+WHATSAPP_NUMBER=51987654321
 ```
 
 ### Frontend (.env)
 ```env
-REACT_APP_API_URL=http://localhost:3001/api
-REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_...
-REACT_APP_META_PIXEL_ID=123456789
-REACT_APP_TIKTOK_PIXEL_ID=ABC123
-# Ver PROJECT_MASTER.md para lista completa
+# API Backend
+REACT_APP_API_URL=https://drop-production-cd2b.up.railway.app/api
+
+# WhatsApp
+REACT_APP_WHATSAPP_NUMBER=51917780708
 ```
+
+Ver `.env.example` en cada carpeta para referencia completa.
 
 ---
 
@@ -158,41 +163,70 @@ REACT_APP_TIKTOK_PIXEL_ID=ABC123
 
 El proyecto usa **CI/CD automático**:
 
-1. **Push to GitHub** → Auto-deploy en Vercel + Railway
-2. **Frontend:** https://tu-dominio.vercel.app
-3. **Backend:** https://tu-backend.railway.app
+**Push to GitHub** → Auto-deploy en:
+- ✅ Vercel (Frontend)
+- ✅ Railway (Backend + PostgreSQL)
 
-Ver [`PROJECT_MASTER.md`](./PROJECT_MASTER.md) para guía detallada de despliegue.
+### Railway (Backend)
+- Root Directory: `/backend`
+- Build: `npm install && npx prisma generate`
+- Start: `npx prisma migrate deploy && npm start`
+
+### Vercel (Frontend)
+- Root Directory: `/frontend`
+- Build: `npm run build`
+- Output: `build`
 
 ---
 
-## 🎯 Roadmap
+## 📋 Comandos Útiles
 
-- [x] E-commerce core completo
-- [x] 7 métodos de pago integrados
+```bash
+# Backend - Prisma
+npx prisma studio          # Abrir BD en navegador
+npx prisma generate        # Generar cliente
+npx prisma db push         # Aplicar cambios
+
+# Frontend - Build
+npm run build             # Build para producción
+npm start                 # Dev server
+```
+
+---
+
+## 📊 Estado del Proyecto
+
+**Versión:** 2.0
+**Estado:** ✅ Producción
+**Última actualización:** 2025-11-07
+
+### Funcionalidades Completas
+- [x] E-commerce completo
+- [x] Pagos con Izipay (BCP)
+- [x] Dropshipping automatizado (CJ)
 - [x] Panel de administración
-- [x] CJ Dropshipping automatizado
-- [x] Email marketing
-- [x] SEO optimizado
-- [x] Multi-idioma (ES/EN)
-- [x] PWA
-- [ ] Chat en vivo
-- [ ] Sistema de wishlist
-- [ ] Notificaciones push
+- [x] Dark mode y multi-currency
+- [x] Sistema de wishlist y comparador
+- [x] Sistema de puntos/lealtad
+- [x] PWA instalable
 
 ---
 
-## 📞 Soporte
+## 👨‍💻 Desarrollador
 
-**Desarrollador:** Jerson
-**GitHub:** https://github.com/JersonCh1/Drop
-**Email:** jchurapfulasalle.edu.pe
+**Jerson Churapacca**
+- GitHub: [@JersonCh1](https://github.com/JersonCh1)
+- Email: echurapacci@gmail.com
 
 ---
 
-## 📄 Licencia
+## 📄 Documentación
 
-MIT License - Ver LICENSE para más detalles.
+Ver [`PROYECTO_DROPSHIPPING_IPHONE.md`](./PROYECTO_DROPSHIPPING_IPHONE.md) para información detallada sobre:
+- Configuración de Izipay
+- Integración CJ Dropshipping
+- Variables de entorno completas
+- Troubleshooting
 
 ---
 
