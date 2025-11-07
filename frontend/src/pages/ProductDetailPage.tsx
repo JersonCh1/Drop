@@ -5,7 +5,6 @@ import productService, { Product, ProductVariant } from '../services/productServ
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 import toast from 'react-hot-toast';
-import { trackingPixels } from '../utils/trackingPixels';
 import ProductReviews from '../components/products/ProductReviews';
 import WishlistButton from '../components/wishlist/WishlistButton';
 import CompareButton from '../components/compare/CompareButton';
@@ -36,15 +35,7 @@ const ProductDetailPage: React.FC = () => {
           setSelectedVariant(availableVariants[0]);
         }
 
-        // Track ViewContent
-        const price = productService.getLowestPrice(data);
-        trackingPixels.trackViewContent({
-          content_name: data.name,
-          content_ids: [data.id],
-          content_type: 'product',
-          value: price,
-          currency: 'USD'
-        });
+        // Product loaded successfully
       } else {
         toast.error('Producto no encontrado');
         navigate('/products');
@@ -100,16 +91,7 @@ const ProductDetailPage: React.FC = () => {
     };
 
     addItem(item);
-
-    // Track AddToCart
-    trackingPixels.trackAddToCart({
-      content_name: item.name,
-      content_ids: [product.id],
-      content_type: 'product',
-      value: price * quantity,
-      currency: 'USD',
-      quantity
-    });
+    // Item added to cart successfully
   };
 
   const currentPrice = selectedVariant

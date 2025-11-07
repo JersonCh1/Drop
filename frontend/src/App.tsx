@@ -28,7 +28,6 @@ import HeroBanner from './components/home/HeroBanner';
 import analyticsService from './services/analyticsService';
 import productService from './services/productService';
 import type { Product as ProductType } from './services/productService';
-import { trackingPixels } from './utils/trackingPixels';
 
 // Marketing
 import SocialProof from './components/marketing/SocialProof';
@@ -243,9 +242,6 @@ function App() {
     // Inicializar analytics
     analyticsService.trackPageView('home');
     analyticsService.setupAutoTracking();
-
-    // Inicializar tracking pixels
-    trackingPixels.init();
 
     // Simular carga inicial
     setTimeout(() => {

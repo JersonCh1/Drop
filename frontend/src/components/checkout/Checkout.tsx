@@ -3,7 +3,6 @@ import { useCart } from '../../context/CartContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { useIzipay } from '../../hooks/useIzipay';
 import PaymentMethodSelector from './PaymentMethodSelector';
-import { trackingPixels } from '../../utils/trackingPixels';
 
 interface CheckoutFormData {
   firstName: string;
@@ -28,22 +27,10 @@ type PaymentMethod = 'yape' | 'plin' | 'izipay' | 'mercadopago';
 const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
   const { items: cart, totalPrice, shippingCost, finalTotal, clearCart } = useCart();
 
-  // Track InitiateCheckout cuando se abre el checkout
+  // Checkout initialization
   useEffect(() => {
-    if (cart.length > 0) {
-      trackingPixels.trackInitiateCheckout({
-        content_ids: cart.map(item => item.productId.toString()),
-        contents: cart.map(item => ({
-          id: item.productId.toString(),
-          quantity: item.quantity,
-          name: item.name
-        })),
-        value: finalTotal,
-        currency: 'USD',
-        num_items: cart.reduce((sum, item) => sum + item.quantity, 0)
-      });
-    }
-  }, []); // Solo al montar el componente
+    // Checkout opened - ready for payment
+  }, []);
 
   // Determinar método de pago por defecto
   const defaultPaymentMethod: PaymentMethod = 'izipay'; // Izipay es la pasarela principal
@@ -88,19 +75,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
     onSuccess: async (response) => {
       console.log('Pago exitoso con Izipay:', response);
 
-      // Track Purchase
-      trackingPixels.trackPurchase({
-        content_ids: cart.map(item => item.productId.toString()),
-        contents: cart.map(item => ({
-          id: item.productId.toString(),
-          quantity: item.quantity,
-          name: item.name
-        })),
-        value: total,
-        currency: 'USD',
-        transaction_id: response.transactionId || `izipay_${Date.now()}`
-      });
-
+      // Payment successful - processing order
       clearCart();
       alert('¡Pago exitoso! Tu orden ha sido procesada.');
       onOrderComplete();
@@ -293,20 +268,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
       const result = await response.json();
       console.log('Order created with operation code:', result);
 
-      // Track Purchase
-      const orderId = result.data?.id || result.orderNumber;
-      trackingPixels.trackPurchase({
-        content_ids: pendingOrderData.items.map((item: any) => item.productId?.toString() || '0'),
-        contents: pendingOrderData.items.map((item: any) => ({
-          id: item.productId?.toString() || '0',
-          quantity: item.quantity,
-          name: item.name
-        })),
-        value: pendingOrderData.total,
-        currency: 'USD',
-        transaction_id: orderId || `${pendingOrderData.paymentMethod}_${Date.now()}`
-      });
-
+      // Order confirmed successfully
       clearCart();
       setShowPaymentConfirmation(false);
       alert('¡Pago confirmado! Tu orden ha sido registrada exitosamente. Recibirás un email de confirmación.');
@@ -400,19 +362,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
           const result = await response.json();
           console.log('MercadoPago preference created:', result);
 
-          // Track Purchase (nota: en MercadoPago el pago se completa después del redirect, pero trackeamos la intención)
-          trackingPixels.trackPurchase({
-            content_ids: cart.map(item => item.productId.toString()),
-            contents: cart.map(item => ({
-              id: item.productId.toString(),
-              quantity: item.quantity,
-              name: item.name
-            })),
-            value: total,
-            currency: 'USD',
-            transaction_id: result.preferenceId || `mercadopago_${Date.now()}`
-          });
-
+          // MercadoPago redirect initiated
           clearCart();
 
           // Redirigir a MercadoPago
@@ -587,19 +537,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
           const result = await response.json();
           console.log(`Izipay ${paymentMethod} formToken obtained:`, result);
 
-          // Track Purchase intent
-          trackingPixels.trackPurchase({
-            content_ids: cart.map(item => item.productId.toString()),
-            contents: cart.map(item => ({
-              id: item.productId.toString(),
-              quantity: item.quantity,
-              name: item.name
-            })),
-            value: total,
-            currency: 'USD',
-            transaction_id: orderId
-          });
-
+          // Payment processing initiated
           clearCart();
 
           // TODO: Aquí se debería usar el hook useIzipay para abrir el formulario
