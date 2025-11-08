@@ -47,6 +47,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
     onFilterChange(resetFilters);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const toggleCategory = (categoryId: string) => {
     const newCategories = localFilters.categories.includes(categoryId)
       ? localFilters.categories.filter(id => id !== categoryId)

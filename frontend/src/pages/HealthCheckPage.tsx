@@ -47,6 +47,7 @@ const HealthCheckPage: React.FC = () => {
     runHealthChecks();
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getStatusColor = (isHealthy: boolean) => {
     return isHealthy ? 'text-green-600' : 'text-red-600';
   };

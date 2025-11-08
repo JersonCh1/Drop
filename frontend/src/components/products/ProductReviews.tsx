@@ -47,6 +47,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
 
   useEffect(() => {
     loadReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
 
   const loadReviews = async () => {

@@ -111,4 +111,5 @@ class WishlistService {
   }
 }
 
-export default new WishlistService();
+const wishlistServiceInstance = new WishlistService();
+export default wishlistServiceInstance;

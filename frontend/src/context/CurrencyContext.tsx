@@ -39,19 +39,16 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Fetch live exchange rates (optional enhancement)
   useEffect(() => {
-    const fetchExchangeRate = async () => {
-      try {
-        // You can integrate with an exchange rate API here
-        // For example: https://api.exchangerate-api.com/v4/latest/USD
-        // const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-        // const data = await response.json();
-        // setExchangeRate(data.rates[currency]);
-      } catch (error) {
-        console.error('Error fetching exchange rate:', error);
-      }
-    };
-
-    // Uncomment to fetch live rates
+    // Future enhancement: fetch live exchange rates
+    // const fetchExchangeRate = async () => {
+    //   try {
+    //     const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    //     const data = await response.json();
+    //     setExchangeRate(data.rates[currency]);
+    //   } catch (error) {
+    //     console.error('Error fetching exchange rate:', error);
+    //   }
+    // };
     // fetchExchangeRate();
   }, [currency]);
 
