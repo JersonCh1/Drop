@@ -62,7 +62,9 @@
       "Bash(del nul \"backend\\nul\" \"frontend\\nul\" \"frontend\\src\\components\\admin\\nul\" 2)",
       "Bash(.gitignore)",
       "Bash(git reset:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(node test-cj-connection.js:*)",
+      "Bash(timeout 20 bash:*)"
     ],
     "deny": [],
     "ask": []

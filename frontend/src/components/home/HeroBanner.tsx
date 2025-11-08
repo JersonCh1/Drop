@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useCart } from '../../context/CartContext';
+import { useCurrency } from '../../context/CurrencyContext';
 import toast from 'react-hot-toast';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
@@ -30,6 +31,13 @@ const HeroBanner: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedVariant, setSelectedVariant] = useState<string>('');
   const { addItem } = useCart();
+  const { formatPrice, currency } = useCurrency();
+  const [, forceUpdate] = useState({});
+
+  // Re-render cuando cambia la moneda
+  useEffect(() => {
+    forceUpdate({});
+  }, [currency]);
 
   useEffect(() => {
     loadHeroProduct();
@@ -174,7 +182,7 @@ const HeroBanner: React.FC = () => {
               <p className="text-sm text-gray-400">Precio desde</p>
               <div className="flex items-baseline gap-3">
                 <span className="text-5xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  ${currentPrice.toFixed(2)}
+                  {formatPrice(currentPrice)}
                 </span>
                 {heroProduct.variants.length > 1 && (
                   <span className="text-sm text-gray-400">
@@ -197,7 +205,7 @@ const HeroBanner: React.FC = () => {
                 >
                   {heroProduct.variants.map((variant) => (
                     <option key={variant.id} value={variant.id} className="bg-gray-900">
-                      {variant.name} - ${variant.price.toFixed(2)}
+                      {variant.name} - {formatPrice(variant.price)}
                       {variant.stockQuantity > 0 ? ` (${variant.stockQuantity} disponibles)` : ' (Agotado)'}
                     </option>
                   ))}

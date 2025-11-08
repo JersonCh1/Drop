@@ -27,13 +27,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
   createCartItem
 }) => {
   const { addItem, isItemInCart } = useCart();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, currency } = useCurrency();
   const [isAdding, setIsAdding] = useState(false);
+  const [, forceUpdate] = useState({});
 
-  // Product card rendered
+  // Re-render cuando cambia la moneda
   useEffect(() => {
-    // Product displayed to user
-  }, [price]);
+    forceUpdate({});
+  }, [currency, formatPrice]);
 
   const handleAddToCart = async () => {
     setIsAdding(true);

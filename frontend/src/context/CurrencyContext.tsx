@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, ReactNode } from 'react';
 
 type Currency = 'USD' | 'PEN';
 
@@ -52,26 +52,25 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
     // fetchExchangeRate();
   }, [currency]);
 
-  const setCurrency = (newCurrency: Currency) => {
+  const setCurrency = useCallback((newCurrency: Currency) => {
     setCurrencyState(newCurrency);
-  };
+  }, []);
 
-  // Los precios en la BD están en PEN (moneda base)
-  const convertPrice = (pricePEN: number): number => {
-    if (currency === 'USD') {
-      // Convertir de PEN a USD
-      return pricePEN / EXCHANGE_RATES.PEN;
+  // Los precios en la BD están en USD (moneda base)
+  const convertPrice = useCallback((priceUSD: number): number => {
+    if (currency === 'PEN') {
+      // Convertir de USD a PEN
+      return priceUSD * EXCHANGE_RATES.PEN;
     }
-    // Ya está en PEN
-    return pricePEN;
-  };
+    // Ya está en USD
+    return priceUSD;
+  }, [currency]);
 
-  const formatPrice = (pricePEN: number): string => {
-    const convertedPrice = convertPrice(pricePEN);
+  const formatPrice = useCallback((priceUSD: number): string => {
+    const convertedPrice = convertPrice(priceUSD);
     const symbol = CURRENCY_SYMBOLS[currency];
-
     return `${symbol}${convertedPrice.toFixed(2)}`;
-  };
+  }, [currency, convertPrice]);
 
   return (
     <CurrencyContext.Provider value={{

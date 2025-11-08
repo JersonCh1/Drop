@@ -452,17 +452,18 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
           setLastOrderId(orderId);
           setPaymentRetryCount(0); // Resetear contador de reintentos
 
-          // Convertir el monto a PEN si está en USD (Izipay SOLO acepta PEN)
+          // El total ya está en la moneda seleccionada (USD o PEN)
+          // Convertir a PEN si es necesario (Izipay SOLO acepta PEN)
           const USD_TO_PEN = 3.75;
           const amountInPEN = currency === 'USD' ? total * USD_TO_PEN : total;
 
-          console.log(`💱 Enviando a Izipay: ${amountInPEN.toFixed(2)} PEN (original: ${total} ${currency})`);
+          console.log(`💱 Checkout: ${total} ${currency} → ${amountInPEN.toFixed(2)} PEN para Izipay`);
 
           // Abrir el formulario de pago de Izipay usando el hook
           await openCardPayment(
             {
               publicKey: process.env.REACT_APP_IZIPAY_PUBLIC_KEY || '',
-              amount: amountInPEN, // ✅ SIEMPRE enviar en PEN
+              amount: amountInPEN, // ✅ Convertido a PEN
               currency: 'PEN', // ✅ SIEMPRE PEN para Izipay
               orderId: orderId,
               email: formData.email,
@@ -517,11 +518,12 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
 
         console.log('✅ Orden creada:', orderId);
 
-        // Convertir el monto a PEN si está en USD (Izipay SOLO acepta PEN)
+        // El total ya está en la moneda seleccionada (USD o PEN)
+        // Convertir a PEN si es necesario (Izipay SOLO acepta PEN)
         const USD_TO_PEN = 3.75;
         const amountInPEN = currency === 'USD' ? total * USD_TO_PEN : total;
 
-        console.log(`💱 ${paymentMethod.toUpperCase()}: Enviando ${amountInPEN.toFixed(2)} PEN (original: ${total} ${currency})`);
+        console.log(`💱 ${paymentMethod.toUpperCase()}: ${total} ${currency} → ${amountInPEN.toFixed(2)} PEN para Izipay`);
 
         // Obtener FormToken del backend especificando el método de pago
         const response = await fetch(`${API_URL}/izipay/formtoken`, {

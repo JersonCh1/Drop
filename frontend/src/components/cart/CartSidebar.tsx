@@ -1,23 +1,26 @@
 // frontend/src/components/cart/CartSidebar.tsx
 import React from 'react';
 import { useCart } from '../../context/CartContext';
+import { useCurrency } from '../../context/CurrencyContext';
 
 interface CartSidebarProps {
   onCheckout: () => void;
 }
 
 const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
-  const { 
-    items, 
-    isOpen, 
-    closeCart, 
-    removeItem, 
-    updateQuantity, 
-    totalPrice, 
-    shippingCost, 
+  const {
+    items,
+    isOpen,
+    closeCart,
+    removeItem,
+    updateQuantity,
+    totalPrice,
+    shippingCost,
     finalTotal,
-    clearCart 
+    clearCart
   } = useCart();
+
+  const { formatPrice } = useCurrency();
 
   if (!isOpen) return null;
 
@@ -80,7 +83,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
                       <div className="flex-1">
                         <h4 className="font-medium text-sm">{item.name}</h4>
                         <p className="text-xs text-gray-600">{item.model} - {item.color}</p>
-                        <p className="text-sm font-semibold text-blue-600">${item.price}</p>
+                        <p className="text-sm font-semibold text-blue-600">{formatPrice(item.price)}</p>
                       </div>
                       
                       <div className="flex items-center space-x-2">
@@ -123,16 +126,16 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
                 <div className="bg-gray-50 p-4 rounded-lg space-y-2 mb-6">
                   <div className="flex justify-between text-sm">
                     <span>Subtotal:</span>
-                    <span>${totalPrice.toFixed(2)}</span>
+                    <span>{formatPrice(totalPrice)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Envío:</span>
-                    <span>${shippingCost.toFixed(2)}</span>
+                    <span>{formatPrice(shippingCost)}</span>
                   </div>
                   <div className="border-t pt-2">
                     <div className="flex justify-between font-semibold">
                       <span>Total:</span>
-                      <span>${finalTotal.toFixed(2)} USD</span>
+                      <span>{formatPrice(finalTotal)}</span>
                     </div>
                   </div>
                 </div>
@@ -147,7 +150,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onCheckout }) => {
                 onClick={handleCheckout}
                 className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
               >
-                Proceder al Checkout - ${finalTotal.toFixed(2)}
+                Proceder al Checkout - {formatPrice(finalTotal)}
               </button>
               <button
                 onClick={closeCart}

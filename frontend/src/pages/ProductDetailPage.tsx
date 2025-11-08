@@ -13,13 +13,19 @@ const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, currency } = useCurrency();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [, forceUpdate] = useState({});
+
+  // Re-render cuando cambia la moneda
+  useEffect(() => {
+    forceUpdate({});
+  }, [currency]);
 
   const loadProduct = useCallback(async () => {
     if (!slug) return;

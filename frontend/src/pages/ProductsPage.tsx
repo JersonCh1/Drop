@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import productService, { Product } from '../services/productService';
 import { useCart } from '../context/CartContext';
+import { useCurrency } from '../context/CurrencyContext';
 import toast from 'react-hot-toast';
 import WishlistButton from '../components/wishlist/WishlistButton';
 import CompareButton from '../components/compare/CompareButton';
@@ -12,6 +13,8 @@ import AdvancedFilters from '../components/products/AdvancedFilters';
 const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { addItem } = useCart();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { formatPrice } = useCurrency();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -270,6 +273,7 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
+  const { formatPrice } = useCurrency();
   const mainImage = productService.getMainImage(product);
   const lowestPrice = productService.getLowestPrice(product);
   const isAvailable = productService.isAvailable(product);
@@ -356,7 +360,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Precio desde</p>
             <span className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              ${lowestPrice.toFixed(2)}
+              {formatPrice(lowestPrice)}
             </span>
             {product.variants.length > 0 && (
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
