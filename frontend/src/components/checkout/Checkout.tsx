@@ -452,12 +452,18 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
           setLastOrderId(orderId);
           setPaymentRetryCount(0); // Resetear contador de reintentos
 
+          // Convertir el monto a PEN si está en USD (Izipay SOLO acepta PEN)
+          const USD_TO_PEN = 3.75;
+          const amountInPEN = currency === 'USD' ? total * USD_TO_PEN : total;
+
+          console.log(`💱 Enviando a Izipay: ${amountInPEN.toFixed(2)} PEN (original: ${total} ${currency})`);
+
           // Abrir el formulario de pago de Izipay usando el hook
           await openCardPayment(
             {
               publicKey: process.env.REACT_APP_IZIPAY_PUBLIC_KEY || '',
-              amount: total,
-              currency: currency,
+              amount: amountInPEN, // ✅ SIEMPRE enviar en PEN
+              currency: 'PEN', // ✅ SIEMPRE PEN para Izipay
               orderId: orderId,
               email: formData.email,
               firstName: formData.firstName,
@@ -511,6 +517,12 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
 
         console.log('✅ Orden creada:', orderId);
 
+        // Convertir el monto a PEN si está en USD (Izipay SOLO acepta PEN)
+        const USD_TO_PEN = 3.75;
+        const amountInPEN = currency === 'USD' ? total * USD_TO_PEN : total;
+
+        console.log(`💱 ${paymentMethod.toUpperCase()}: Enviando ${amountInPEN.toFixed(2)} PEN (original: ${total} ${currency})`);
+
         // Obtener FormToken del backend especificando el método de pago
         const response = await fetch(`${API_URL}/izipay/formtoken`, {
           method: 'POST',
@@ -518,8 +530,8 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            amount: total,
-            currency: currency,
+            amount: amountInPEN, // ✅ Convertido a PEN
+            currency: 'PEN', // ✅ SIEMPRE PEN para Izipay
             orderId: orderId,
             email: formData.email,
             firstName: formData.firstName,
