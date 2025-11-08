@@ -52,6 +52,7 @@ const CJProductImporter: React.FC = () => {
 
   useEffect(() => {
     loadCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

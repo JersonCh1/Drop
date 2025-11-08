@@ -19,6 +19,7 @@ import { CurrencyProvider } from './context/CurrencyContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import ProductCard from './components/products/ProductCard';
 import CartSidebar from './components/cart/CartSidebar';
 import Checkout from './components/checkout/Checkout';

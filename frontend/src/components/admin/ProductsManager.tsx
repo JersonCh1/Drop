@@ -37,6 +37,7 @@ const ProductsManager: React.FC<ProductsManagerProps> = ({ adminToken }) => {
 
   useEffect(() => {
     loadProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadProducts = async () => {

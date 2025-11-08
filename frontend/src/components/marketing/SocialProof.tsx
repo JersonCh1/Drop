@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { XMarkIcon, ShoppingBagIcon, UserIcon, CheckCircleIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ShoppingBagIcon, CheckCircleIcon, EyeIcon } from '@heroicons/react/24/outline';
 
 interface Notification {
   id: string;
@@ -134,6 +134,7 @@ const SocialProof: React.FC = () => {
       clearTimeout(initialTimer);
       clearInterval(interval);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex, isVisible]);
 
   const handleDismiss = () => {

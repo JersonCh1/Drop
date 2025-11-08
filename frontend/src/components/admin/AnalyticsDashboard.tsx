@@ -40,6 +40,7 @@ const AnalyticsDashboard: React.FC = () => {
 
   useEffect(() => {
     loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange]);
 
   const loadStats = async () => {

@@ -55,6 +55,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPaymentConfirmation, setShowPaymentConfirmation] = useState(false);
   const [operationCode, setOperationCode] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pendingOrderData, setPendingOrderData] = useState<any>(null);
   const [lastOrderId, setLastOrderId] = useState<string | null>(null);
   const [lastFormToken, setLastFormToken] = useState<string | null>(null);
