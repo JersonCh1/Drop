@@ -67,10 +67,21 @@ router.post('/formtoken', async (req, res) => {
       });
     }
 
+    // Izipay SOLO acepta PEN - Convertir si viene en USD
+    let finalAmount = amount;
+    let finalCurrency = 'PEN';
+
+    if (currency === 'USD') {
+      // Tasa de cambio USD a PEN (actualizar según necesites)
+      const USD_TO_PEN = 3.75;
+      finalAmount = amount * USD_TO_PEN;
+      console.log(`💱 Conversión: ${amount} USD = ${finalAmount.toFixed(2)} PEN`);
+    }
+
     // Preparar datos para Izipay
     const paymentData = {
-      amount: Math.round(amount * 100), // Convertir a centavos
-      currency: currency,
+      amount: Math.round(finalAmount * 100), // Convertir a centavos
+      currency: finalCurrency, // Siempre PEN para Izipay
       orderId: orderId,
       customer: {
         email: email,
@@ -95,8 +106,9 @@ router.post('/formtoken', async (req, res) => {
     }
 
     console.log('📦 Datos de pago:', {
-      amount: paymentData.amount,
-      currency: paymentData.currency,
+      amountOriginal: `${amount} ${currency}`,
+      amountFinal: `${finalAmount.toFixed(2)} ${finalCurrency}`,
+      amountCentavos: paymentData.amount,
       orderId: paymentData.orderId,
       email: email
     });

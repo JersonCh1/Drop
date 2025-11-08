@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
+import { useCurrency } from '../../context/CurrencyContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { useIzipay } from '../../hooks/useIzipay';
 import PaymentMethodSelector from './PaymentMethodSelector';
@@ -26,6 +27,7 @@ type PaymentMethod = 'yape' | 'plin' | 'izipay' | 'mercadopago';
 
 const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
   const { items: cart, totalPrice, shippingCost, finalTotal, clearCart } = useCart();
+  const { currency } = useCurrency();
 
   // Checkout initialization
   useEffect(() => {
@@ -424,7 +426,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
           },
           body: JSON.stringify({
             amount: total,
-            currency: 'PEN',
+            currency: currency,
             orderId: orderId,
             email: formData.email,
             firstName: formData.firstName,
@@ -454,7 +456,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
             {
               publicKey: process.env.REACT_APP_IZIPAY_PUBLIC_KEY || '',
               amount: total,
-              currency: 'PEN',
+              currency: currency,
               orderId: orderId,
               email: formData.email,
               firstName: formData.firstName,
@@ -516,7 +518,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
           },
           body: JSON.stringify({
             amount: total,
-            currency: 'PEN',
+            currency: currency,
             orderId: orderId,
             email: formData.email,
             firstName: formData.firstName,
