@@ -56,12 +56,18 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
     setCurrencyState(newCurrency);
   };
 
-  const convertPrice = (priceUSD: number): number => {
-    return priceUSD * exchangeRate;
+  // Los precios en la BD están en PEN (moneda base)
+  const convertPrice = (pricePEN: number): number => {
+    if (currency === 'USD') {
+      // Convertir de PEN a USD
+      return pricePEN / EXCHANGE_RATES.PEN;
+    }
+    // Ya está en PEN
+    return pricePEN;
   };
 
-  const formatPrice = (priceUSD: number): string => {
-    const convertedPrice = convertPrice(priceUSD);
+  const formatPrice = (pricePEN: number): string => {
+    const convertedPrice = convertPrice(pricePEN);
     const symbol = CURRENCY_SYMBOLS[currency];
 
     return `${symbol}${convertedPrice.toFixed(2)}`;
