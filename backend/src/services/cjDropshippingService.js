@@ -139,7 +139,7 @@ class CJDropshippingService {
       if (priceMax) searchParams.endPrice = priceMax;
       if (country) searchParams.warehouseCountryEn = country;
 
-      const result = await this.apiRequest('/product/list', searchParams);
+      const result = await this.apiRequest('/product/list', searchParams, 'GET');
 
       return {
         success: true,
