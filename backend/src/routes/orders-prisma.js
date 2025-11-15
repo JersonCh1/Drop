@@ -526,4 +526,58 @@ router.patch('/:id/status', verifyAdminToken, async (req, res) => {
   }
 });
 
+// DELETE /api/orders/:id - Eliminar orden (admin)
+router.delete('/:id', verifyAdminToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    console.log(`🗑️  Intentando eliminar orden ${id}`);
+
+    // Verificar que la orden existe
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        items: true
+      }
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Orden no encontrada'
+      });
+    }
+
+    // Eliminar items de la orden primero (relación)
+    await prisma.orderItem.deleteMany({
+      where: { orderId: id }
+    });
+
+    // Eliminar la orden
+    await prisma.order.delete({
+      where: { id }
+    });
+
+    console.log(`✅ Orden ${id} (${order.orderNumber}) eliminada correctamente`);
+
+    res.json({
+      success: true,
+      message: 'Orden eliminada correctamente',
+      deletedOrder: {
+        id: order.id,
+        orderNumber: order.orderNumber,
+        total: order.totalAmount
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error al eliminar orden:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
