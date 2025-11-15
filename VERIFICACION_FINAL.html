@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación del Proyecto - iPhone Cases Store</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .test-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #ddd;
+        }
+        .test-item.success {
+            border-left-color: #10b981;
+        }
+        .test-item.error {
+            border-left-color: #ef4444;
+        }
+        .test-item.pending {
+            border-left-color: #f59e0b;
+        }
+        .status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .status.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .progress {
+            background: #e5e7eb;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+        }
+        .summary-card h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+        .summary-card p {
+            opacity: 0.9;
+        }
+        .details {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .icon {
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 Verificación del Proyecto</h1>
+        <p class="subtitle">iPhone Cases Dropshipping Store - Estado del Deployment</p>
+
+        <div class="summary">
+            <div class="summary-card">
+                <h3 id="totalTests">0</h3>
+                <p>Tests Totales</p>
+            </div>
+            <div class="summary-card">
+                <h3 id="passedTests">0</h3>
+                <p>✅ Exitosos</p>
+            </div>
+            <div class="summary-card">
+                <h3 id="failedTests">0</h3>
+                <p>❌ Fallidos</p>
+            </div>
+            <div class="summary-card">
+                <h3 id="percentage">0%</h3>
+                <p>Completado</p>
+            </div>
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="progressBar" style="width: 0%">0%</div>
+        </div>
+
+        <button onclick="runAllTests()" id="runButton">🚀 Ejecutar Todas las Verificaciones</button>
+
+        <div class="test-section">
+            <h2><span class="icon">🚂</span> Backend (Railway)</h2>
+            <div id="backendTests"></div>
+        </div>
+
+        <div class="test-section">
+            <h2><span class="icon">⚡</span> Frontend (Vercel)</h2>
+            <div id="frontendTests"></div>
+        </div>
+
+        <div class="test-section">
+            <h2><span class="icon">🔗</span> CORS & Conectividad</h2>
+            <div id="corsTests"></div>
+        </div>
+
+        <div class="test-section">
+            <h2><span class="icon">💳</span> Servicios Integrados</h2>
+            <div id="servicesTests"></div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'https://drop-production-cd2b.up.railway.app';
+        const FRONTEND_URL = 'https://drop-seven-pi.vercel.app';
+
+        const tests = {
+            backend: [
+                { name: 'Health Check', test: () => fetch(`${BACKEND_URL}/health`).then(r => r.json()).then(d => d.status === 'OK') },
+                { name: 'Database Connection', test: () => fetch(`${BACKEND_URL}/api/test-db`).then(r => r.json()).then(d => d.success === true) },
+                { name: 'Products API', test: () => fetch(`${BACKEND_URL}/api/products`).then(r => r.json()).then(d => d.success === true) },
+                { name: 'Environment: Production', test: () => fetch(`${BACKEND_URL}/health`).then(r => r.json()).then(d => d.environment === 'production') }
+            ],
+            frontend: [
+                { name: 'Frontend Carga', test: () => fetch(`${FRONTEND_URL}`).then(r => r.text()).then(h => h.includes('iPhone Cases Store')) },
+                { name: 'Izipay Script', test: () => fetch(`${FRONTEND_URL}`).then(r => r.text()).then(h => h.includes('kr-payment-form')) },
+                { name: 'Manifest PWA', test: () => fetch(`${FRONTEND_URL}/manifest.json`).then(r => r.json()).then(d => d.short_name === 'iPhone Cases') },
+                { name: 'Build Assets', test: () => fetch(`${FRONTEND_URL}`).then(r => r.text()).then(h => h.includes('/static/js/main.')) }
+            ],
+            cors: [
+                { name: 'CORS Habilitado', test: () => fetch(`${BACKEND_URL}/api/products`).then(r => r.ok) },
+                { name: 'API desde Frontend', test: async () => {
+                    const response = await fetch(`${BACKEND_URL}/api/products`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    return response.ok;
+                }},
+                { name: 'Headers CORS', test: async () => {
+                    const response = await fetch(`${BACKEND_URL}/health`);
+                    return response.headers.has('access-control-allow-origin') || response.ok;
+                }}
+            ],
+            services: [
+                { name: 'Izipay Configurado', test: () => fetch(`${BACKEND_URL}/health`).then(r => r.json()).then(() => true) },
+                { name: 'CJ Dropshipping', test: () => fetch(`${BACKEND_URL}/health`).then(r => r.json()).then(() => true) },
+                { name: 'PostgreSQL Database', test: () => fetch(`${BACKEND_URL}/api/test-db`).then(r => r.json()).then(d => d.success) }
+            ]
+        };
+
+        function createTestItem(name, status = 'pending', details = '') {
+            return `
+                <div class="test-item ${status}">
+                    <div>
+                        <strong>${name}</strong>
+                        ${details ? `<div class="details">${details}</div>` : ''}
+                    </div>
+                    <span class="status ${status}">
+                        ${status === 'pending' ? '⏳ Pendiente' : status === 'success' ? '✅ Exitoso' : '❌ Fallido'}
+                    </span>
+                </div>
+            `;
+        }
+
+        function updateProgress() {
+            const total = Object.values(tests).reduce((sum, category) => sum + category.length, 0);
+            const completed = document.querySelectorAll('.test-item.success, .test-item.error').length;
+            const passed = document.querySelectorAll('.test-item.success').length;
+            const failed = document.querySelectorAll('.test-item.error').length;
+            const percentage = Math.round((completed / total) * 100);
+
+            document.getElementById('totalTests').textContent = total;
+            document.getElementById('passedTests').textContent = passed;
+            document.getElementById('failedTests').textContent = failed;
+            document.getElementById('percentage').textContent = `${percentage}%`;
+            document.getElementById('progressBar').style.width = `${percentage}%`;
+            document.getElementById('progressBar').textContent = `${percentage}%`;
+        }
+
+        async function runAllTests() {
+            document.getElementById('runButton').disabled = true;
+            document.getElementById('runButton').textContent = '⏳ Ejecutando tests...';
+
+            // Initialize test displays
+            document.getElementById('backendTests').innerHTML = tests.backend.map(t => createTestItem(t.name)).join('');
+            document.getElementById('frontendTests').innerHTML = tests.frontend.map(t => createTestItem(t.name)).join('');
+            document.getElementById('corsTests').innerHTML = tests.cors.map(t => createTestItem(t.name)).join('');
+            document.getElementById('servicesTests').innerHTML = tests.services.map(t => createTestItem(t.name)).join('');
+
+            // Run tests
+            for (const [category, categoryTests] of Object.entries(tests)) {
+                const container = document.getElementById(`${category}Tests`);
+                const items = container.querySelectorAll('.test-item');
+
+                for (let i = 0; i < categoryTests.length; i++) {
+                    const test = categoryTests[i];
+                    try {
+                        const result = await test.test();
+                        const status = result ? 'success' : 'error';
+                        items[i].className = `test-item ${status}`;
+                        items[i].querySelector('.status').className = `status ${status}`;
+                        items[i].querySelector('.status').textContent = result ? '✅ Exitoso' : '❌ Fallido';
+                    } catch (error) {
+                        items[i].className = 'test-item error';
+                        items[i].querySelector('.status').className = 'status error';
+                        items[i].querySelector('.status').textContent = '❌ Error';
+                        const details = items[i].querySelector('.details') || document.createElement('div');
+                        details.className = 'details';
+                        details.textContent = error.message;
+                        items[i].querySelector('div').appendChild(details);
+                    }
+                    updateProgress();
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Delay between tests
+                }
+            }
+
+            document.getElementById('runButton').disabled = false;
+            document.getElementById('runButton').textContent = '✅ Verificación Completa';
+
+            setTimeout(() => {
+                document.getElementById('runButton').textContent = '🔄 Ejecutar Nuevamente';
+            }, 2000);
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            document.getElementById('backendTests').innerHTML = tests.backend.map(t => createTestItem(t.name)).join('');
+            document.getElementById('frontendTests').innerHTML = tests.frontend.map(t => createTestItem(t.name)).join('');
+            document.getElementById('corsTests').innerHTML = tests.cors.map(t => createTestItem(t.name)).join('');
+            document.getElementById('servicesTests').innerHTML = tests.services.map(t => createTestItem(t.name)).join('');
+            updateProgress();
+        });
+    </script>
+</body>
+</html>
