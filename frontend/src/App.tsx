@@ -29,6 +29,7 @@ import HeroBanner from './components/home/HeroBanner';
 import analyticsService from './services/analyticsService';
 import productService from './services/productService';
 import type { Product as ProductType } from './services/productService';
+import { initGA, trackPageView } from './utils/googleAnalytics';
 
 // Marketing
 import SocialProof from './components/marketing/SocialProof';
@@ -240,7 +241,10 @@ function App() {
   const basePrice = 19.99;
 
   useEffect(() => {
-    // Inicializar analytics
+    // Inicializar Google Analytics
+    initGA();
+
+    // Inicializar analytics interno
     analyticsService.trackPageView('home');
     analyticsService.setupAutoTracking();
 
