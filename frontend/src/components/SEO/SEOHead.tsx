@@ -30,41 +30,47 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   category,
   noindex = false
 }) => {
-  // Valores por defecto
-  const defaultTitle = 'iPhone Cases Store - Premium Carcasas para iPhone';
-  const defaultDescription = 'Descubre nuestra colección de carcasas premium para iPhone. Protección superior, diseños elegantes y envío gratis a todo Perú. Garantía de satisfacción 100%.';
+  // Valores por defecto - OPTIMIZADOS PARA ESPAÑA
+  const defaultTitle = 'CASEPRO España - Carcasas iPhone Premium | Envío Gratis 24h';
+  const defaultDescription = 'Carcasas profesionales para iPhone en España. Protección premium, diseños exclusivos y envío gratis en 24h. Garantía de satisfacción. ¡Compra ahora!';
   const defaultImage = '/images/og-image.jpg';
-  const defaultUrl = typeof window !== 'undefined' ? window.location.href : 'https://tudominio.com';
-  const defaultKeywords = 'carcasas iphone, fundas iphone, cases iphone, protector iphone, accesorios iphone, iphone 15, iphone 14, iphone 13';
+  const defaultUrl = typeof window !== 'undefined' ? window.location.href : 'https://casepro.es';
+  const defaultKeywords = 'carcasas iphone españa, fundas iphone, carcasas iphone 15, fundas iphone baratas, protector iphone, accesorios iphone, carcasas iphone madrid, fundas iphone barcelona, case iphone, carcasas premium iphone';
 
   // Usar props o valores por defecto
-  const finalTitle = title ? `${title} | iPhone Cases Store` : defaultTitle;
+  const finalTitle = title ? `${title} | CASEPRO España` : defaultTitle;
   const finalDescription = description || defaultDescription;
   const finalImage = image || defaultImage;
   const finalUrl = url || defaultUrl;
   const finalKeywords = keywords || defaultKeywords;
 
   // Nombre del sitio
-  const siteName = 'iPhone Cases Store';
+  const siteName = 'CASEPRO España';
 
   // Structured Data for Organization
   const organizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: siteName,
-    url: 'https://tudominio.com',
-    logo: 'https://tudominio.com/logo.png',
+    url: 'https://casepro.es',
+    logo: 'https://casepro.es/logo-casepro.svg',
+    description: 'Tienda online de carcasas profesionales para iPhone en España',
     contactPoint: {
       '@type': 'ContactPoint',
-      telephone: '+51-999-999-999',
+      telephone: '+34-XXX-XXX-XXX',
       contactType: 'Customer Service',
-      areaServed: 'PE',
+      areaServed: 'ES',
       availableLanguage: ['Spanish', 'English']
     },
+    address: {
+      '@type': 'PostalAddress',
+      addressCountry: 'ES',
+      addressRegion: 'España'
+    },
     sameAs: [
-      'https://facebook.com/tutienda',
-      'https://instagram.com/tutienda',
-      'https://twitter.com/tutienda'
+      'https://facebook.com/caseproes',
+      'https://instagram.com/caseproes',
+      'https://twitter.com/caseproes'
     ]
   };
 
@@ -105,10 +111,10 @@ const SEOHead: React.FC<SEOHeadProps> = ({
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: siteName,
-    url: 'https://tudominio.com',
+    url: 'https://casepro.es',
     potentialAction: {
       '@type': 'SearchAction',
-      target: 'https://tudominio.com/products?search={search_term_string}',
+      target: 'https://casepro.es/products?search={search_term_string}',
       'query-input': 'required name=search_term_string'
     }
   };
@@ -136,7 +142,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
       <meta property="og:site_name" content={siteName} />
-      <meta property="og:locale" content="es_PE" />
+      <meta property="og:locale" content="es_ES" />
       <meta property="og:locale:alternate" content="en_US" />
 
       {/* Product-specific OG tags */}
@@ -162,8 +168,8 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       <meta name="author" content={siteName} />
       <meta name="publisher" content={siteName} />
       <meta name="language" content="Spanish" />
-      <meta name="geo.region" content="PE" />
-      <meta name="geo.placename" content="Lima" />
+      <meta name="geo.region" content="ES" />
+      <meta name="geo.placename" content="España" />
 
       {/* Mobile */}
       <meta name="theme-color" content="#667eea" />

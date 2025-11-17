@@ -77,4 +77,4 @@ User-agent: DotBot
 Disallow: /
 
 # Sitemap
-Sitemap: https://tudominio.com/sitemap.xml
+Sitemap: https://casepro.es/sitemap.xml
