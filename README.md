@@ -1,16 +1,23 @@
-# 📱 Tienda Dropshipping - Carcasas iPhone
+# 🛡️ CASEPRO - Tienda de Carcasas iPhone
 
 > E-commerce completo con panel admin, pagos automatizados y dropshipping integrado.
 
-[![Producción](https://img.shields.io/badge/Estado-Producción-success)](https://github.com/JersonCh1/Drop)
+[![Producción](https://img.shields.io/badge/Estado-Producción-success)](https://casepro.es)
 [![React](https://img.shields.io/badge/React-18-blue)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20-green)](https://nodejs.org/)
 
 ## 🚀 URLs en Producción
 
-- **Frontend:** https://flashfunded-frontend.vercel.app
-- **Backend:** https://drop-production-cd2b.up.railway.app
+- **🌐 Sitio Web:** https://casepro.es (en configuración)
+- **Frontend Temp:** https://flashfunded-frontend.vercel.app
+- **Backend API:** https://drop-production-cd2b.up.railway.app
 - **Repositorio:** https://github.com/JersonCh1/Drop
+
+## 📋 Documentación Importante
+
+- **[Branding y Marketing](BRANDING_Y_MARKETING.md)** - Guía completa de identidad de marca
+- **[Plan de Acción HOY](PLAN_DE_ACCION_HOY.md)** - Checklist para empezar a vender
+- **[Configurar Dominio](CONFIGURAR_DOMINIO_CASEPRO.ES.md)** - Guía de configuración DNS
 
 ---
 
