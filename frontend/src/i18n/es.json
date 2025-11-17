@@ -28,8 +28,8 @@
     "admin": "Admin"
   },
   "header": {
-    "storeName": "iPhone Store",
-    "storeTagline": "Premium Cases & Accessories",
+    "storeName": "CASEPRO PERÚ",
+    "storeTagline": "Protección Profesional",
     "adminPanel": "Panel Admin",
     "myProfile": "Mi Perfil",
     "myOrders": "Mis Órdenes",
@@ -39,8 +39,8 @@
   },
   "home": {
     "hero": {
-      "title": "Fundas Premium para iPhone",
-      "subtitle": "Protege tu iPhone con estilo. Envío gratis a todo el mundo.",
+      "title": "Carcasas Profesionales para iPhone",
+      "subtitle": "Protección premium para tu iPhone. Envío gratis a todo Perú.",
       "cta": "Ver Colección"
     },
     "features": {

@@ -36,9 +36,9 @@ const Footer: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-2xl font-extrabold bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
-                  iPhone Cases
+                  {t('header.storeName')}
                 </h3>
-                <p className="text-xs text-gray-400 font-medium">{t('footer.tagline')}</p>
+                <p className="text-xs text-gray-400 font-medium">{t('header.storeTagline')}</p>
               </div>
             </div>
             <p className="text-gray-300 mb-6 max-w-md leading-relaxed">
