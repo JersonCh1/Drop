@@ -76,16 +76,13 @@ const Header: React.FC<HeaderProps> = () => {
         <div className="flex justify-between items-center h-20">
           {/* Logo CASEPRO */}
           <div className="flex items-center">
-            <a href="/" className="flex items-center space-x-2 group">
-              <div className="relative">
+            <a href="/" className="flex items-center space-x-3 group">
+              <div className="relative bg-white dark:bg-white rounded-lg px-3 py-2 shadow-sm">
                 <img
                   src="/logo-casepro-transparent.png"
                   alt="CASEPRO Perú - Carcasas iPhone Premium"
-                  className="h-10 w-auto sm:h-12 object-contain transform group-hover:scale-105 transition-transform duration-200"
+                  className="h-8 w-auto sm:h-10 lg:h-12 object-contain transform group-hover:scale-105 transition-transform duration-200"
                 />
-              </div>
-              <div className="hidden md:block">
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">{t('header.storeTagline')}</p>
               </div>
             </a>
           </div>
