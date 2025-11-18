@@ -74,22 +74,18 @@ const Header: React.FC<HeaderProps> = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          {/* Logo - Más Elegante */}
+          {/* Logo CASEPRO */}
           <div className="flex items-center">
             <a href="/" className="flex items-center space-x-3 group">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl blur-md opacity-50 group-hover:opacity-75 transition-opacity"></div>
-                <div className="relative w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center transform group-hover:scale-105 transition-transform shadow-lg">
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                </div>
+                <img
+                  src="/logo-casepro.jpg"
+                  alt="CASEPRO Logo"
+                  className="h-10 w-auto sm:h-12 object-contain transform group-hover:scale-105 transition-transform duration-200"
+                />
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-2xl font-extrabold bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 dark:from-white dark:via-blue-100 dark:to-purple-100 bg-clip-text text-transparent">
-                  {t('header.storeName')}
-                </h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium -mt-1">{t('header.storeTagline')}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">{t('header.storeTagline')}</p>
               </div>
             </a>
           </div>
