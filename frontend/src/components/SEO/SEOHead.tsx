@@ -30,22 +30,22 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   category,
   noindex = false
 }) => {
-  // Valores por defecto - OPTIMIZADOS PARA ESPAÑA
-  const defaultTitle = 'CASEPRO España - Carcasas iPhone Premium | Envío Gratis 24h';
-  const defaultDescription = 'Carcasas profesionales para iPhone en España. Protección premium, diseños exclusivos y envío gratis en 24h. Garantía de satisfacción. ¡Compra ahora!';
+  // Valores por defecto - OPTIMIZADOS PARA PERÚ
+  const defaultTitle = 'CASEPRO Perú - Carcasas iPhone Premium | Envío Gratis';
+  const defaultDescription = 'Carcasas profesionales para iPhone en Perú. Protección premium, diseños exclusivos y envío gratis a todo el país. Garantía de satisfacción. ¡Compra ahora!';
   const defaultImage = '/images/og-image.jpg';
   const defaultUrl = typeof window !== 'undefined' ? window.location.href : 'https://casepro.es';
-  const defaultKeywords = 'carcasas iphone españa, fundas iphone, carcasas iphone 15, fundas iphone baratas, protector iphone, accesorios iphone, carcasas iphone madrid, fundas iphone barcelona, case iphone, carcasas premium iphone';
+  const defaultKeywords = 'carcasas iphone peru, fundas iphone, carcasas iphone 15, fundas iphone baratas, protector iphone, accesorios iphone, carcasas iphone lima, fundas iphone peru, case iphone, carcasas premium iphone';
 
   // Usar props o valores por defecto
-  const finalTitle = title ? `${title} | CASEPRO España` : defaultTitle;
+  const finalTitle = title ? `${title} | CASEPRO Perú` : defaultTitle;
   const finalDescription = description || defaultDescription;
   const finalImage = image || defaultImage;
   const finalUrl = url || defaultUrl;
   const finalKeywords = keywords || defaultKeywords;
 
   // Nombre del sitio
-  const siteName = 'CASEPRO España';
+  const siteName = 'CASEPRO Perú';
 
   // Structured Data for Organization
   const organizationSchema = {
@@ -54,23 +54,23 @@ const SEOHead: React.FC<SEOHeadProps> = ({
     name: siteName,
     url: 'https://casepro.es',
     logo: 'https://casepro.es/logo-casepro.svg',
-    description: 'Tienda online de carcasas profesionales para iPhone en España',
+    description: 'Tienda online de carcasas profesionales para iPhone en Perú',
     contactPoint: {
       '@type': 'ContactPoint',
-      telephone: '+34-XXX-XXX-XXX',
+      telephone: '+51-XXX-XXX-XXX',
       contactType: 'Customer Service',
-      areaServed: 'ES',
+      areaServed: 'PE',
       availableLanguage: ['Spanish', 'English']
     },
     address: {
       '@type': 'PostalAddress',
-      addressCountry: 'ES',
-      addressRegion: 'España'
+      addressCountry: 'PE',
+      addressRegion: 'Perú'
     },
     sameAs: [
-      'https://facebook.com/caseproes',
-      'https://instagram.com/caseproes',
-      'https://twitter.com/caseproes'
+      'https://facebook.com/caseproperu',
+      'https://instagram.com/caseproperu',
+      'https://twitter.com/caseproperu'
     ]
   };
 
@@ -142,7 +142,7 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
       <meta property="og:site_name" content={siteName} />
-      <meta property="og:locale" content="es_ES" />
+      <meta property="og:locale" content="es_PE" />
       <meta property="og:locale:alternate" content="en_US" />
 
       {/* Product-specific OG tags */}
@@ -168,8 +168,8 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       <meta name="author" content={siteName} />
       <meta name="publisher" content={siteName} />
       <meta name="language" content="Spanish" />
-      <meta name="geo.region" content="ES" />
-      <meta name="geo.placename" content="España" />
+      <meta name="geo.region" content="PE" />
+      <meta name="geo.placename" content="Perú" />
 
       {/* Mobile */}
       <meta name="theme-color" content="#667eea" />

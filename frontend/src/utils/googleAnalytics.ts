@@ -73,7 +73,7 @@ export const trackProductView = (product: {
   if (!GA_TRACKING_ID || !window.gtag) return;
 
   window.gtag('event', 'view_item', {
-    currency: 'EUR',
+    currency: 'PEN',
     value: product.price || 0,
     items: [
       {
@@ -97,7 +97,7 @@ export const trackAddToCart = (product: {
   if (!GA_TRACKING_ID || !window.gtag) return;
 
   window.gtag('event', 'add_to_cart', {
-    currency: 'EUR',
+    currency: 'PEN',
     value: product.price * product.quantity,
     items: [
       {
@@ -121,7 +121,7 @@ export const trackRemoveFromCart = (product: {
   if (!GA_TRACKING_ID || !window.gtag) return;
 
   window.gtag('event', 'remove_from_cart', {
-    currency: 'EUR',
+    currency: 'PEN',
     value: product.price * product.quantity,
     items: [
       {
@@ -139,7 +139,7 @@ export const trackBeginCheckout = (items: any[], total: number): void => {
   if (!GA_TRACKING_ID || !window.gtag) return;
 
   window.gtag('event', 'begin_checkout', {
-    currency: 'EUR',
+    currency: 'PEN',
     value: total,
     items: items.map((item) => ({
       item_id: item.id?.toString() || item.productId?.toString(),
@@ -162,7 +162,7 @@ export const trackPurchase = (order: {
 
   window.gtag('event', 'purchase', {
     transaction_id: order.orderId,
-    currency: 'EUR',
+    currency: 'PEN',
     value: order.total,
     shipping: order.shipping || 0,
     tax: order.tax || 0,
