@@ -74,14 +74,27 @@ const Header: React.FC<HeaderProps> = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          {/* Logo CASEPRO - EXTRA GRANDE */}
+          {/* Logo CASEPRO - Escudo + Texto */}
           <div className="flex items-center">
-            <a href="/" className="flex items-center group">
-              <img
-                src="/logo-casepro-transparent.png"
-                alt="CASEPRO Perú - Carcasas iPhone Premium"
-                className="h-12 w-auto sm:h-14 lg:h-16 object-contain transform group-hover:scale-105 transition-transform duration-200 drop-shadow-md"
-              />
+            <a href="/" className="flex items-center space-x-3 group">
+              {/* Escudo CASEPRO */}
+              <div className="relative flex-shrink-0">
+                <img
+                  src="/logo-icon.jpg"
+                  alt="CASEPRO"
+                  className="h-12 w-12 sm:h-14 sm:w-14 object-contain transform group-hover:scale-110 transition-transform duration-200 drop-shadow-lg"
+                />
+              </div>
+              {/* Texto CASEPRO */}
+              <div className="flex flex-col">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
+                  <span className="text-gray-900 dark:text-white">case</span>
+                  <span className="text-blue-600 dark:text-blue-400">Pro</span>
+                </h1>
+                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-medium -mt-1">
+                  Perú • {t('header.storeTagline')}
+                </p>
+              </div>
             </a>
           </div>
 
