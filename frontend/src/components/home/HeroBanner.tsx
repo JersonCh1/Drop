@@ -184,11 +184,6 @@ const HeroBanner: React.FC = () => {
                 <span className="text-5xl font-extrabold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                   {formatPrice(currentPrice)}
                 </span>
-                {heroProduct.variants.length > 1 && (
-                  <span className="text-sm text-gray-400">
-                    {heroProduct.variants.length} variantes disponibles
-                  </span>
-                )}
               </div>
             </div>
 
@@ -206,7 +201,7 @@ const HeroBanner: React.FC = () => {
                   {heroProduct.variants.map((variant) => (
                     <option key={variant.id} value={variant.id} className="bg-gray-900">
                       {variant.name} - {formatPrice(variant.price)}
-                      {variant.stockQuantity > 0 ? ` (${variant.stockQuantity} disponibles)` : ' (Agotado)'}
+                      {variant.stockQuantity === 0 ? ' (Agotado)' : ''}
                     </option>
                   ))}
                 </select>
