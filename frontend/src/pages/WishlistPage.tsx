@@ -93,7 +93,7 @@ const WishlistPage: React.FC = () => {
               </p>
               <Link
                 to="/products"
-                className="inline-flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg transition-all duration-300 hover:scale-105"
+                className="inline-flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold rounded-xl shadow-lg transition-all duration-300 hover:scale-105"
               >
                 <span>Explorar Productos</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,7 +144,7 @@ const WishlistPage: React.FC = () => {
                     <div className="flex items-center justify-between mb-4">
                       <div>
                         <p className="text-xs text-gray-500 mb-1">Desde</p>
-                        <p className="text-2xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        <p className="text-2xl font-extrabold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                           {formatPrice(item.lowestPrice)}
                         </p>
                       </div>
@@ -159,7 +159,7 @@ const WishlistPage: React.FC = () => {
                     <div className="flex space-x-2">
                       <Link
                         to={`/products/${item.slug}`}
-                        className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2 px-4 rounded-lg text-center transition-all duration-300"
+                        className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-medium py-2 px-4 rounded-lg text-center transition-all duration-300"
                       >
                         Ver Producto
                       </Link>

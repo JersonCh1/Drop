@@ -207,7 +207,7 @@ const UsersManager: React.FC<UsersManagerProps> = ({ adminToken }) => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-3 py-1 text-xs font-medium rounded-full ${
                         user.role === 'ADMIN'
-                          ? 'bg-purple-100 text-purple-800'
+                          ? 'bg-cyan-100 text-cyan-800'
                           : 'bg-blue-100 text-blue-800'
                       }`}>
                         {user.role}

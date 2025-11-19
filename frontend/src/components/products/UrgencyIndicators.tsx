@@ -110,7 +110,7 @@ const UrgencyIndicators: React.FC<UrgencyIndicatorsProps> = ({
 
       {/* Limited Time Offer Timer */}
       {showTimer && (
-        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-4 rounded-xl border-2 border-blue-400 shadow-lg shadow-blue-500/50">
+        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-cyan-600 to-pink-600 p-4 rounded-xl border-2 border-blue-400 shadow-lg shadow-blue-500/50">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
           <div className="relative">
             <div className="flex items-center justify-between mb-3">
@@ -168,10 +168,10 @@ const UrgencyIndicators: React.FC<UrgencyIndicatorsProps> = ({
 
       {/* Live Viewers Counter */}
       {showViewers && (
-        <div className="relative overflow-hidden bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-xl border-2 border-purple-200">
+        <div className="relative overflow-hidden bg-gradient-to-r from-cyan-50 to-pink-50 p-3 rounded-xl border-2 border-purple-200">
           <div className="flex items-center space-x-3">
             <div className="relative">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-pink-500 rounded-full flex items-center justify-center">
                 <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                   <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
@@ -180,9 +180,9 @@ const UrgencyIndicators: React.FC<UrgencyIndicatorsProps> = ({
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
             </div>
             <div className="flex-1">
-              <p className="text-purple-900 font-bold text-sm flex items-center">
+              <p className="text-cyan-900 font-bold text-sm flex items-center">
                 <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                <span className="font-black text-lg text-purple-600">{viewers}</span>
+                <span className="font-black text-lg text-cyan-600">{viewers}</span>
                 <span className="ml-1">personas viendo este producto ahora</span>
               </p>
             </div>
@@ -216,11 +216,11 @@ const UrgencyIndicators: React.FC<UrgencyIndicatorsProps> = ({
         <div className="flex items-center space-x-2">
           <div className="flex -space-x-2">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 border-2 border-white flex items-center justify-center text-white text-xs font-bold">
+              <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 border-2 border-white flex items-center justify-center text-white text-xs font-bold">
                 {String.fromCharCode(65 + i)}
               </div>
             ))}
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 border-2 border-white flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-pink-500 border-2 border-white flex items-center justify-center text-white text-xs font-bold">
               +89
             </div>
           </div>

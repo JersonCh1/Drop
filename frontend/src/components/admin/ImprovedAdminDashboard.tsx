@@ -117,7 +117,7 @@ const ImprovedAdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, adminT
     const colors: { [key: string]: string } = {
       'PENDING': 'bg-yellow-100 text-yellow-800 border-yellow-300',
       'CONFIRMED': 'bg-blue-100 text-blue-800 border-blue-300',
-      'PROCESSING': 'bg-purple-100 text-purple-800 border-purple-300',
+      'PROCESSING': 'bg-cyan-100 text-cyan-800 border-purple-300',
       'SHIPPED': 'bg-indigo-100 text-indigo-800 border-indigo-300',
       'DELIVERED': 'bg-green-100 text-green-800 border-green-300',
       'CANCELLED': 'bg-red-100 text-red-800 border-red-300'
@@ -324,8 +324,8 @@ const ImprovedAdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, adminT
                         <p className="text-sm font-medium text-gray-600">Completadas</p>
                         <p className="text-3xl font-bold text-gray-900 mt-2">{stats.completedOrders}</p>
                       </div>
-                      <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
@@ -517,12 +517,12 @@ const ImprovedAdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, adminT
 
                 {/* Estado y Método de Pago */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <div className="bg-cyan-50 border border-purple-200 rounded-lg p-4">
                     <div className="flex items-center mb-3">
-                      <svg className="w-5 h-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-cyan-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <h4 className="font-semibold text-purple-900">Estado</h4>
+                      <h4 className="font-semibold text-cyan-900">Estado</h4>
                     </div>
                     <div className="space-y-2 text-sm">
                       <div>

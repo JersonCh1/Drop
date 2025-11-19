@@ -74,7 +74,7 @@ const OrderTracking: React.FC = () => {
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'confirmed': return 'bg-blue-100 text-blue-800';
       case 'processing': return 'bg-indigo-100 text-indigo-800';
-      case 'shipped': return 'bg-purple-100 text-purple-800';
+      case 'shipped': return 'bg-cyan-100 text-cyan-800';
       case 'delivered': return 'bg-green-100 text-green-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -277,7 +277,7 @@ const OrderTracking: React.FC = () => {
 
                 {orderData.shipped_at && (
                   <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                    <div className="w-2 h-2 bg-cyan-500 rounded-full mt-2"></div>
                     <div>
                       <p className="font-medium text-gray-900">Orden Enviada</p>
                       <p className="text-sm text-gray-600">

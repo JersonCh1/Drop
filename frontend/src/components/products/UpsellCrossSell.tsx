@@ -135,7 +135,7 @@ const UpsellCrossSell: React.FC = () => {
       <div>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-2xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <h3 className="text-2xl font-black bg-gradient-to-r from-cyan-600 to-pink-600 bg-clip-text text-transparent">
               🎁 Combos Especiales
             </h3>
             <p className="text-gray-600 text-sm mt-1">Ahorra más comprando en paquete</p>
@@ -146,7 +146,7 @@ const UpsellCrossSell: React.FC = () => {
           {bundles.map((bundle) => (
             <div
               key={bundle.id}
-              className="relative group bg-white rounded-2xl border-2 border-gray-200 p-6 hover:border-purple-400 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+              className="relative group bg-white rounded-2xl border-2 border-gray-200 p-6 hover:border-cyan-400 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
             >
               {/* Badge */}
               {bundle.badge && (
@@ -178,7 +178,7 @@ const UpsellCrossSell: React.FC = () => {
                 {/* Pricing */}
                 <div className="mb-4">
                   <div className="flex items-baseline space-x-2 mb-1">
-                    <span className="text-3xl font-black text-purple-600">${bundle.price}</span>
+                    <span className="text-3xl font-black text-cyan-600">${bundle.price}</span>
                     <span className="text-lg text-gray-400 line-through">${bundle.originalPrice}</span>
                   </div>
                   <p className="text-sm font-semibold text-green-600">
@@ -193,7 +193,7 @@ const UpsellCrossSell: React.FC = () => {
                   className={`w-full py-3 rounded-xl font-bold text-sm transition-all duration-300 ${
                     selectedBundle === bundle.id
                       ? 'bg-green-500 text-white'
-                      : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'
+                      : 'bg-gradient-to-r from-cyan-600 to-pink-600 text-white hover:from-cyan-700 hover:to-pink-700'
                   }`}
                 >
                   {selectedBundle === bundle.id ? (

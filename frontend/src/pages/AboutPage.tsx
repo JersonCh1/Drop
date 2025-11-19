@@ -6,7 +6,7 @@ const AboutPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 text-white py-20">
+      <div className="bg-gradient-to-br from-blue-600 via-cyan-600 to-pink-600 text-white py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-5xl font-black mb-6">Sobre Nosotros</h1>
           <p className="text-xl text-blue-100 leading-relaxed">
@@ -73,10 +73,10 @@ const AboutPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-purple-50 rounded-xl p-6 border-l-4 border-purple-600">
+            <div className="bg-cyan-50 rounded-xl p-6 border-l-4 border-cyan-600">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
+                  <div className="w-12 h-12 bg-cyan-600 rounded-lg flex items-center justify-center">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
                     </svg>
@@ -112,7 +112,7 @@ const AboutPage: React.FC = () => {
         </section>
 
         {/* Why Choose Us */}
-        <section className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl shadow-2xl p-8 text-white mb-8">
+        <section className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl shadow-2xl p-8 text-white mb-8">
           <h2 className="text-3xl font-black mb-6">¿Por Qué Elegirnos?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
@@ -201,7 +201,7 @@ const AboutPage: React.FC = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-8 text-center text-white shadow-2xl">
+        <section className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-3xl p-8 text-center text-white shadow-2xl">
           <h2 className="text-3xl font-black mb-3">¿Listo para Proteger tu iPhone?</h2>
           <p className="text-blue-100 mb-6 text-lg">
             Únete a miles de clientes satisfechos que confían en nosotros

@@ -239,7 +239,7 @@ const CJProductImporter: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-lg shadow-lg">
+      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white p-6 rounded-lg shadow-lg">
         <h1 className="text-3xl font-bold mb-2">Importador CJ Dropshipping</h1>
         <p className="text-blue-100">Busca e importa productos directamente desde CJ Dropshipping</p>
       </div>
@@ -273,7 +273,7 @@ const CJProductImporter: React.FC = () => {
             }}
             className={`flex-1 px-6 py-4 rounded-lg font-semibold transition-all ${
               searchMode === 'pid'
-                ? 'bg-purple-600 text-white shadow-lg'
+                ? 'bg-cyan-600 text-white shadow-lg'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -296,11 +296,11 @@ const CJProductImporter: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4 mb-4">
-            <p className="text-purple-800 text-sm mb-2">
+          <div className="bg-cyan-50 border-2 border-purple-200 rounded-lg p-4 mb-4">
+            <p className="text-cyan-800 text-sm mb-2">
               📋 <strong>Cómo obtener el PID:</strong>
             </p>
-            <ol className="list-decimal list-inside text-purple-700 text-sm space-y-1 ml-4">
+            <ol className="list-decimal list-inside text-cyan-700 text-sm space-y-1 ml-4">
               <li>Ve a <a href="https://cjdropshipping.com/" target="_blank" rel="noopener noreferrer" className="underline font-semibold">cjdropshipping.com</a></li>
               <li>Busca el producto y copia su PID de la URL</li>
               <li>Formato: <code className="bg-purple-200 px-2 py-1 rounded">000B9312-456A-4D31-94BD-B083E2A198E8</code></li>

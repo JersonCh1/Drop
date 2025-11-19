@@ -102,7 +102,7 @@ const ReturnsPage: React.FC = () => {
           <section>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">4. Cómo Solicitar una Devolución</h2>
             <div className="space-y-4">
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6">
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-6">
                 <h3 className="font-bold text-gray-900 mb-4 text-lg">Proceso en 3 Pasos:</h3>
 
                 <div className="space-y-4">
@@ -220,7 +220,7 @@ const ReturnsPage: React.FC = () => {
             <p className="text-gray-700 leading-relaxed mb-4">
               Si deseas cambiar tu producto por otro color, modelo o producto diferente:
             </p>
-            <div className="bg-purple-50 rounded-lg p-6 border-l-4 border-purple-500">
+            <div className="bg-cyan-50 rounded-lg p-6 border-l-4 border-cyan-500">
               <ol className="list-decimal list-inside text-gray-700 space-y-2">
                 <li>Solicita la devolución del producto original</li>
                 <li>Una vez aprobada, realiza un nuevo pedido del producto deseado</li>

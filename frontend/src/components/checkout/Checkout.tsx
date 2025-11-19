@@ -579,7 +579,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
       <div className="absolute right-0 top-0 h-full w-full max-w-4xl bg-gradient-to-br from-gray-50 to-white shadow-2xl overflow-y-auto">
         <form onSubmit={handleSubmitOrder} className="flex flex-col h-full">
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 shadow-lg">
+          <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 to-cyan-600 text-white p-6 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-3xl font-extrabold">Finalizar Compra</h2>
@@ -603,7 +603,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
               {/* Información Personal y Envío */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                  <span className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center text-white text-sm font-bold mr-3">1</span>
+                  <span className="w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center text-white text-sm font-bold mr-3">1</span>
                   Información de Contacto y Envío
                 </h3>
 
@@ -769,7 +769,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
               {/* Método de Pago */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center">
-                  <span className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center text-white text-sm font-bold mr-3">2</span>
+                  <span className="w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center text-white text-sm font-bold mr-3">2</span>
                   Método de Pago
                 </h3>
                 <p className="text-sm text-gray-600 mb-6 flex items-center">
@@ -807,9 +807,9 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
 
                 {/* Yape Info */}
                 {paymentMethod === 'yape' && (
-                  <div className="mt-6 p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                  <div className="mt-6 p-6 bg-gradient-to-br from-cyan-50 to-pink-50 rounded-xl border border-purple-200">
                     <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <div className="w-12 h-12 bg-cyan-600 rounded-xl flex items-center justify-center flex-shrink-0">
                         <span className="text-2xl">📱</span>
                       </div>
                       <div>
@@ -996,7 +996,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
               </div>
 
               {/* Resumen de Orden */}
-              <div className="bg-gradient-to-br from-blue-600 to-purple-600 text-white rounded-2xl shadow-xl p-6">
+              <div className="bg-gradient-to-br from-blue-600 to-cyan-600 text-white rounded-2xl shadow-xl p-6">
                 <h3 className="text-xl font-bold mb-4">Resumen de tu Orden</h3>
 
                 <div className="space-y-3 mb-6">
@@ -1067,7 +1067,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="group relative px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden"
+                className="group relative px-10 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden"
               >
                 <span className="relative z-10 flex items-center space-x-2">
                   {isSubmitting ? (
@@ -1113,7 +1113,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
             <div className="text-center mb-6">
               <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 ${
                 pendingOrderData.paymentMethod === 'yape'
-                  ? 'bg-purple-100'
+                  ? 'bg-cyan-100'
                   : 'bg-green-100'
               }`}>
                 <span className="text-5xl">{pendingOrderData.paymentMethod === 'yape' ? '📱' : '💸'}</span>
@@ -1121,14 +1121,14 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
                 Pagar con {pendingOrderData.paymentMethod === 'yape' ? 'Yape' : 'Plin'}
               </h3>
-              <p className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+              <p className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">
                 ${pendingOrderData.total.toFixed(2)}
               </p>
             </div>
 
             <div className={`p-6 rounded-2xl mb-6 ${
               pendingOrderData.paymentMethod === 'yape'
-                ? 'bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200'
+                ? 'bg-gradient-to-br from-cyan-50 to-pink-50 border border-purple-200'
                 : 'bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200'
             }`}>
               <div className="flex flex-col md:flex-row gap-6">
@@ -1200,7 +1200,7 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
             <button
               onClick={handleConfirmPayment}
               disabled={isSubmitting || !operationCode.trim()}
-              className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center space-x-2"
+              className="w-full py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center space-x-2"
             >
               {isSubmitting ? (
                 <>

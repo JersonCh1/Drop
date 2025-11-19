@@ -170,7 +170,7 @@ const SocialProof: React.FC = () => {
       case 'bag':
         return 'bg-blue-500';
       case 'eye':
-        return 'bg-purple-500';
+        return 'bg-cyan-500';
       case 'check':
         return 'bg-green-500';
       default:
@@ -192,7 +192,7 @@ const SocialProof: React.FC = () => {
         >
           <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-4 mb-2 relative overflow-hidden">
             {/* Animated gradient border top */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-gradient-x"></div>
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-500 to-pink-500 animate-gradient-x"></div>
 
             {/* Close button */}
             <button
@@ -236,7 +236,7 @@ const SocialProof: React.FC = () => {
             {/* Progress bar */}
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-200">
               <div
-                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 animate-shrink"
+                className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 animate-shrink"
                 style={{ animationDuration: '5s' }}
               ></div>
             </div>

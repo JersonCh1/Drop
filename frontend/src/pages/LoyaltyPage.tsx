@@ -168,7 +168,7 @@ const LoyaltyPage: React.FC = () => {
           <div className="lg:col-span-2 space-y-6">
 
             {/* Points Overview */}
-            <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl shadow-md p-8 text-white">
+            <div className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl shadow-md p-8 text-white">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <p className="text-blue-100 text-sm font-medium mb-1">Puntos Disponibles</p>
@@ -270,8 +270,8 @@ const LoyaltyPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4 p-4 bg-purple-50 rounded-lg">
-                  <div className="bg-purple-600 text-white rounded-full p-2">
+                <div className="flex items-start gap-4 p-4 bg-cyan-50 rounded-lg">
+                  <div className="bg-cyan-600 text-white rounded-full p-2">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>

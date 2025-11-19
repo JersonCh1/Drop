@@ -64,7 +64,11 @@
       "Bash(git reset:*)",
       "Bash(rm:*)",
       "Bash(node test-cj-connection.js:*)",
-      "Bash(timeout 20 bash:*)"
+      "Bash(timeout 20 bash:*)",
+      "WebFetch(domain:gs.statcounter.com)",
+      "Bash(cmd /c \"dir C:\\Users\\Jerson\\Downloads /b | findstr /i LOGO\")",
+      "Bash(copy:*)",
+      "Bash(xargs sed:*)"
     ],
     "deny": [],
     "ask": []

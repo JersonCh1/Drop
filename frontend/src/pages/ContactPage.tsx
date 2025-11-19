@@ -96,7 +96,7 @@ const ContactPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
+      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -151,9 +151,9 @@ const ContactPage: React.FC = () => {
                 {/* Phone */}
                 <a
                   href="tel:+51999999999"
-                  className="w-full flex items-center gap-3 p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors group"
+                  className="w-full flex items-center gap-3 p-4 bg-cyan-50 hover:bg-cyan-100 rounded-xl transition-colors group"
                 >
-                  <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 bg-cyan-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                     <PhoneIcon className="w-6 h-6 text-white" />
                   </div>
                   <div className="text-left">
@@ -200,8 +200,8 @@ const ContactPage: React.FC = () => {
             {/* Location */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                  <MapPinIcon className="w-5 h-5 text-purple-600" />
+                <div className="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center">
+                  <MapPinIcon className="w-5 h-5 text-cyan-600" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">
                   {t('contact.location') || 'Ubicación'}
@@ -217,7 +217,7 @@ const ContactPage: React.FC = () => {
             </div>
 
             {/* FAQ Link */}
-            <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl shadow-lg p-6 text-white">
+            <div className="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl shadow-lg p-6 text-white">
               <h3 className="text-lg font-bold mb-2">
                 ¿Tienes preguntas?
               </h3>
@@ -346,7 +346,7 @@ const ContactPage: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-4 px-8 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold py-4 px-8 rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
                       <>

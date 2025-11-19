@@ -359,7 +359,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
         <div className="flex items-end justify-between mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Precio desde</p>
-            <span className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
               {formatPrice(lowestPrice)}
             </span>
             {product.variants.length > 0 && (

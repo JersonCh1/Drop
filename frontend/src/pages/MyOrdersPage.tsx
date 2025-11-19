@@ -60,7 +60,7 @@ const MyOrdersPage: React.FC = () => {
     const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
       PENDING: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pendiente' },
       PROCESSING: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Procesando' },
-      SHIPPED: { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Enviado' },
+      SHIPPED: { bg: 'bg-cyan-100', text: 'text-cyan-800', label: 'Enviado' },
       DELIVERED: { bg: 'bg-green-100', text: 'text-green-800', label: 'Entregado' },
       CANCELLED: { bg: 'bg-red-100', text: 'text-red-800', label: 'Cancelado' }
     };

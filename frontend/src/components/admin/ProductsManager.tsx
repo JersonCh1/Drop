@@ -230,8 +230,8 @@ const ProductsManager: React.FC<ProductsManagerProps> = ({ adminToken }) => {
                         onClick={() => handleSetHeroBanner(product)}
                         className={`inline-flex items-center justify-center px-3 py-2 rounded-md transition-colors text-xs font-medium ${
                           product.isHeroBanner
-                            ? 'bg-purple-600 text-white hover:bg-purple-700'
-                            : 'bg-purple-200 text-purple-700 hover:bg-purple-300'
+                            ? 'bg-cyan-600 text-white hover:bg-cyan-700'
+                            : 'bg-purple-200 text-cyan-700 hover:bg-purple-300'
                         }`}
                         title={product.isHeroBanner ? 'Banner Principal Activo' : 'Usar como Banner Principal'}
                       >
@@ -598,7 +598,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ adminToken, product
                 <button
                   type="button"
                   onClick={handleUnsplashAutomatic}
-                  className="w-full px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-md hover:from-purple-600 hover:to-pink-600 text-sm font-medium flex items-center justify-center"
+                  className="w-full px-4 py-2 bg-gradient-to-r from-cyan-500 to-pink-500 text-white rounded-md hover:from-cyan-600 hover:to-pink-600 text-sm font-medium flex items-center justify-center"
                 >
                   <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />

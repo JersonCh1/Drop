@@ -13,8 +13,8 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({ selectedM
       name: 'Tarjeta',
       description: 'Visa, Mastercard, Amex',
       icon: '💳',
-      gradient: 'from-blue-600 via-indigo-600 to-purple-600',
-      hoverGradient: 'from-blue-700 via-indigo-700 to-purple-700',
+      gradient: 'from-blue-600 via-indigo-600 to-cyan-600',
+      hoverGradient: 'from-blue-700 via-indigo-700 to-cyan-700',
       badge: 'Recomendado',
       badgeColor: 'bg-green-500',
       commission: 'BCP'
@@ -24,10 +24,10 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({ selectedM
       name: 'Yape',
       description: 'Instant\u00e1neo y f\u00e1cil',
       icon: '📱',
-      gradient: 'from-purple-600 via-pink-600 to-rose-600',
-      hoverGradient: 'from-purple-700 via-pink-700 to-rose-700',
+      gradient: 'from-cyan-600 via-pink-600 to-rose-600',
+      hoverGradient: 'from-cyan-700 via-pink-700 to-rose-700',
       badge: 'Gratis',
-      badgeColor: 'bg-purple-500',
+      badgeColor: 'bg-cyan-500',
       commission: 'Sin comisi\u00f3n'
     },
     {
@@ -58,7 +58,7 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({ selectedM
     <div className="space-y-6">
       {/* Header con animación */}
       <div className="text-center space-y-2 animate-fade-in">
-        <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600">
+        <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-600 to-pink-600">
           Elige tu método de pago
         </h3>
         <p className="text-sm text-gray-600 flex items-center justify-center">
@@ -215,7 +215,7 @@ const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({ selectedM
         </div>
 
         <div className="flex items-center space-x-2 text-sm text-gray-600">
-          <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="w-5 h-5 text-cyan-600" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
             <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
           </svg>

@@ -228,7 +228,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
         <div className="mb-8">
           <button
             onClick={() => setShowForm(true)}
-            className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+            className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold rounded-xl hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 shadow-lg hover:shadow-xl"
           >
             ✍️ Escribir una opinión
           </button>
@@ -329,7 +329,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? 'Enviando...' : 'Publicar opinión'}
               </button>

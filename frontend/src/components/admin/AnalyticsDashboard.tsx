@@ -88,7 +88,7 @@ const AnalyticsDashboard: React.FC = () => {
     const colors: Record<string, string> = {
       PENDING: 'bg-yellow-100 text-yellow-800',
       CONFIRMED: 'bg-blue-100 text-blue-800',
-      PROCESSING: 'bg-purple-100 text-purple-800',
+      PROCESSING: 'bg-cyan-100 text-cyan-800',
       SHIPPED: 'bg-indigo-100 text-indigo-800',
       DELIVERED: 'bg-green-100 text-green-800',
       CANCELLED: 'bg-red-100 text-red-800'
@@ -194,7 +194,7 @@ const AnalyticsDashboard: React.FC = () => {
         </div>
 
         {/* Total Customers */}
-        <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl shadow-lg p-6 text-white">
+        <div className="bg-gradient-to-br from-cyan-600 to-cyan-700 rounded-2xl shadow-lg p-6 text-white">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-white/20 rounded-lg">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -261,7 +261,7 @@ const AnalyticsDashboard: React.FC = () => {
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
                     <div
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 h-3 rounded-full transition-all duration-500"
+                      className="bg-gradient-to-r from-blue-600 to-cyan-600 h-3 rounded-full transition-all duration-500"
                       style={{ width: `${percentage}%` }}
                     ></div>
                   </div>
@@ -311,7 +311,7 @@ const AnalyticsDashboard: React.FC = () => {
           <div className="space-y-4">
             {stats.topProducts.map((product, index) => (
               <div key={product.id} className="flex items-center space-x-4 p-3 bg-gradient-to-r from-gray-50 to-transparent rounded-lg hover:from-blue-50 transition-colors">
-                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold">
+                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center text-white font-bold">
                   #{index + 1}
                 </div>
                 <div className="flex-1 min-w-0">

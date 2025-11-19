@@ -92,7 +92,7 @@ const TrackingPage: React.FC = () => {
       },
       PROCESSING: {
         label: 'En Proceso',
-        color: 'bg-purple-100 text-purple-800 border-purple-300',
+        color: 'bg-cyan-100 text-cyan-800 border-purple-300',
         icon: '📦',
         description: 'Estamos preparando tu pedido'
       },
@@ -148,11 +148,11 @@ const TrackingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-pink-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10">
-          <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-3">
+          <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600 mb-3">
             Rastrear mi Orden
           </h1>
           <p className="text-gray-600 text-lg">
@@ -200,7 +200,7 @@ const TrackingPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center space-x-3 text-lg"
+              className="w-full py-5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center space-x-3 text-lg"
             >
               {loading ? (
                 <>
@@ -240,7 +240,7 @@ const TrackingPage: React.FC = () => {
             {/* Status Card */}
             <div className="bg-white rounded-3xl shadow-2xl p-8">
               <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full text-5xl mb-4">
+                <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-full text-5xl mb-4">
                   {getStatusInfo(order.status).icon}
                 </div>
                 <h2 className="text-3xl font-bold text-gray-900 mb-2">
@@ -383,7 +383,7 @@ const TrackingPage: React.FC = () => {
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <div className="flex justify-between items-center text-xl">
                   <span className="font-bold text-gray-900">Total:</span>
-                  <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                  <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">
                     ${order.total.toFixed(2)}
                   </span>
                 </div>
@@ -409,7 +409,7 @@ const TrackingPage: React.FC = () => {
             </div>
 
             {/* Support */}
-            <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-3xl shadow-2xl p-8 text-white text-center">
+            <div className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-3xl shadow-2xl p-8 text-white text-center">
               <h3 className="text-2xl font-bold mb-3">¿Necesitas ayuda?</h3>
               <p className="mb-6 text-blue-100">
                 Si tienes alguna pregunta sobre tu orden, no dudes en contactarnos

@@ -524,9 +524,9 @@ const SuppliersManager: React.FC = () => {
                 <div className="text-sm text-gray-600">Productos Activos</div>
                 <div className="text-2xl font-bold text-green-600">{(selectedSupplier as any).activeProducts || 0}</div>
               </div>
-              <div className="bg-purple-50 p-4 rounded-lg">
+              <div className="bg-cyan-50 p-4 rounded-lg">
                 <div className="text-sm text-gray-600">Total Órdenes</div>
-                <div className="text-2xl font-bold text-purple-600">{selectedSupplier.ordersCount || 0}</div>
+                <div className="text-2xl font-bold text-cyan-600">{selectedSupplier.ordersCount || 0}</div>
               </div>
               <div className="bg-yellow-50 p-4 rounded-lg">
                 <div className="text-sm text-gray-600">Órdenes Pendientes</div>
