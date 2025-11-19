@@ -13,10 +13,10 @@ interface CurrencyContextType {
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
-// Exchange rates (you should fetch this from an API in production)
-const EXCHANGE_RATES: Record<Currency, number> = {
+// Default fallback exchange rates
+const DEFAULT_EXCHANGE_RATES: Record<Currency, number> = {
   USD: 1,
-  PEN: 3.75 // USD to PEN exchange rate
+  PEN: 3.75 // Fallback rate
 };
 
 const CURRENCY_SYMBOLS: Record<Currency, string> = {
@@ -30,26 +30,42 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
     return saved || 'USD';
   });
 
-  const [exchangeRate, setExchangeRate] = useState(EXCHANGE_RATES[currency]);
+  const [exchangeRate, setExchangeRate] = useState(DEFAULT_EXCHANGE_RATES[currency]);
+
+  // Fetch live exchange rates from API
+  useEffect(() => {
+    const fetchExchangeRate = async () => {
+      if (currency === 'USD') {
+        setExchangeRate(1);
+        return;
+      }
+
+      try {
+        // Using exchangerate-api.com (free tier: 1500 requests/month)
+        const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+        const data = await response.json();
+
+        if (data.rates && data.rates.PEN) {
+          setExchangeRate(data.rates.PEN);
+          console.log(`💱 Tipo de cambio actualizado: 1 USD = ${data.rates.PEN.toFixed(2)} PEN`);
+        } else {
+          setExchangeRate(DEFAULT_EXCHANGE_RATES.PEN);
+        }
+      } catch (error) {
+        console.error('Error fetching exchange rate, using fallback:', error);
+        setExchangeRate(DEFAULT_EXCHANGE_RATES.PEN);
+      }
+    };
+
+    fetchExchangeRate();
+
+    // Update exchange rate every 30 minutes
+    const interval = setInterval(fetchExchangeRate, 30 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [currency]);
 
   useEffect(() => {
     localStorage.setItem('currency', currency);
-    setExchangeRate(EXCHANGE_RATES[currency]);
-  }, [currency]);
-
-  // Fetch live exchange rates (optional enhancement)
-  useEffect(() => {
-    // Future enhancement: fetch live exchange rates
-    // const fetchExchangeRate = async () => {
-    //   try {
-    //     const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-    //     const data = await response.json();
-    //     setExchangeRate(data.rates[currency]);
-    //   } catch (error) {
-    //     console.error('Error fetching exchange rate:', error);
-    //   }
-    // };
-    // fetchExchangeRate();
   }, [currency]);
 
   const setCurrency = useCallback((newCurrency: Currency) => {
@@ -59,12 +75,12 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
   // Los precios en la BD están en USD (moneda base)
   const convertPrice = useCallback((priceUSD: number): number => {
     if (currency === 'PEN') {
-      // Convertir de USD a PEN
-      return priceUSD * EXCHANGE_RATES.PEN;
+      // Convertir de USD a PEN con tipo de cambio en tiempo real
+      return priceUSD * exchangeRate;
     }
     // Ya está en USD
     return priceUSD;
-  }, [currency]);
+  }, [currency, exchangeRate]);
 
   const formatPrice = useCallback((priceUSD: number): string => {
     const convertedPrice = convertPrice(priceUSD);

@@ -129,7 +129,7 @@ const Footer: React.FC = () => {
             © {currentYear} <span className="font-semibold text-gray-300">{t('footer.storeName')}</span>. {t('footer.allRightsReserved')}.
           </p>
           <p className="text-gray-500 text-xs mt-2">
-            {t('footer.madeInPeru')}
+            {t('footer.madeWithLove')}
           </p>
         </div>
       </div>

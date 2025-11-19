@@ -30,22 +30,22 @@ const SEOHead: React.FC<SEOHeadProps> = ({
   category,
   noindex = false
 }) => {
-  // Valores por defecto - OPTIMIZADOS PARA PERÚ
-  const defaultTitle = 'CASEPRO Perú - Carcasas iPhone Premium | Envío Gratis';
-  const defaultDescription = 'Carcasas profesionales para iPhone en Perú. Protección premium, diseños exclusivos y envío gratis a todo el país. Garantía de satisfacción. ¡Compra ahora!';
+  // Valores por defecto - GLOBAL
+  const defaultTitle = 'CASEPRO - Premium iPhone Cases | Free Shipping';
+  const defaultDescription = 'Professional iPhone cases with premium protection. Exclusive designs with international shipping. Satisfaction guaranteed. Shop now!';
   const defaultImage = '/images/og-image.jpg';
   const defaultUrl = typeof window !== 'undefined' ? window.location.href : 'https://casepro.es';
-  const defaultKeywords = 'carcasas iphone peru, fundas iphone, carcasas iphone 15, fundas iphone baratas, protector iphone, accesorios iphone, carcasas iphone lima, fundas iphone peru, case iphone, carcasas premium iphone';
+  const defaultKeywords = 'iphone cases, phone cases, iphone 15 cases, iphone covers, premium phone cases, iphone accessories, protective cases, casepro, carcasas iphone';
 
   // Usar props o valores por defecto
-  const finalTitle = title ? `${title} | CASEPRO Perú` : defaultTitle;
+  const finalTitle = title ? `${title} | CASEPRO` : defaultTitle;
   const finalDescription = description || defaultDescription;
   const finalImage = image || defaultImage;
   const finalUrl = url || defaultUrl;
   const finalKeywords = keywords || defaultKeywords;
 
   // Nombre del sitio
-  const siteName = 'CASEPRO Perú';
+  const siteName = 'CASEPRO';
 
   // Structured Data for Organization
   const organizationSchema = {
@@ -54,23 +54,18 @@ const SEOHead: React.FC<SEOHeadProps> = ({
     name: siteName,
     url: 'https://casepro.es',
     logo: 'https://casepro.es/logo-casepro.svg',
-    description: 'Tienda online de carcasas profesionales para iPhone en Perú',
+    description: 'Professional iPhone cases online store with international shipping',
     contactPoint: {
       '@type': 'ContactPoint',
-      telephone: '+51-XXX-XXX-XXX',
+      telephone: '+51-917-780-708',
       contactType: 'Customer Service',
-      areaServed: 'PE',
+      areaServed: 'Worldwide',
       availableLanguage: ['Spanish', 'English']
     },
-    address: {
-      '@type': 'PostalAddress',
-      addressCountry: 'PE',
-      addressRegion: 'Perú'
-    },
     sameAs: [
-      'https://facebook.com/caseproperu',
-      'https://instagram.com/caseproperu',
-      'https://twitter.com/caseproperu'
+      'https://facebook.com/casepro',
+      'https://instagram.com/casepro',
+      'https://twitter.com/casepro'
     ]
   };
 
@@ -168,8 +163,6 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       <meta name="author" content={siteName} />
       <meta name="publisher" content={siteName} />
       <meta name="language" content="Spanish" />
-      <meta name="geo.region" content="PE" />
-      <meta name="geo.placename" content="Perú" />
 
       {/* Mobile */}
       <meta name="theme-color" content="#667eea" />

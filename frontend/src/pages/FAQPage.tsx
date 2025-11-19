@@ -17,7 +17,7 @@ const FAQPage: React.FC = () => {
     {
       category: 'Envíos',
       question: '¿Cuánto tiempo tarda el envío?',
-      answer: 'El tiempo de envío varía según tu ubicación. Generalmente: \n• Nacional (Perú): 3-7 días hábiles\n• Latinoamérica: 15-25 días hábiles\n• Internacional: 20-35 días hábiles\n\nRecibirás un número de tracking para seguir tu pedido.'
+      answer: 'Shipping time varies by location. Generally: \n• Express: 5-10 business days\n• Standard: 15-25 business days\n• International: 20-35 business days\n\nYou will receive a tracking number to follow your order.'
     },
     {
       category: 'Envíos',
@@ -61,7 +61,7 @@ const FAQPage: React.FC = () => {
     {
       category: 'Pagos',
       question: '¿Qué métodos de pago aceptan?',
-      answer: 'Aceptamos múltiples métodos de pago:\n• Tarjetas de crédito/débito (Visa, Mastercard, American Express)\n• Yape (Perú - GRATIS)\n• Plin (Perú - GRATIS)\n• MercadoPago\n• Culqi\n• Stripe\n\nTodos los pagos son 100% seguros y encriptados.'
+      answer: 'We accept multiple payment methods:\n• Credit/Debit cards (Visa, Mastercard, American Express)\n• Digital wallets (Yape, Plin)\n• International payment platforms\n\nAll payments are 100% secure and encrypted.'
     },
     {
       category: 'Pagos',
@@ -71,7 +71,7 @@ const FAQPage: React.FC = () => {
     {
       category: 'Pagos',
       question: '¿Puedo pagar contra entrega?',
-      answer: 'Actualmente no ofrecemos pago contra entrega. Sin embargo, aceptamos Yape y Plin que son métodos de pago inmediatos y gratuitos en Perú.'
+      answer: 'Currently we do not offer cash on delivery. However, we accept digital wallets and credit cards for instant secure payment.'
     },
     {
       category: 'Pagos',

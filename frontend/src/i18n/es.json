@@ -28,7 +28,7 @@
     "admin": "Admin"
   },
   "header": {
-    "storeName": "CASEPRO PERÚ",
+    "storeName": "CASEPRO",
     "storeTagline": "Protección Profesional",
     "adminPanel": "Panel Admin",
     "myProfile": "Mi Perfil",
@@ -40,7 +40,7 @@
   "home": {
     "hero": {
       "title": "Carcasas Profesionales para iPhone",
-      "subtitle": "Protección premium para tu iPhone. Envío gratis a todo Perú.",
+      "subtitle": "Protección premium para tu iPhone. Envío internacional gratis.",
       "cta": "Ver Colección"
     },
     "features": {
@@ -176,7 +176,7 @@
     "allRightsReserved": "Todos los derechos reservados",
     "storeName": "iPhone Cases Store",
     "tagline": "Premium Quality",
-    "description": "Protege tu iPhone con estilo. Carcasas de alta calidad con envío a todo Perú.",
+    "description": "Protege tu iPhone con estilo. Carcasas de alta calidad con envío internacional.",
     "navigation": "Navegación",
     "home": "Inicio",
     "products": "Productos",
@@ -189,13 +189,13 @@
       "securePurchase": "Compra Segura",
       "securePurchaseDesc": "Pago protegido",
       "fastShipping": "Envío Rápido",
-      "fastShippingDesc": "A todo Perú",
+      "fastShippingDesc": "Envío mundial",
       "warranty": "Garantía",
       "warrantyDesc": "Calidad premium",
       "support": "Soporte 24/7",
       "supportDesc": "Estamos aquí"
     },
-    "madeInPeru": "Hecho con cariño en Perú 🇵🇪"
+    "madeWithLove": "Hecho con calidad profesional"
   },
   "contact": {
     "title": "Contáctanos",

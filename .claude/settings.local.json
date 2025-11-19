@@ -68,7 +68,10 @@
       "WebFetch(domain:gs.statcounter.com)",
       "Bash(cmd /c \"dir C:\\Users\\Jerson\\Downloads /b | findstr /i LOGO\")",
       "Bash(copy:*)",
-      "Bash(xargs sed:*)"
+      "Bash(xargs sed:*)",
+      "Bash(node --version:*)",
+      "Bash(npm --version:*)",
+      "WebFetch(domain:www.izipay.pe)"
     ],
     "deny": [],
     "ask": []
