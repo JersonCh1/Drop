@@ -71,7 +71,17 @@
       "Bash(xargs sed:*)",
       "Bash(node --version:*)",
       "Bash(npm --version:*)",
-      "WebFetch(domain:www.izipay.pe)"
+      "WebFetch(domain:www.izipay.pe)",
+      "Bash(del GUIA_DNS_CASEPRO.ES.md)",
+      "WebFetch(domain:cjdropshipping.com)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6IkFETUlOIiwidXNlcklkIjoiYWRtaW4tMSIsImlhdCI6MTc2MzY3MjUxMiwiZXhwIjoxNzY0Mjc3MzEyfQ.IxBPP4TC3_9hwGKQ1rtmFK_O74LSoscE_Q43afZmHSU\")",
+      "Bash(node test-cj-search.js:*)",
+      "Bash(node:*)",
+      "Bash(timeout 3 bash:*)",
+      "WebFetch(domain:www.aliexpress.com)",
+      "WebFetch(domain:findniche.com)",
+      "WebFetch(domain:www.sourcinbox.com)",
+      "Bash(timeout 8 bash:*)"
     ],
     "deny": [],
     "ask": []

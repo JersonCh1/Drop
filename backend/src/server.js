@@ -922,6 +922,14 @@ const cjDropshippingRoutes = require('./routes/cjDropshipping');
 app.use('/api/cj', cjDropshippingRoutes);
 app.use('/api/cj-dropshipping', cjDropshippingRoutes); // Alias para compatibilidad con frontend
 
+// =================== RUTAS DE ALIEXPRESS ===================
+const aliexpressRoutes = require('./routes/aliexpress');
+app.use('/api/aliexpress', aliexpressRoutes);
+
+// =================== RUTAS DE DSERS (ALIEXPRESS DROPSHIPPING) ===================
+const dsersRoutes = require('./routes/dsers');
+app.use('/api/dsers', dsersRoutes);
+
 // =================== RUTAS DE REFERIDOS ===================
 const referralsRoutes = require('./routes/referrals');
 app.use('/api/referrals', referralsRoutes);

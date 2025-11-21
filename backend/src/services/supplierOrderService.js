@@ -135,6 +135,27 @@ async function placeOrderWithSupplierAPI(supplierOrderId, supplier, items, custo
     if (supplier.slug === 'cj-dropshipping' || supplier.name.toLowerCase().includes('cj')) {
       console.log('📦 Usando API de CJ Dropshipping...');
       apiResponse = await placeOrderWithCJ(items, customerOrder, supplier);
+    } else if (supplier.slug === 'aliexpress' || supplier.slug === 'aliexpress-dsers' || supplier.name.toLowerCase().includes('aliexpress')) {
+      // AliExpress con DSers - Proceso semi-automático
+      console.log('📦 Orden de AliExpress/DSers - Preparando para procesamiento...');
+
+      const dsersService = require('./dsersOrderService');
+      const dsersResult = await dsersService.handleNewOrder(customerOrder.id);
+
+      await prisma.supplierOrder.update({
+        where: { id: supplierOrderId },
+        data: {
+          status: 'PENDING',
+          notes: `Orden preparada para DSers. Accede a /api/dsers/pending para ver detalles.`
+        }
+      });
+
+      return {
+        success: true,
+        requiresManualProcessing: true,
+        message: `Orden lista para procesar en DSers`,
+        dsersOrder: dsersResult
+      };
     } else {
       // Para otros proveedores, retornar error para que se maneje manualmente
       console.log(`⚠️ Proveedor ${supplier.name} no tiene integración automática`);

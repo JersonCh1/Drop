@@ -15,6 +15,7 @@ export interface ProductVariant {
   id: string;
   name: string;
   color: string | null;
+  material?: string | null;
   price: string;
   comparePrice?: string | null;
   sku: string;

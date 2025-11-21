@@ -30,9 +30,18 @@ const HeroBanner: React.FC = () => {
   const [heroProduct, setHeroProduct] = useState<HeroProduct | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedVariant, setSelectedVariant] = useState<string>('');
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const { addItem } = useCart();
   const { formatPrice, currency } = useCurrency();
   const [, forceUpdate] = useState({});
+
+  // Mapeo de colores a índices de imagen
+  const colorToImageIndex: { [key: string]: number } = {
+    'Transparente': 0,
+    'Negro': 1,
+    'Gris': 2,
+    'Morado': 3
+  };
 
   // Re-render cuando cambia la moneda
   useEffect(() => {
@@ -146,9 +155,11 @@ const HeroBanner: React.FC = () => {
   }
 
   // Hero Banner Dinámico con el producto seleccionado
-  const mainImage = heroProduct.images.find(img => img.isMain)?.url || heroProduct.images[0]?.url;
   const currentVariant = heroProduct.variants.find(v => v.id === selectedVariant) || heroProduct.variants[0];
   const currentPrice = currentVariant?.price || heroProduct.basePrice;
+
+  // Obtener la imagen según el índice seleccionado
+  const mainImage = heroProduct.images[selectedImageIndex]?.url || heroProduct.images[0]?.url;
 
   // Obtener colores únicos
   const uniqueColors = Array.from(new Set(heroProduct.variants.map(v => v.color).filter(Boolean)));
@@ -195,7 +206,17 @@ const HeroBanner: React.FC = () => {
                 </label>
                 <select
                   value={selectedVariant}
-                  onChange={(e) => setSelectedVariant(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedVariant(e.target.value);
+                    // Cambiar imagen según el color de la variante seleccionada
+                    const variant = heroProduct.variants.find(v => v.id === e.target.value);
+                    if (variant && variant.color && colorToImageIndex[variant.color] !== undefined) {
+                      const imageIndex = colorToImageIndex[variant.color];
+                      if (imageIndex < heroProduct.images.length) {
+                        setSelectedImageIndex(imageIndex);
+                      }
+                    }
+                  }}
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent backdrop-blur-sm"
                 >
                   {heroProduct.variants.map((variant) => (
@@ -285,6 +306,29 @@ const HeroBanner: React.FC = () => {
                   </div>
                 )}
               </div>
+
+              {/* Miniaturas de imágenes */}
+              {heroProduct.images.length > 1 && (
+                <div className="grid grid-cols-6 gap-2 mt-4">
+                  {heroProduct.images.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={`aspect-square bg-white/5 rounded-lg overflow-hidden border-2 transition-all ${
+                        selectedImageIndex === index
+                          ? 'border-cyan-400 ring-2 ring-cyan-400/50'
+                          : 'border-white/20 hover:border-white/40'
+                      }`}
+                    >
+                      <img
+                        src={image.url}
+                        alt={`Vista ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Stats */}
               <div className="grid grid-cols-3 gap-4 mt-8">

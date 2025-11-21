@@ -22,6 +22,14 @@ const ProductDetailPage: React.FC = () => {
   const [quantity, setQuantity] = useState(1);
   const [, forceUpdate] = useState({});
 
+  // Mapeo de colores a índices de imagen
+  const colorToImageIndex: { [key: string]: number } = {
+    'Transparente': 0,
+    'Negro': 1,
+    'Gris': 2,
+    'Morado': 3
+  };
+
   // Re-render cuando cambia la moneda
   useEffect(() => {
     forceUpdate({});
@@ -266,33 +274,86 @@ const ProductDetailPage: React.FC = () => {
               })()}
 
               {/* Variant Selection */}
-              {product.variants.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                    Selecciona una opción:
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    {product.variants.filter(v => v.isActive).map(variant => (
-                      <button
-                        key={variant.id}
-                        onClick={() => setSelectedVariant(variant)}
-                        disabled={variant.stockQuantity === 0}
-                        className={`p-4 border-2 rounded-lg text-left transition-all ${
-                          selectedVariant?.id === variant.id
-                            ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-200'
-                            : 'border-gray-200 hover:border-gray-300'
-                        } ${variant.stockQuantity === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      >
-                        <div className="font-medium text-gray-900">{variant.color}</div>
-                        <div className="text-sm text-gray-600">{formatPrice(parseFloat(variant.price))}</div>
-                        {variant.stockQuantity === 0 && (
-                          <div className="text-xs text-red-600 mt-1">Agotado</div>
-                        )}
-                      </button>
-                    ))}
+              {product.variants.length > 0 && (() => {
+                // Agrupar variantes por modelo y color
+                const models = Array.from(new Set(product.variants.filter(v => v.isActive && v.material).map(v => v.material as string)));
+                const colors = Array.from(new Set(product.variants.filter(v => v.isActive && v.color).map(v => v.color as string)));
+
+                return (
+                  <div className="mb-6">
+                    {/* Selector de Modelo */}
+                    <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                      Modelo de iPhone:
+                    </h3>
+                    <select
+                      value={selectedVariant?.material || ''}
+                      onChange={(e) => {
+                        const model = e.target.value;
+                        const color = selectedVariant?.color || colors[0];
+                        const variant = product.variants.find(v => v.material === model && v.color === color && v.isActive);
+                        if (variant) {
+                          setSelectedVariant(variant);
+                          if (variant.color && colorToImageIndex[variant.color] !== undefined) {
+                            const imageIndex = colorToImageIndex[variant.color];
+                            if (imageIndex < product.images.length) {
+                              setSelectedImageIndex(imageIndex);
+                            }
+                          }
+                        }
+                      }}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-200 text-base"
+                    >
+                      {models.map(model => (
+                        <option key={model} value={model}>{model}</option>
+                      ))}
+                    </select>
+
+                    {/* Selector de Color */}
+                    <h3 className="text-sm font-semibold text-gray-900 mb-3 mt-6">
+                      Color:
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {colors.map(color => {
+                        const model = selectedVariant?.material || models[0];
+                        const variant = product.variants.find(v => v.material === model && v.color === color && v.isActive);
+                        const isAvailable = variant && variant.stockQuantity > 0;
+
+                        return (
+                          <button
+                            key={color}
+                            onClick={() => {
+                              if (variant) {
+                                setSelectedVariant(variant);
+                                // Cambiar imagen según el color seleccionado
+                                if (color && colorToImageIndex[color] !== undefined) {
+                                  const imageIndex = colorToImageIndex[color];
+                                  console.log('Color seleccionado:', color, 'Índice de imagen:', imageIndex, 'Total imágenes:', product.images.length);
+                                  if (imageIndex < product.images.length) {
+                                    setSelectedImageIndex(imageIndex);
+                                    console.log('Imagen cambiada a índice:', imageIndex);
+                                  }
+                                }
+                              }
+                            }}
+                            disabled={!isAvailable}
+                            className={`p-4 border-2 rounded-lg text-left transition-all ${
+                              selectedVariant?.color === color
+                                ? 'border-cyan-600 bg-cyan-50 ring-2 ring-cyan-200'
+                                : 'border-gray-200 hover:border-gray-300'
+                            } ${!isAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            <div className="font-medium text-gray-900">{color}</div>
+                            <div className="text-sm text-gray-600">{formatPrice(parseFloat(variant?.price || '0'))}</div>
+                            {!isAvailable && (
+                              <div className="text-xs text-red-600 mt-1">Agotado</div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Quantity Selector */}
               <div className="mb-6">

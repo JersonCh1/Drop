@@ -4,6 +4,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import ProductsManager from './ProductsManager';
 import CJProductImporter from './CJProductImporter';
+import AliExpressImporter from './AliExpressImporter';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import UsersManager from './UsersManager';
 
@@ -35,7 +36,7 @@ interface AdminDashboardProps {
 }
 
 const ImprovedAdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, adminToken }) => {
-  const [activeTab, setActiveTab] = useState<'analytics' | 'orders' | 'products' | 'import' | 'users'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'orders' | 'products' | 'import' | 'manual' | 'users'>('analytics');
   const [orders, setOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState<Stats>({ totalOrders: 0, totalRevenue: 0, pendingOrders: 0, completedOrders: 0 });
   const [loading, setLoading] = useState(true);
@@ -232,7 +233,23 @@ const ImprovedAdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, adminT
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                <span>Importar</span>
+                <span>Importar CJ</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('manual')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'manual'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                <span>AliExpress</span>
               </div>
             </button>
 
@@ -421,6 +438,11 @@ const ImprovedAdminDashboard: React.FC<AdminDashboardProps> = ({ onClose, adminT
             {/* Import Tab */}
             {activeTab === 'import' && (
               <CJProductImporter />
+            )}
+
+            {/* AliExpress Automatic Importer Tab */}
+            {activeTab === 'manual' && (
+              <AliExpressImporter />
             )}
 
             {/* Users Tab */}
