@@ -15,9 +15,15 @@
 
 ## 📋 Documentación Importante
 
-- **[Branding y Marketing](BRANDING_Y_MARKETING.md)** - Guía completa de identidad de marca
-- **[Plan de Acción HOY](PLAN_DE_ACCION_HOY.md)** - Checklist para empezar a vender
-- **[Configurar Dominio](CONFIGURAR_DOMINIO_CASEPRO.ES.md)** - Guía de configuración DNS
+### Marketing y Ventas
+- **[📊 Marketing Tracking Completo](MARKETING_TRACKING_COMPLETO.md)** - Sistema completo de tracking (Facebook Pixel + GTM)
+- **[🎯 Facebook Pixel Setup](FACEBOOK_PIXEL_SETUP.md)** - Guía detallada de configuración de Facebook Pixel
+- **[🏷️ Google Tag Manager](GOOGLE_TAG_MANAGER_SETUP.md)** - Guía de configuración de GTM
+- **[🚀 Branding y Marketing](BRANDING_Y_MARKETING.md)** - Guía completa de identidad de marca
+- **[📋 Plan de Acción HOY](PLAN_DE_ACCION_HOY.md)** - Checklist para empezar a vender
+
+### Técnica
+- **[🌐 Configurar Dominio](CONFIGURAR_DOMINIO_CASEPRO.ES.md)** - Guía de configuración DNS
 
 ---
 

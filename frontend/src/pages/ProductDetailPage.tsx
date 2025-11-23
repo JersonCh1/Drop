@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import ProductReviews from '../components/products/ProductReviews';
 import WishlistButton from '../components/wishlist/WishlistButton';
 import CompareButton from '../components/compare/CompareButton';
+import { trackViewContent } from '../services/facebookPixel';
 
 const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -48,6 +49,15 @@ const ProductDetailPage: React.FC = () => {
         if (availableVariants.length > 0) {
           setSelectedVariant(availableVariants[0]);
         }
+
+        // Facebook Pixel: Track ViewContent
+        trackViewContent({
+          id: data.id,
+          name: data.name,
+          price: productService.getLowestPrice(data),
+          category: data.category?.name,
+          currency: currency,
+        });
 
         // Product loaded successfully
       } else {

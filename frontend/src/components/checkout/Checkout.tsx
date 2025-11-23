@@ -4,6 +4,7 @@ import { useCurrency } from '../../context/CurrencyContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { useIzipay } from '../../hooks/useIzipay';
 import PaymentMethodSelector from './PaymentMethodSelector';
+import { trackInitiateCheckout, trackAddPaymentInfo, trackPurchase } from '../../services/facebookPixel';
 
 interface CheckoutFormData {
   firstName: string;
@@ -31,6 +32,18 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
 
   // Checkout initialization
   useEffect(() => {
+    // Facebook Pixel: Track InitiateCheckout
+    trackInitiateCheckout({
+      items: cart.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+      })),
+      total: finalTotal,
+      currency: currency,
+    });
+
     // Checkout opened - ready for payment
   }, []);
 
@@ -77,6 +90,19 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
   const { isLoaded: isIzipayLoaded, openCardPayment } = useIzipay({
     onSuccess: async (response) => {
       console.log('Pago exitoso con Izipay:', response);
+
+      // Facebook Pixel: Track Purchase
+      trackPurchase({
+        orderId: lastOrderId || 'unknown',
+        items: cart.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+        total: finalTotal,
+        currency: currency,
+      });
 
       // Payment successful - processing order
       clearCart();
@@ -271,6 +297,19 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
       const result = await response.json();
       console.log('Order created with operation code:', result);
 
+      // Facebook Pixel: Track Purchase (Yape/Plin)
+      trackPurchase({
+        orderId: result.orderNumber || result.orderId || 'unknown',
+        items: pendingOrderData.items.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+        total: pendingOrderData.total,
+        currency: currency,
+      });
+
       // Order confirmed successfully
       clearCart();
       setShowPaymentConfirmation(false);
@@ -446,6 +485,12 @@ const Checkout: React.FC<CheckoutProps> = ({ onClose, onOrderComplete }) => {
         if (response.ok) {
           const result = await response.json();
           console.log('Izipay formToken obtained:', result);
+
+          // Facebook Pixel: Track AddPaymentInfo
+          trackAddPaymentInfo({
+            total: total,
+            currency: currency,
+          });
 
           // Guardar FormToken y OrderId para reintentos
           setLastFormToken(result.formToken);

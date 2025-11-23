@@ -1,6 +1,7 @@
 // frontend/src/context/CartContext.tsx
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { trackAddToCart } from '../services/facebookPixel';
 
 export interface CartItem {
   id: string;
@@ -97,25 +98,33 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case 'ADD_ITEM': {
       const newItem = { ...action.payload, quantity: action.payload.quantity || 1 };
       const existingItemIndex = state.items.findIndex(item => item.id === newItem.id);
-      
+
       let updatedItems: CartItem[];
-      
+
       if (existingItemIndex >= 0) {
-        updatedItems = state.items.map((item, index) => 
-          index === existingItemIndex 
+        updatedItems = state.items.map((item, index) =>
+          index === existingItemIndex
             ? { ...item, quantity: Math.min(item.quantity + newItem.quantity, item.maxQuantity || 99) }
             : item
         );
       } else {
         updatedItems = [...state.items, newItem as CartItem];
       }
-      
+
+      // Facebook Pixel: Track AddToCart
+      trackAddToCart({
+        id: newItem.id,
+        name: newItem.name,
+        price: newItem.price,
+        quantity: newItem.quantity,
+      });
+
       const totalItems = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
       const totalPrice = updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       const shippingCost = calculateShipping(updatedItems, state.country);
       const tax = calculateTax(totalPrice, state.country);
       const finalTotal = totalPrice + shippingCost + tax;
-      
+
       return {
         ...state,
         items: updatedItems,
