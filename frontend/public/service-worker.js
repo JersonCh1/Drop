@@ -46,7 +46,26 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - BYPASS todo para permitir Izipay funcionar correctamente
 self.addEventListener('fetch', (event) => {
-  // SIMPLEMENTE HACER BYPASS DE TODO - No cachear nada durante desarrollo
+  const url = event.request.url;
+
+  // NUNCA interceptar estos dominios (tracking, pagos, analytics)
+  const bypassDomains = [
+    'facebook.net',
+    'facebook.com',
+    'googletagmanager.com',
+    'google-analytics.com',
+    'izipay',
+    'micuentaweb.pe',
+    'stripe.com',
+    'mercadopago.com'
+  ];
+
+  // Si la URL contiene alguno de estos dominios, NO interceptar
+  if (bypassDomains.some(domain => url.includes(domain))) {
+    return; // Dejar que el navegador maneje la request normalmente
+  }
+
+  // Para todo lo demás, hacer bypass simple
   event.respondWith(fetch(event.request));
 });
 
