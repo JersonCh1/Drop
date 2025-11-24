@@ -116,11 +116,17 @@ router.post('/import', verifyAdmin, async (req, res) => {
     }
 
     console.log(`📦 Importando producto de AliExpress...`);
+    console.log(`📍 URL: ${url}`);
+    console.log(`📁 Categoría ID: ${categoryId}`);
+    console.log(`💵 Precio proveedor: ${supplierPrice}`);
+    console.log(`📈 Margen de ganancia: ${profitMargin}%`);
 
     // 1. Extraer datos del producto usando Puppeteer (más confiable)
+    console.log(`🔄 Iniciando extracción con Puppeteer...`);
     const extractResult = await aliexpressPuppeteerService.getProductData(url);
 
     if (!extractResult.success) {
+      console.error(`❌ Error en extracción:`, extractResult.error);
       return res.status(400).json({
         success: false,
         message: extractResult.error || 'Error extrayendo producto'
@@ -128,6 +134,7 @@ router.post('/import', verifyAdmin, async (req, res) => {
     }
 
     const productData = extractResult.product;
+    console.log(`✅ Producto extraído: ${productData.name}`);
 
     // 2. Calcular precio de venta con el precio manual
     const finalSupplierPrice = parseFloat(supplierPrice);

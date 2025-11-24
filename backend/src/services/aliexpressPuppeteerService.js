@@ -129,7 +129,8 @@ class AliExpressPuppeteerService {
    */
   async initBrowser() {
     if (!this.browser) {
-      this.browser = await puppeteer.launch({
+      // Configuración para Railway/producción
+      const launchOptions = {
         headless: true,
         args: [
           '--no-sandbox',
@@ -140,7 +141,29 @@ class AliExpressPuppeteerService {
           '--window-size=1920x1080',
           '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
         ]
-      });
+      };
+
+      // En Railway/producción, buscar Chromium de Nix
+      if (process.env.RAILWAY_ENVIRONMENT || process.env.NODE_ENV === 'production') {
+        const { execSync } = require('child_process');
+        try {
+          // Buscar chromium en /nix/store
+          const chromiumPath = execSync('find /nix/store -name chromium -type f -executable 2>/dev/null | head -1')
+            .toString()
+            .trim();
+
+          if (chromiumPath) {
+            launchOptions.executablePath = chromiumPath;
+            console.log(`🔍 Chromium encontrado en: ${chromiumPath}`);
+          } else {
+            console.log('⚠️ Chromium no encontrado, usando Puppeteer por defecto');
+          }
+        } catch (error) {
+          console.error('⚠️ Error buscando Chromium:', error.message);
+        }
+      }
+
+      this.browser = await puppeteer.launch(launchOptions);
       console.log('🌐 Navegador Puppeteer iniciado');
     }
     return this.browser;
