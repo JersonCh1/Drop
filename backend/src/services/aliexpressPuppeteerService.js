@@ -596,6 +596,39 @@ class AliExpressPuppeteerService {
           data.debug.variantContainers = skuContainers.length;
         }
 
+        // ESTRATEGIA 6: Extraer imágenes del DOM si solo hay 1
+        if (data.images.length <= 1) {
+          // Buscar imágenes en la galería del producto
+          const imageElements = document.querySelectorAll('img[class*="mainImage"], img[class*="magnifier"], img[class*="slider"], ul[class*="imageList"] img, div[class*="image-view"] img');
+
+          const foundImages = new Set();
+          imageElements.forEach(img => {
+            let src = img.getAttribute('src') || img.getAttribute('data-src') || '';
+
+            // Limpiar parámetros y obtener versión de alta calidad
+            if (src && (src.includes('alicdn.com') || src.includes('ae01.alicdn'))) {
+              // Remover parámetros de tamaño pequeño
+              src = src.split('_')[0] + '.jpg';
+
+              // Asegurar https
+              if (src.startsWith('//')) {
+                src = `https:${src}`;
+              }
+
+              // Evitar miniaturas muy pequeñas
+              if (!src.includes('_50x50') && !src.includes('_100x100')) {
+                foundImages.add(src);
+              }
+            }
+          });
+
+          if (foundImages.size > 0) {
+            // Si encontramos imágenes nuevas, reemplazar
+            data.images = Array.from(foundImages).slice(0, 8);
+            data.debug.imagesFrom = 'DOM Gallery';
+          }
+        }
+
         // Fallback: título de página
         if (!data.name) {
           data.name = document.title.replace(' - AliExpress', '').trim();
