@@ -223,32 +223,75 @@ router.post('/import', verifyAdmin, async (req, res) => {
         // Crear variante por defecto o múltiples si existen
         variants: {
           create: productData.variants.length > 0
-            ? productData.variants.slice(0, 10).map((variant, index) => {
-                // Parsear nombre de variante (ej: "Color: MagSafe Orange" o "Modelo: iPhone 17 Air")
-                const variantData = {
-                  name: variant.name,
-                  price: parseFloat(salePrice.toFixed(2)),
-                  sku: `${slug}-${skuTimestamp}-${index + 1}`,
-                  stockQuantity: 100,
-                  supplierProductId: variant.skuId?.toString(),
-                  isActive: true,
-                  color: null,
-                  material: null
-                };
+            ? (() => {
+                // Separar colores y modelos de las variantes
+                const colors = [];
+                const models = [];
 
-                // Extraer propiedad y valor del nombre
-                if (variant.name.includes(':')) {
+                productData.variants.forEach(variant => {
+                  if (!variant.name.includes(':')) return;
+
                   const [property, value] = variant.name.split(':').map(s => s.trim());
 
                   if (property.toLowerCase().includes('color')) {
-                    variantData.color = value;
+                    colors.push(value);
                   } else if (property.toLowerCase().includes('modelo') || property.toLowerCase().includes('model')) {
-                    variantData.material = value;
+                    models.push(value);
                   }
+                });
+
+                // Si tenemos ambos (colores y modelos), crear combinaciones
+                if (colors.length > 0 && models.length > 0) {
+                  const combinations = [];
+                  let skuIndex = 1;
+
+                  colors.forEach(color => {
+                    models.forEach(model => {
+                      combinations.push({
+                        name: `${model} - ${color}`,
+                        price: parseFloat(salePrice.toFixed(2)),
+                        sku: `${slug}-${skuTimestamp}-${skuIndex++}`,
+                        stockQuantity: 100,
+                        supplierProductId: null,
+                        isActive: true,
+                        color: color,
+                        material: model
+                      });
+                    });
+                  });
+
+                  console.log(`   ✅ Creadas ${combinations.length} combinaciones (${colors.length} colores × ${models.length} modelos)`);
+                  return combinations;
                 }
 
-                return variantData;
-              })
+                // Si solo hay una dimensión, crear variantes simples
+                const simpleVariants = productData.variants.slice(0, 10).map((variant, index) => {
+                  const variantData = {
+                    name: variant.name,
+                    price: parseFloat(salePrice.toFixed(2)),
+                    sku: `${slug}-${skuTimestamp}-${index + 1}`,
+                    stockQuantity: 100,
+                    supplierProductId: variant.skuId?.toString(),
+                    isActive: true,
+                    color: null,
+                    material: null
+                  };
+
+                  if (variant.name.includes(':')) {
+                    const [property, value] = variant.name.split(':').map(s => s.trim());
+
+                    if (property.toLowerCase().includes('color')) {
+                      variantData.color = value;
+                    } else if (property.toLowerCase().includes('modelo') || property.toLowerCase().includes('model')) {
+                      variantData.material = value;
+                    }
+                  }
+
+                  return variantData;
+                });
+
+                return simpleVariants;
+              })()
             : [{
                 name: 'Default',
                 price: parseFloat(salePrice.toFixed(2)),
