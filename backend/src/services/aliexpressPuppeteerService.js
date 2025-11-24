@@ -147,24 +147,68 @@ class AliExpressPuppeteerService {
       if (process.env.RAILWAY_ENVIRONMENT || process.env.NODE_ENV === 'production') {
         const { execSync } = require('child_process');
         try {
-          // Buscar chromium en /nix/store
-          const chromiumPath = execSync('find /nix/store -name chromium -type f -executable 2>/dev/null | head -1')
-            .toString()
-            .trim();
+          // Buscar chromium en /nix/store con múltiples métodos
+          let chromiumPath = null;
+
+          // Método 1: Buscar en /nix/store
+          try {
+            chromiumPath = execSync('find /nix/store -path "*/bin/chromium" -type f -executable 2>/dev/null | head -1')
+              .toString()
+              .trim();
+          } catch (e) {
+            console.log('⚠️ Método 1 falló');
+          }
+
+          // Método 2: Usar which si está en PATH
+          if (!chromiumPath) {
+            try {
+              chromiumPath = execSync('which chromium 2>/dev/null')
+                .toString()
+                .trim();
+            } catch (e) {
+              console.log('⚠️ Método 2 falló');
+            }
+          }
+
+          // Método 3: Paths comunes en Railway
+          if (!chromiumPath) {
+            const commonPaths = [
+              '/usr/bin/chromium',
+              '/usr/bin/chromium-browser',
+              '/usr/bin/google-chrome',
+              '/usr/bin/google-chrome-stable'
+            ];
+
+            for (const path of commonPaths) {
+              try {
+                execSync(`test -f ${path} && test -x ${path}`);
+                chromiumPath = path;
+                break;
+              } catch (e) {
+                // Path no existe
+              }
+            }
+          }
 
           if (chromiumPath) {
             launchOptions.executablePath = chromiumPath;
-            console.log(`🔍 Chromium encontrado en: ${chromiumPath}`);
+            console.log(`✅ Chromium encontrado en: ${chromiumPath}`);
           } else {
-            console.log('⚠️ Chromium no encontrado, usando Puppeteer por defecto');
+            console.log('⚠️ Chromium no encontrado en ninguna ubicación conocida');
+            console.log('💡 Intentando usar Chromium de Puppeteer (puede fallar en Railway)');
           }
         } catch (error) {
           console.error('⚠️ Error buscando Chromium:', error.message);
         }
       }
 
-      this.browser = await puppeteer.launch(launchOptions);
-      console.log('🌐 Navegador Puppeteer iniciado');
+      try {
+        this.browser = await puppeteer.launch(launchOptions);
+        console.log('🌐 Navegador Puppeteer iniciado correctamente');
+      } catch (launchError) {
+        console.error('❌ Error lanzando navegador:', launchError.message);
+        throw new Error(`No se pudo iniciar el navegador: ${launchError.message}. Asegúrate de que Chromium esté instalado en Railway.`);
+      }
     }
     return this.browser;
   }

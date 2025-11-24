@@ -245,10 +245,30 @@ router.post('/import', verifyAdmin, async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error en /import:', error);
-    res.status(500).json({
+    console.error('Stack:', error.stack);
+
+    // Mensaje más específico según el tipo de error
+    let errorMessage = 'Error importando producto';
+    let statusCode = 500;
+
+    if (error.message.includes('navegador') || error.message.includes('Chromium')) {
+      errorMessage = 'Error con el navegador. El servidor está configurando Chromium. Intenta en 1 minuto.';
+      statusCode = 503;
+    } else if (error.message.includes('timeout') || error.message.includes('Timeout')) {
+      errorMessage = 'La importación tardó demasiado. AliExpress puede estar lento. Intenta de nuevo.';
+      statusCode = 408;
+    } else if (error.message.includes('Proveedor AliExpress no configurado')) {
+      errorMessage = error.message;
+      statusCode = 400;
+    } else {
+      errorMessage = `Error: ${error.message}`;
+    }
+
+    res.status(statusCode).json({
       success: false,
-      message: 'Error importando producto',
-      error: error.message
+      message: errorMessage,
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });

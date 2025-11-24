@@ -2,10 +2,14 @@
 # https://nixpacks.com/docs/configuration/file
 
 [phases.setup]
-nixPkgs = ["...", "chromium"]
+nixPkgs = ["...", "chromium", "nss", "freetype", "harfbuzz", "ca-certificates", "fontconfig"]
 
 [phases.install]
-cmds = ["npm install --production=false"]
+cmds = [
+  "npm install --production=false",
+  "echo '🔍 Verificando Chromium...'",
+  "find /nix/store -path '*/bin/chromium' -executable 2>/dev/null | head -1 || echo '❌ Chromium no encontrado'"
+]
 
 [start]
 cmd = "npx prisma migrate deploy && npm start"
