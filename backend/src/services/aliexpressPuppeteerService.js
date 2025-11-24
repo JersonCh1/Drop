@@ -100,23 +100,41 @@ class AliExpressPuppeteerService {
         }
       });
 
-      // Navegar a la página
+      // Navegar a la página (más tolerante)
       console.log('🌐 Navegando a AliExpress...');
-      await page.goto(cleanUrl, {
-        waitUntil: 'domcontentloaded',
-        timeout: 60000
+      try {
+        await page.goto(cleanUrl, {
+          waitUntil: 'domcontentloaded',
+          timeout: 30000
+        });
+      } catch (e) {
+        console.log('⚠️ Timeout navegando, pero continuando...');
+      }
+
+      // Esperar a que cargue el contenido principal
+      console.log('⏳ Esperando carga de datos dinámicos (10 segundos)...');
+      await new Promise(resolve => setTimeout(resolve, 10000));
+
+      // Intentar esperar específicamente por runParams.data
+      console.log('⏳ Esperando window.runParams.data...');
+      const hasData = await page.evaluate(() => {
+        return new Promise((resolve) => {
+          let attempts = 0;
+          const checkInterval = setInterval(() => {
+            attempts++;
+            if (window.runParams && window.runParams.data && window.runParams.data.priceModule) {
+              clearInterval(checkInterval);
+              resolve(true);
+            }
+            if (attempts > 20) { // 20 intentos = 10 segundos
+              clearInterval(checkInterval);
+              resolve(false);
+            }
+          }, 500); // Check cada 500ms
+        });
       });
 
-      // Esperar a que cargue el contenido principal (más tiempo para JS dinámico)
-      console.log('⏳ Esperando carga de datos dinámicos...');
-      await new Promise(resolve => setTimeout(resolve, 5000));
-
-      // Intentar esperar por elementos específicos
-      try {
-        await page.waitForSelector('meta[property="og:title"]', { timeout: 5000 });
-      } catch (e) {
-        console.log('⚠️ Selector og:title no encontrado, continuando...');
-      }
+      console.log(`📊 ¿Datos cargados?: ${hasData}`);
 
       // Primero verificar qué variables globales tiene AliExpress
       const aliexpressGlobals = await page.evaluate(() => {
@@ -250,6 +268,33 @@ class AliExpressPuppeteerService {
               rating: parseFloat(pageData.storeModule.positiveRate) || 0,
               orders: parseInt(pageData.storeModule.orderCount) || 0
             };
+          }
+        }
+
+        // ESTRATEGIA 3: window.data (nueva estructura 2025)
+        if (window.data && typeof window.data === 'object') {
+          data.debug.foundWindowData = true;
+          // AliExpress puede tener datos aquí en versiones nuevas
+          // Intentar extraer lo que podamos
+        }
+
+        // ESTRATEGIA 4: DOM scraping directo (precio de elementos HTML)
+        if (data.price === 0) {
+          // Buscar precio en el DOM
+          const priceElements = document.querySelectorAll('[class*="price"]');
+          for (const el of priceElements) {
+            const text = el.textContent;
+            // Buscar patrón S/XX.XX o $XX.XX
+            const match = text.match(/[S$]\s*\/?\s*([\d,]+\.?\d*)/);
+            if (match && match[1]) {
+              const priceValue = parseFloat(match[1].replace(',', ''));
+              if (priceValue > 0 && priceValue < 1000) {
+                data.price = priceValue;
+                data.currency = text.includes('S/') ? 'PEN' : 'USD';
+                data.debug.priceFrom = 'DOM';
+                break;
+              }
+            }
           }
         }
 
