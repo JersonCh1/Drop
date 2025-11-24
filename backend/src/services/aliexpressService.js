@@ -57,14 +57,27 @@ class AliExpressService {
       // Usar API pública de AliExpress (si está disponible)
       // O hacer scraping de la página
 
-      const response = await axios.get(url, {
+      // Limpiar URL y normalizar
+      let cleanUrl = url.split('?')[0]; // Remover parámetros
+
+      // Si tiene supplyId u otros parámetros, AliExpress puede causar loops de redirect
+      // Usar solo la URL base del producto
+      if (!cleanUrl.includes('.html')) {
+        cleanUrl = `${cleanUrl}.html`;
+      }
+
+      console.log(`🔗 URL original: ${url}`);
+      console.log(`🔗 URL limpia: ${cleanUrl}`);
+
+      const response = await axios.get(cleanUrl, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept-Language': 'en-US,en;q=0.9,es;q=0.8',
           'Accept-Encoding': 'gzip, deflate, br',
-          'Cache-Control': 'max-age=0',
-          'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Sec-Ch-Ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
           'Sec-Ch-Ua-Mobile': '?0',
           'Sec-Ch-Ua-Platform': '"Windows"',
           'Sec-Fetch-Dest': 'document',
@@ -72,10 +85,14 @@ class AliExpressService {
           'Sec-Fetch-Site': 'none',
           'Sec-Fetch-User': '?1',
           'Upgrade-Insecure-Requests': '1',
-          'Referer': 'https://www.google.com/'
+          'Dnt': '1',
+          'Connection': 'keep-alive'
         },
-        timeout: 30000,
-        maxRedirects: 5
+        timeout: 45000, // Aumentado a 45 segundos
+        maxRedirects: 10, // Aumentado a 10 redirects
+        validateStatus: function (status) {
+          return status >= 200 && status < 400; // Aceptar redirects 3xx
+        }
       });
 
       const $ = cheerio.load(response.data);
