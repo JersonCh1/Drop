@@ -408,6 +408,121 @@ class AliExpressPuppeteerService {
           }
         }
 
+        // ESTRATEGIA 5: Extraer variantes del DOM (nuevo AliExpress 2025)
+        if (data.variants.length === 0) {
+          // Buscar contenedores de SKU/variantes
+          const skuContainers = document.querySelectorAll('[class*="sku-item--property"]');
+
+          skuContainers.forEach((container, containerIndex) => {
+            // Obtener el título de la variante (Color, Model, Size, etc.)
+            const titleEl = container.querySelector('[class*="sku-item--title"]');
+            let fullTitle = titleEl ? titleEl.textContent.trim() : '';
+
+            // El título puede ser "Color: MagSafe Orange" o "Modelo móvil: iPhone 17 Pro"
+            // Extraer la propiedad y el valor actual seleccionado
+            let propertyName = '';
+            let currentValue = '';
+
+            if (fullTitle.includes(':')) {
+              const parts = fullTitle.split(':');
+              propertyName = parts[0].trim();
+              currentValue = parts[1]?.trim() || '';
+            }
+
+            // Limpiar el nombre de la propiedad
+            // IMPORTANTE: usar \b para word boundary y evitar "Model" dentro de "Modelo" → "Modeloo"
+            propertyName = propertyName
+              .replace(/\bModelo móvil\b/gi, 'Modelo')
+              .replace(/\bModel\b/gi, 'Modelo')
+              .replace(/\bColor\b/gi, 'Color')
+              .trim();
+
+            // Buscar todas las opciones dentro de este contenedor
+            const optionElements = container.querySelectorAll('[class*="sku-item--"][data-sku-col]');
+
+            // Si no hay opciones con texto (ej: solo imágenes de colores)
+            // Contar cuántas hay y crear nombres genéricos
+            const hasTextOptions = Array.from(optionElements).some(el => {
+              return el.getAttribute('title') || el.textContent?.trim();
+            });
+
+            optionElements.forEach((optionEl, index) => {
+              // Intentar obtener el texto - buscar en múltiples lugares
+              let optionText = '';
+
+              // Método 1: Buscar en título o aria-label
+              optionText = optionEl.getAttribute('title') || optionEl.getAttribute('aria-label') || '';
+
+              // Método 2: Si no hay, buscar en elementos internos
+              if (!optionText) {
+                const textElements = optionEl.querySelectorAll('span, div');
+                textElements.forEach(el => {
+                  const text = el.textContent?.trim() || '';
+                  if (text.length > optionText.length && !text.includes('Color') && !text.includes('Modelo')) {
+                    optionText = text;
+                  }
+                });
+              }
+
+              // Obtener imagen si existe
+              const img = optionEl.querySelector('img');
+              const imageUrl = img ? img.getAttribute('src') : '';
+
+              // Si no hay texto pero hay imagen (caso común con colores)
+              if (!optionText && imageUrl) {
+                // Intentar extraer del alt de la imagen
+                const imgAlt = img.getAttribute('alt') || '';
+                if (imgAlt) {
+                  optionText = imgAlt;
+                }
+
+                // Si sigue sin texto, intentar extraer del currentValue del título
+                if (!optionText && currentValue) {
+                  // El título puede ser "Color: MagSafe Orange" - extraer "MagSafe Orange"
+                  // Si hay múltiples opciones, usar índice: "MagSafe Orange 1", "MagSafe Orange 2"
+                  if (optionElements.length > 1) {
+                    optionText = `${currentValue} ${index + 1}`;
+                  } else {
+                    optionText = currentValue;
+                  }
+                }
+
+                // Último recurso: nombre genérico
+                if (!optionText) {
+                  optionText = `Opción ${index + 1}`;
+                }
+              }
+
+              // Limpiar y normalizar el texto de la opción
+              optionText = optionText
+                .replace(/Modelo móvil\s*/gi, '')
+                .replace(/iPhone\s*17\s*aire/gi, 'iPhone 17 Air')
+                .replace(/iPhone\s*17\s*Pro\s*máx\./gi, 'iPhone 17 Pro Max')
+                .replace(/iPhone\s*16\s*aire/gi, 'iPhone 16 Air')
+                .replace(/iPhone\s*16\s*Pro\s*máx\./gi, 'iPhone 16 Pro Max')
+                .replace(/iPhone\s*15\s*Pro\s*máx\./gi, 'iPhone 15 Pro Max')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+              if (optionText && optionText.length > 0) {
+                // Construir nombre completo
+                const fullName = `${propertyName}: ${optionText}`;
+
+                data.variants.push({
+                  name: fullName,
+                  imageUrl: imageUrl ? (imageUrl.startsWith('//') ? `https:${imageUrl}` : imageUrl) : '',
+                  property: propertyName,
+                  value: optionText,
+                  skuId: null
+                });
+              }
+            });
+          });
+
+          data.debug.variantsFrom = 'DOM';
+          data.debug.variantContainers = skuContainers.length;
+        }
+
         // Fallback: título de página
         if (!data.name) {
           data.name = document.title.replace(' - AliExpress', '').trim();
