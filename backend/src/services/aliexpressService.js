@@ -261,9 +261,23 @@ class AliExpressService {
 
     } catch (error) {
       console.error('❌ Error obteniendo producto de AliExpress:', error.message);
+
+      // Mensajes de error más específicos
+      let errorMessage = error.message;
+
+      if (error.message.includes('Maximum number of redirects')) {
+        errorMessage = 'La URL causó demasiados redirects. Intenta copiar la URL directamente desde el navegador después de que la página cargue completamente.';
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'La conexión con AliExpress tardó demasiado. Intenta de nuevo.';
+      } else if (error.message.includes('Network Error') || error.message.includes('ENOTFOUND')) {
+        errorMessage = 'No se pudo conectar con AliExpress. Verifica tu conexión a internet.';
+      } else if (error.response) {
+        errorMessage = `AliExpress respondió con error ${error.response.status}. Es posible que la URL sea inválida o el producto ya no exista.`;
+      }
+
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
         product: null
       };
     }
