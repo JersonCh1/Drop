@@ -15,7 +15,7 @@ const cheerio = require('cheerio');
 class AliExpressService {
   constructor() {
     this.isConfigured = true;
-    console.log('✅ AliExpress Service inicializado');
+    console.log('✅ AliExpress Service inicializado (v2.0 - Redirect fix)');
   }
 
   /**
