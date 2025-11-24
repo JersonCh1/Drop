@@ -599,25 +599,30 @@ class AliExpressPuppeteerService {
         // ESTRATEGIA 6: Extraer imágenes del DOM si solo hay 1
         if (data.images.length <= 1) {
           // Buscar imágenes en la galería del producto
-          const imageElements = document.querySelectorAll('img[class*="mainImage"], img[class*="magnifier"], img[class*="slider"], ul[class*="imageList"] img, div[class*="image-view"] img');
+          const imageElements = document.querySelectorAll('div[class*="image"] img, img[class*="magnifier"], img[class*="slider"]');
 
           const foundImages = new Set();
           imageElements.forEach(img => {
             let src = img.getAttribute('src') || img.getAttribute('data-src') || '';
 
             // Limpiar parámetros y obtener versión de alta calidad
-            if (src && (src.includes('alicdn.com') || src.includes('ae01.alicdn'))) {
-              // Remover parámetros de tamaño pequeño
-              src = src.split('_')[0] + '.jpg';
+            if (src && (src.includes('aliexpress-media') || src.includes('alicdn.com') || src.includes('ae01.alicdn'))) {
+              // Remover tamaños de URL (ej: /48x48.jpg → .jpg)
+              src = src.replace(/\/\d+x\d+\./, '.');
+              src = src.replace(/_\d+x\d+\./, '.');
+
+              // Obtener base URL sin parámetros
+              const baseUrl = src.split('.jpg')[0] + '.jpg';
 
               // Asegurar https
-              if (src.startsWith('//')) {
-                src = `https:${src}`;
+              let cleanUrl = baseUrl;
+              if (cleanUrl.startsWith('//')) {
+                cleanUrl = `https:${cleanUrl}`;
               }
 
-              // Evitar miniaturas muy pequeñas
-              if (!src.includes('_50x50') && !src.includes('_100x100')) {
-                foundImages.add(src);
+              // Evitar miniaturas y duplicados
+              if (!cleanUrl.includes('_50x50') && !cleanUrl.includes('_100x100') && !cleanUrl.includes('/50x50') && cleanUrl.length > 30) {
+                foundImages.add(cleanUrl);
               }
             }
           });
@@ -626,6 +631,7 @@ class AliExpressPuppeteerService {
             // Si encontramos imágenes nuevas, reemplazar
             data.images = Array.from(foundImages).slice(0, 8);
             data.debug.imagesFrom = 'DOM Gallery';
+            data.debug.imagesFound = foundImages.size;
           }
         }
 
