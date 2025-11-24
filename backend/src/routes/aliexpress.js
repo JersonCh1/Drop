@@ -159,10 +159,14 @@ router.post('/import', verifyAdmin, async (req, res) => {
     const salePrice = finalSupplierPrice * (1 + profitMargin / 100);
 
     // 3. Crear slug (más corto para evitar problemas con SKUs)
-    const slug = productData.name.toLowerCase()
+    let baseSlug = productData.name.toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
-      .substring(0, 50); // Reducido de 100 a 50 para evitar SKUs muy largos
+      .substring(0, 40); // Reducido a 40 para dejar espacio al timestamp
+
+    // Agregar timestamp para garantizar unicidad
+    const timestamp = Date.now().toString().slice(-6);
+    const slug = `${baseSlug}-${timestamp}`;
 
     console.log(`📝 Slug generado: ${slug}`);
 
@@ -183,8 +187,8 @@ router.post('/import', verifyAdmin, async (req, res) => {
     console.log(`   - Imágenes: ${productData.images.length}`);
     console.log(`   - Variantes: ${productData.variants.length}`);
 
-    // Generar timestamp único para SKUs
-    const timestamp = Date.now().toString().slice(-6); // Últimos 6 dígitos
+    // Generar timestamp único para SKUs (diferente al del slug)
+    const skuTimestamp = (Date.now() + 1).toString().slice(-6); // Últimos 6 dígitos
 
     const product = await prisma.product.create({
       data: {
@@ -224,7 +228,7 @@ router.post('/import', verifyAdmin, async (req, res) => {
                 const variantData = {
                   name: variant.name,
                   price: parseFloat(salePrice.toFixed(2)),
-                  sku: `${slug}-${timestamp}-${index + 1}`,
+                  sku: `${slug}-${skuTimestamp}-${index + 1}`,
                   stockQuantity: 100,
                   supplierProductId: variant.skuId?.toString(),
                   isActive: true,
@@ -248,7 +252,7 @@ router.post('/import', verifyAdmin, async (req, res) => {
             : [{
                 name: 'Default',
                 price: parseFloat(salePrice.toFixed(2)),
-                sku: `${slug}-${timestamp}-default`,
+                sku: `${slug}-${skuTimestamp}-default`,
                 stockQuantity: 100,
                 isActive: true
               }]
