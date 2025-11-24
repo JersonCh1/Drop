@@ -158,11 +158,13 @@ router.post('/import', verifyAdmin, async (req, res) => {
     const finalSupplierPrice = parseFloat(supplierPrice);
     const salePrice = finalSupplierPrice * (1 + profitMargin / 100);
 
-    // 3. Crear slug
+    // 3. Crear slug (más corto para evitar problemas con SKUs)
     const slug = productData.name.toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
-      .substring(0, 100);
+      .substring(0, 50); // Reducido de 100 a 50 para evitar SKUs muy largos
+
+    console.log(`📝 Slug generado: ${slug}`);
 
     // 4. Obtener supplier de AliExpress
     let supplier = await prisma.supplier.findUnique({
@@ -177,6 +179,13 @@ router.post('/import', verifyAdmin, async (req, res) => {
     }
 
     // 5. Crear producto en la BD
+    console.log(`💾 Creando producto en BD...`);
+    console.log(`   - Imágenes: ${productData.images.length}`);
+    console.log(`   - Variantes: ${productData.variants.length}`);
+
+    // Generar timestamp único para SKUs
+    const timestamp = Date.now().toString().slice(-6); // Últimos 6 dígitos
+
     const product = await prisma.product.create({
       data: {
         name: productData.name,
@@ -213,7 +222,7 @@ router.post('/import', verifyAdmin, async (req, res) => {
             ? productData.variants.slice(0, 10).map((variant, index) => ({
                 name: variant.name,
                 price: parseFloat(salePrice.toFixed(2)),
-                sku: `${slug}-${index + 1}`,
+                sku: `${slug}-${timestamp}-${index + 1}`, // Agregado timestamp para evitar colisiones
                 stockQuantity: 100,
                 supplierProductId: variant.skuId?.toString(),
                 isActive: true
@@ -221,7 +230,7 @@ router.post('/import', verifyAdmin, async (req, res) => {
             : [{
                 name: 'Default',
                 price: parseFloat(salePrice.toFixed(2)),
-                sku: `${slug}-default`,
+                sku: `${slug}-${timestamp}-default`,
                 stockQuantity: 100,
                 isActive: true
               }]
