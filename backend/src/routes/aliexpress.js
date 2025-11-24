@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const aliexpressService = require('../services/aliexpressService');
+const aliexpressPuppeteerService = require('../services/aliexpressPuppeteerService');
 const { PrismaClient } = require('@prisma/client');
 const jwt = require('jsonwebtoken');
 
@@ -43,10 +44,11 @@ function verifyAdmin(req, res, next) {
 
 /**
  * POST /api/aliexpress/extract - Extraer datos de producto desde URL
+ * Usa Puppeteer (navegador real) para evitar bloqueos de AliExpress
  */
 router.post('/extract', verifyAdmin, async (req, res) => {
   try {
-    const { url } = req.body;
+    const { url, usePuppeteer = true } = req.body;
 
     if (!url) {
       return res.status(400).json({
@@ -56,8 +58,12 @@ router.post('/extract', verifyAdmin, async (req, res) => {
     }
 
     console.log(`🔍 Extrayendo producto de AliExpress: ${url}`);
+    console.log(`🤖 Método: ${usePuppeteer ? 'Puppeteer (navegador real)' : 'Axios (HTTP simple)'}`);
 
-    const result = await aliexpressService.getProductData(url);
+    // Usar Puppeteer por defecto (más confiable)
+    const result = usePuppeteer
+      ? await aliexpressPuppeteerService.getProductData(url)
+      : await aliexpressService.getProductData(url);
 
     if (!result.success) {
       return res.status(400).json({
@@ -111,8 +117,8 @@ router.post('/import', verifyAdmin, async (req, res) => {
 
     console.log(`📦 Importando producto de AliExpress...`);
 
-    // 1. Extraer datos del producto
-    const extractResult = await aliexpressService.getProductData(url);
+    // 1. Extraer datos del producto usando Puppeteer (más confiable)
+    const extractResult = await aliexpressPuppeteerService.getProductData(url);
 
     if (!extractResult.success) {
       return res.status(400).json({

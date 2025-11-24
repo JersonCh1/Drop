@@ -81,7 +81,9 @@
       "WebFetch(domain:www.aliexpress.com)",
       "WebFetch(domain:findniche.com)",
       "WebFetch(domain:www.sourcinbox.com)",
-      "Bash(timeout 8 bash:*)"
+      "Bash(timeout 8 bash:*)",
+      "WebFetch(domain:casepro.es)",
+      "Bash(timeout 90 node:*)"
     ],
     "deny": [],
     "ask": []
