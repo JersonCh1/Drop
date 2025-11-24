@@ -44,6 +44,9 @@ app.use(cors({
       'http://localhost:3000',
       'http://localhost:3001',
       'http://localhost:3002',
+      'https://www.casepro.es',
+      'https://casepro.es',
+      'https://flashfunded-frontend.vercel.app',
       process.env.FRONTEND_URL
     ].filter(Boolean);
 
