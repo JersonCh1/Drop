@@ -15,6 +15,116 @@ class AliExpressPuppeteerService {
   }
 
   /**
+   * Mejorar el título del producto para que sea más comercial
+   */
+  improveProductTitle(rawTitle) {
+    let title = rawTitle;
+
+    // Extraer modelo de iPhone PRIMERO
+    const iphoneMatch = title.match(/(iPhone\s*\d+\s*(Pro\s*Max|Pro|Plus|Air)?)/i);
+    let iphoneModel = '';
+    if (iphoneMatch) {
+      iphoneModel = iphoneMatch[0]
+        .replace(/iPhone(\d+)/, 'iPhone $1')
+        .replace(/ProMax/i, 'Pro Max')
+        .replace(/\s+/g, ' ')
+        .trim();
+      title = title.replace(iphoneMatch[0], '').trim();
+    }
+
+    // Detectar material (Cuero, Silicona, etc.)
+    let material = '';
+    if (title.match(/cuero|leather|pu/i)) {
+      material = 'Cuero';
+      title = title.replace(/cuero|leather|pu|piel/gi, '').trim();
+    } else if (title.match(/silicone?|silicon/i)) {
+      material = 'Silicona';
+      title = title.replace(/silicone?|silicon/gi, '').trim();
+    } else if (title.match(/tpu/i)) {
+      material = 'TPU';
+      title = title.replace(/tpu/gi, '').trim();
+    }
+
+    // Detectar características especiales
+    const features = [];
+    if (title.match(/magsafe/i)) {
+      features.push('MagSafe');
+      title = title.replace(/magsafe/gi, '').trim();
+    }
+    if (title.match(/ai|smart\s*control|camera\s*button|control\s*button/i)) {
+      features.push('Botón AI Control');
+      title = title.replace(/ai|smart\s*control|camera\s*button|control\s*button|con cubierta de botón de cámara de control inteligente/gi, '').trim();
+    }
+    if (title.match(/360|protección completa/i)) {
+      features.push('360°');
+      title = title.replace(/360|protección completa/gi, '').trim();
+    }
+    if (title.match(/transparent|transparente|clear/i)) {
+      features.push('Transparente');
+      title = title.replace(/transparent|transparente|clear/gi, '').trim();
+    }
+
+    // Remover palabras basura comunes
+    const garbageWords = [
+      'funda trasera',
+      'funda',
+      'case',
+      'back case',
+      'bumper',
+      'simple',
+      'real',
+      'para',
+      'for',
+      'with',
+      'con',
+      'de',
+      'the',
+      'business',
+      'ari',
+      '17ari',
+      '16ari',
+      '15ari',
+      'cover',
+      'cubierta',
+      'protección',
+      'protection'
+    ];
+
+    garbageWords.forEach(word => {
+      title = title.replace(new RegExp(`\\b${word}\\b`, 'gi'), '');
+    });
+
+    // Limpiar espacios y caracteres extraños
+    title = title
+      .replace(/\s+/g, ' ')
+      .replace(/[^a-zA-Z0-9\sáéíóúñÁÉÍÓÚÑ]/g, '')
+      .trim();
+
+    // Construir título final
+    let parts = ['Funda'];
+
+    if (features.length > 0) {
+      parts.push(features.join(' + '));
+    }
+
+    if (material) {
+      parts.push(material);
+    }
+
+    // Si quedó algo útil del título, agregarlo
+    if (title.length > 3 && title.length < 30) {
+      parts.push(title.charAt(0).toUpperCase() + title.slice(1).toLowerCase());
+    }
+
+    if (iphoneModel) {
+      parts.push('-');
+      parts.push(iphoneModel);
+    }
+
+    return parts.join(' ').replace(/\s+-\s+/g, ' - ').trim();
+  }
+
+  /**
    * Inicializar navegador (se reutiliza entre requests)
    */
   async initBrowser() {
@@ -318,7 +428,13 @@ class AliExpressPuppeteerService {
         throw new Error('No se pudo extraer el nombre del producto');
       }
 
-      console.log(`✅ Datos extraídos: ${productData.name}`);
+      // Mejorar el título para que sea más comercial
+      const originalName = productData.name;
+      productData.name = this.improveProductTitle(productData.name);
+
+      console.log(`✅ Datos extraídos:`);
+      console.log(`   📦 Nombre original: ${originalName}`);
+      console.log(`   ✨ Nombre mejorado: ${productData.name}`);
       console.log(`   💰 Precio: ${productData.price} ${productData.currency}`);
       console.log(`   🖼️ Imágenes: ${productData.images.length}`);
       console.log(`   🎨 Variantes: ${productData.variants.length}`);
