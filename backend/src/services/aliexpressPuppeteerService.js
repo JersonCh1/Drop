@@ -477,8 +477,15 @@ class AliExpressPuppeteerService {
 
         // ESTRATEGIA 5: Extraer variantes del DOM (nuevo AliExpress 2025)
         if (data.variants.length === 0) {
+          // En producción, esperar más tiempo para que carguen las variantes
+          if (process.env.RAILWAY_ENVIRONMENT || process.env.NODE_ENV === 'production') {
+            console.log('⏳ Esperando variantes adicionales en producción (3 segundos)...');
+            await new Promise(resolve => setTimeout(resolve, 3000));
+          }
+
           // Buscar contenedores de SKU/variantes
           const skuContainers = document.querySelectorAll('[class*="sku-item--property"]');
+          console.log(`🔍 Contenedores SKU encontrados: ${skuContainers.length}`);
 
           skuContainers.forEach((container, containerIndex) => {
             // Obtener el título de la variante (Color, Model, Size, etc.)
