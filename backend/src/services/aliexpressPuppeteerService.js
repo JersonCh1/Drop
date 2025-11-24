@@ -244,11 +244,11 @@ class AliExpressPuppeteerService {
         console.log('⚠️ Timeout navegando, pero continuando...');
       }
 
-      // Esperar a que cargue el contenido principal
-      console.log('⏳ Esperando carga de datos dinámicos (10 segundos)...');
-      await new Promise(resolve => setTimeout(resolve, 10000));
+      // Esperar a que cargue el contenido principal (reducido a 5 segundos)
+      console.log('⏳ Esperando carga de datos dinámicos (5 segundos)...');
+      await new Promise(resolve => setTimeout(resolve, 5000));
 
-      // Intentar esperar específicamente por runParams.data
+      // Intentar esperar específicamente por runParams.data (reducido a 5 segundos)
       console.log('⏳ Esperando window.runParams.data...');
       const hasData = await page.evaluate(() => {
         return new Promise((resolve) => {
@@ -259,7 +259,7 @@ class AliExpressPuppeteerService {
               clearInterval(checkInterval);
               resolve(true);
             }
-            if (attempts > 20) { // 20 intentos = 10 segundos
+            if (attempts > 10) { // 10 intentos = 5 segundos
               clearInterval(checkInterval);
               resolve(false);
             }

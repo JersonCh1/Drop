@@ -123,7 +123,25 @@ router.post('/import', verifyAdmin, async (req, res) => {
 
     // 1. Extraer datos del producto usando Puppeteer (más confiable)
     console.log(`🔄 Iniciando extracción con Puppeteer...`);
-    const extractResult = await aliexpressPuppeteerService.getProductData(url);
+
+    let extractResult;
+    try {
+      // Timeout de 25 segundos para evitar que Railway corte a los 30
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout de 25 segundos excedido')), 25000)
+      );
+
+      extractResult = await Promise.race([
+        aliexpressPuppeteerService.getProductData(url),
+        timeoutPromise
+      ]);
+    } catch (timeoutError) {
+      console.error(`⏰ Timeout:`, timeoutError.message);
+      return res.status(408).json({
+        success: false,
+        message: 'La extracción tardó demasiado. AliExpress puede estar lento. Intenta de nuevo.'
+      });
+    }
 
     if (!extractResult.success) {
       console.error(`❌ Error en extracción:`, extractResult.error);
