@@ -1,0 +1,11 @@
+# nixpacks.toml - Railway build configuration
+# https://nixpacks.com/docs/configuration/file
+
+[phases.setup]
+nixPkgs = ["...", "chromium"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[start]
+cmd = "npx prisma migrate deploy && npm start"
