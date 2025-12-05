@@ -429,10 +429,11 @@ const NotFoundPage = () => (
 const FeaturedProducts = () => {
   const [products, setProducts] = React.useState<ProductType[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const { formatPrice } = require('./context/CurrencyContext').useCurrency();
 
   const loadFeaturedProducts = React.useCallback(async () => {
     try {
-      const data = await productService.getFeaturedProducts(3);
+      const data = await productService.getFeaturedProducts(6); // Mostrar 6 productos
       setProducts(data);
     } catch (error) {
       console.error('Error loading featured products:', error);
@@ -476,8 +477,14 @@ const FeaturedProducts = () => {
   }
 
   return (
-    <section className="py-20 bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-20 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden">
+      {/* Background decoration matching Hero */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600/10 to-cyan-600/10 backdrop-blur-md rounded-full border border-blue-600/20 mb-4">
@@ -550,7 +557,7 @@ const FeaturedProducts = () => {
                     <div>
                       <p className="text-sm text-gray-500 mb-1">Desde</p>
                       <p className="text-2xl font-extrabold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                        ${lowestPrice.toFixed(2)}
+                        {formatPrice(lowestPrice)}
                       </p>
                     </div>
                     <Link
