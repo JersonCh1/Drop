@@ -539,22 +539,22 @@ const FeaturedProducts = () => {
                 </Link>
 
                 {/* Product Info */}
-                <div className="p-6">
+                <div className="p-6 bg-white/95 dark:bg-gray-800/95">
                   <Link to={`/products/${product.slug}`}>
-                    <h3 className="font-bold text-xl mb-2 text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+                    <h3 className="font-bold text-xl mb-3 text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2 min-h-[56px]">
                       {product.name}
                     </h3>
                   </Link>
 
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
+                  <p className="text-gray-700 dark:text-gray-300 text-sm mb-4 line-clamp-3 leading-relaxed min-h-[60px]">
                     {product.description || 'Carcasa de alta calidad con protección premium'}
                   </p>
 
                   {/* Price and CTA */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
                     <div>
-                      <p className="text-sm text-gray-500 mb-1">Desde</p>
-                      <p className="text-2xl font-extrabold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Desde</p>
+                      <p className="text-2xl font-extrabold text-blue-600 dark:text-blue-400">
                         {formatPrice(lowestPrice)}
                       </p>
                     </div>

@@ -217,7 +217,7 @@ const Header: React.FC<HeaderProps> = () => {
             ) : (
               <button
                 onClick={() => navigate('/login')}
-                className="hidden sm:flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 font-medium"
+                className="hidden sm:flex items-center space-x-2 px-5 py-2.5 text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl transition-all duration-200 font-bold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:scale-105"
                 title={t('header.loginTitle')}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

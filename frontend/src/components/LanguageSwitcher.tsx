@@ -24,15 +24,15 @@ const LanguageSwitcher: React.FC = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+        className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         aria-label="Change language"
       >
         <span className="text-2xl">{currentLocale?.flag}</span>
-        <span className="text-sm font-medium text-gray-700 hidden sm:inline">
+        <span className="text-sm font-bold text-gray-900 dark:text-white hidden sm:inline">
           {currentLocale?.name}
         </span>
         <svg
-          className={`w-4 h-4 text-gray-600 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-gray-700 dark:text-gray-300 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -42,7 +42,7 @@ const LanguageSwitcher: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
           {availableLocales.map((loc) => (
             <button
               key={loc.code}
@@ -50,8 +50,8 @@ const LanguageSwitcher: React.FC = () => {
                 changeLocale(loc.code);
                 setIsOpen(false);
               }}
-              className={`w-full flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 transition-colors ${
-                locale === loc.code ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
+              className={`w-full flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                locale === loc.code ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'
               }`}
             >
               <span className="text-2xl">{loc.flag}</span>
