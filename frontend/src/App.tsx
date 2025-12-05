@@ -200,11 +200,6 @@ const AppContent: React.FC<{
                   <Route path="/returns" element={<ReturnsPage />} />
                   <Route path="/cookies" element={<CookiesPage />} />
 
-                  {/* Redirects para rutas antiguas/incorrectas */}
-                  <Route path="/en/collections/all" element={<Navigate to="/products" replace />} />
-                  <Route path="/en/*" element={<Navigate to="/" replace />} />
-                  <Route path="/collections/*" element={<Navigate to="/products" replace />} />
-
                   {/* 404 */}
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
