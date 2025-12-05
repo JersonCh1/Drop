@@ -472,35 +472,38 @@ const FeaturedProducts = () => {
   }
 
   return (
-    <section className="py-20 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden">
-      {/* Background decoration matching Hero */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl"></div>
+    <section className="py-24 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/40 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden">
+      {/* Background decoration - Más sutil y elegante */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-400/30 to-cyan-400/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-br from-purple-400/25 to-pink-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-gradient-to-br from-cyan-400/15 to-blue-400/15 rounded-full blur-2xl"></div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600/10 to-cyan-600/10 backdrop-blur-md rounded-full border border-blue-600/20 mb-4">
-            <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+        {/* Section Header - Mejorado con más contraste */}
+        <div className="text-center mb-20">
+          {/* Badge con fondo más sólido */}
+          <div className="inline-flex items-center space-x-2 px-5 py-2.5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-full border-2 border-blue-500/30 shadow-lg shadow-blue-500/20 mb-6">
+            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
-            <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-              Lo Más Popular
+            <span className="text-sm font-bold bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-600 bg-clip-text text-transparent tracking-wide">
+              LO MÁS POPULAR
             </span>
           </div>
 
-          <h2 className="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
-            Productos <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">Destacados</span>
+          {/* Título con sombra sutil para mejor legibilidad */}
+          <h2 className="text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white mb-6 tracking-tight drop-shadow-sm">
+            Productos <span className="bg-gradient-to-r from-blue-600 via-cyan-500 to-purple-600 bg-clip-text text-transparent">Destacados</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Descubre nuestras carcasas más populares con el mejor diseño y protección
+          <p className="text-xl lg:text-2xl text-gray-700 dark:text-gray-200 max-w-3xl mx-auto leading-relaxed font-light">
+            Descubre nuestras carcasas más populares con el mejor diseño y protección profesional
           </p>
         </div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        {/* Products Grid - Diseño más elegante */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mb-16">
           {products.map((product, index) => {
             const mainImage = productService.getMainImage(product);
             const lowestPrice = productService.getLowestPrice(product);
@@ -508,11 +511,11 @@ const FeaturedProducts = () => {
             return (
               <div
                 key={product.id}
-                className="group relative bg-white rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100"
+                className="group relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl overflow-hidden hover:shadow-2xl shadow-lg transition-all duration-500 hover:-translate-y-3 border border-gray-200/50 dark:border-gray-700/50 hover:border-blue-300/50"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {/* Product Image */}
-                <Link to={`/products/${product.slug}`} className="block relative overflow-hidden aspect-square bg-gradient-to-br from-gray-100 to-gray-200">
+                <Link to={`/products/${product.slug}`} className="block relative overflow-hidden aspect-square bg-gradient-to-br from-slate-100 to-blue-50/50 dark:from-gray-700 dark:to-gray-600">
                   <img
                     src={mainImage}
                     alt={product.name}
@@ -574,16 +577,20 @@ const FeaturedProducts = () => {
           })}
         </div>
 
-        {/* CTA Button */}
+        {/* CTA Button - Más elegante y sutil */}
         <div className="text-center">
           <Link
             to="/products"
-            className="group inline-flex items-center space-x-3 px-10 py-5 bg-gradient-to-r from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-700 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+            className="group relative inline-flex items-center space-x-3 px-12 py-5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl hover:bg-white dark:hover:bg-gray-800 text-gray-900 dark:text-white font-bold rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-105 border-2 border-gray-200/50 dark:border-gray-700/50 hover:border-blue-400/50 dark:hover:border-blue-500/50 overflow-hidden"
           >
-            <span className="text-lg">Ver Todo el Catálogo</span>
-            <svg className="w-6 h-6 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span className="relative z-10 text-lg bg-gradient-to-r from-gray-900 via-blue-600 to-cyan-600 dark:from-white dark:via-blue-400 dark:to-cyan-400 bg-clip-text text-transparent">
+              Ver Todo el Catálogo
+            </span>
+            <svg className="relative z-10 w-6 h-6 text-blue-600 dark:text-blue-400 group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
+            {/* Shine effect sutil */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
           </Link>
         </div>
       </div>
