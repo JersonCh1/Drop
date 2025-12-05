@@ -7,8 +7,8 @@ const CurrencySelector: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const currencies = [
-    { code: 'USD' as const, name: 'US Dollar', flag: '🇺🇸', symbol: '$' },
-    { code: 'PEN' as const, name: 'Sol Peruano', flag: '🇵🇪', symbol: 'S/' }
+    { code: 'PEN' as const, name: 'Sol Peruano', flag: '🇵🇪', symbol: 'S/' },
+    { code: 'USD' as const, name: 'US Dollar', flag: '🇺🇸', symbol: '$' }
   ];
 
   const selectedCurrency = currencies.find(c => c.code === currency);

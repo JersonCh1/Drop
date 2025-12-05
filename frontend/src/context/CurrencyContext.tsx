@@ -27,7 +27,7 @@ const CURRENCY_SYMBOLS: Record<Currency, string> = {
 export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currency, setCurrencyState] = useState<Currency>(() => {
     const saved = localStorage.getItem('currency') as Currency | null;
-    return saved || 'USD';
+    return saved || 'PEN'; // 🇵🇪 Por defecto en Soles (Moneda peruana)
   });
 
   const [exchangeRate, setExchangeRate] = useState(DEFAULT_EXCHANGE_RATES[currency]);
@@ -46,13 +46,14 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
         const data = await response.json();
 
         if (data.rates && data.rates.PEN) {
-          setExchangeRate(data.rates.PEN);
-          console.log(`💱 Tipo de cambio actualizado: 1 USD = ${data.rates.PEN.toFixed(2)} PEN`);
+          const rate = data.rates.PEN;
+          setExchangeRate(rate);
+          console.log(`💱 Tipo de cambio actualizado: 1 USD = ${rate.toFixed(2)} PEN`);
         } else {
           setExchangeRate(DEFAULT_EXCHANGE_RATES.PEN);
         }
       } catch (error) {
-        console.error('Error fetching exchange rate, using fallback:', error);
+        console.error('Error al obtener tipo de cambio, usando tasa de respaldo:', error);
         setExchangeRate(DEFAULT_EXCHANGE_RATES.PEN);
       }
     };
