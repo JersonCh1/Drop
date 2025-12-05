@@ -289,78 +289,91 @@ const ProductDetailPage: React.FC = () => {
                 const models = Array.from(new Set(product.variants.filter(v => v.isActive && v.material).map(v => v.material as string)));
                 const colors = Array.from(new Set(product.variants.filter(v => v.isActive && v.color).map(v => v.color as string)));
 
+                // Si no hay modelos ni colores estructurados, no mostrar selectores
+                if (models.length === 0 && colors.length === 0) {
+                  return null;
+                }
+
                 return (
                   <div className="mb-6">
                     {/* Selector de Modelo */}
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                      Modelo de iPhone:
-                    </h3>
-                    <select
-                      value={selectedVariant?.material || ''}
-                      onChange={(e) => {
-                        const model = e.target.value;
-                        const color = selectedVariant?.color || colors[0];
-                        const variant = product.variants.find(v => v.material === model && v.color === color && v.isActive);
-                        if (variant) {
-                          setSelectedVariant(variant);
-                          if (variant.color && colorToImageIndex[variant.color] !== undefined) {
-                            const imageIndex = colorToImageIndex[variant.color];
-                            if (imageIndex < product.images.length) {
-                              setSelectedImageIndex(imageIndex);
-                            }
-                          }
-                        }
-                      }}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-200 text-base"
-                    >
-                      {models.map(model => (
-                        <option key={model} value={model}>{model}</option>
-                      ))}
-                    </select>
-
-                    {/* Selector de Color */}
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3 mt-6">
-                      Color:
-                    </h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      {colors.map(color => {
-                        const model = selectedVariant?.material || models[0];
-                        const variant = product.variants.find(v => v.material === model && v.color === color && v.isActive);
-                        const isAvailable = variant && variant.stockQuantity > 0;
-
-                        return (
-                          <button
-                            key={color}
-                            onClick={() => {
-                              if (variant) {
-                                setSelectedVariant(variant);
-                                // Cambiar imagen según el color seleccionado
-                                if (color && colorToImageIndex[color] !== undefined) {
-                                  const imageIndex = colorToImageIndex[color];
-                                  console.log('Color seleccionado:', color, 'Índice de imagen:', imageIndex, 'Total imágenes:', product.images.length);
-                                  if (imageIndex < product.images.length) {
-                                    setSelectedImageIndex(imageIndex);
-                                    console.log('Imagen cambiada a índice:', imageIndex);
-                                  }
+                    {models.length > 0 && (
+                      <>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                          Modelo de iPhone:
+                        </h3>
+                        <select
+                          value={selectedVariant?.material || ''}
+                          onChange={(e) => {
+                            const model = e.target.value;
+                            const color = selectedVariant?.color || colors[0];
+                            const variant = product.variants.find(v => v.material === model && v.color === color && v.isActive);
+                            if (variant) {
+                              setSelectedVariant(variant);
+                              if (variant.color && colorToImageIndex[variant.color] !== undefined) {
+                                const imageIndex = colorToImageIndex[variant.color];
+                                if (imageIndex < product.images.length) {
+                                  setSelectedImageIndex(imageIndex);
                                 }
                               }
-                            }}
-                            disabled={!isAvailable}
-                            className={`p-4 border-2 rounded-lg text-left transition-all ${
-                              selectedVariant?.color === color
-                                ? 'border-cyan-600 bg-cyan-50 ring-2 ring-cyan-200'
-                                : 'border-gray-200 hover:border-gray-300'
-                            } ${!isAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            <div className="font-medium text-gray-900">{color}</div>
-                            <div className="text-sm text-gray-600">{formatPrice(parseFloat(variant?.price || '0'))}</div>
-                            {!isAvailable && (
-                              <div className="text-xs text-red-600 mt-1">Agotado</div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
+                            }
+                          }}
+                          className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-200 text-base"
+                        >
+                          {models.map(model => (
+                            <option key={model} value={model}>{model}</option>
+                          ))}
+                        </select>
+                      </>
+                    )}
+
+                    {/* Selector de Color */}
+                    {colors.length > 0 && (
+                      <>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 mt-6">
+                          Color:
+                        </h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          {colors.map(color => {
+                            const model = selectedVariant?.material || models[0];
+                            const variant = product.variants.find(v => v.material === model && v.color === color && v.isActive);
+                            const isAvailable = variant && variant.stockQuantity > 0;
+
+                            return (
+                              <button
+                                key={color}
+                                onClick={() => {
+                                  if (variant) {
+                                    setSelectedVariant(variant);
+                                    // Cambiar imagen según el color seleccionado
+                                    if (color && colorToImageIndex[color] !== undefined) {
+                                      const imageIndex = colorToImageIndex[color];
+                                      console.log('Color seleccionado:', color, 'Índice de imagen:', imageIndex, 'Total imágenes:', product.images.length);
+                                      if (imageIndex < product.images.length) {
+                                        setSelectedImageIndex(imageIndex);
+                                        console.log('Imagen cambiada a índice:', imageIndex);
+                                      }
+                                    }
+                                  }
+                                }}
+                                disabled={!isAvailable}
+                                className={`p-4 border-2 rounded-lg text-left transition-all ${
+                                  selectedVariant?.color === color
+                                    ? 'border-cyan-600 bg-cyan-50 dark:bg-cyan-900/30 ring-2 ring-cyan-200 dark:ring-cyan-700'
+                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                                } ${!isAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              >
+                                <div className="font-medium text-gray-900 dark:text-white">{color}</div>
+                                <div className="text-sm text-gray-600 dark:text-gray-400">{formatPrice(parseFloat(variant?.price || '0'))}</div>
+                                {!isAvailable && (
+                                  <div className="text-xs text-red-600 mt-1">Agotado</div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
                   </div>
                 );
               })()}
