@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
 import { Elements } from '@stripe/react-stripe-js';
@@ -51,6 +51,7 @@ const TermsPage = React.lazy(() => import('./pages/TermsPage'));
 const ReturnsPage = React.lazy(() => import('./pages/ReturnsPage'));
 const CookiesPage = React.lazy(() => import('./pages/CookiesPage'));
 const WishlistPage = React.lazy(() => import('./pages/WishlistPage'));
+const DSersOrdersPage = React.lazy(() => import('./pages/admin/DSersOrdersPage'));
 const ComparePage = React.lazy(() => import('./pages/ComparePage'));
 const LoyaltyPage = React.lazy(() => import('./pages/LoyaltyPage'));
 const HealthCheckPage = React.lazy(() => import('./pages/HealthCheckPage'));
@@ -185,6 +186,7 @@ const AppContent: React.FC<{
 
                   {/* Ruta de administración (protegida) */}
                   <Route path="/admin" element={<AdminPage />} />
+                  <Route path="/admin/dsers" element={<DSersOrdersPage />} />
                   <Route path="/health" element={<HealthCheckPage />} />
 
                   {/* Páginas informativas */}
@@ -197,6 +199,11 @@ const AppContent: React.FC<{
                   <Route path="/terms" element={<TermsPage />} />
                   <Route path="/returns" element={<ReturnsPage />} />
                   <Route path="/cookies" element={<CookiesPage />} />
+
+                  {/* Redirects para rutas antiguas/incorrectas */}
+                  <Route path="/en/collections/all" element={<Navigate to="/products" replace />} />
+                  <Route path="/en/*" element={<Navigate to="/" replace />} />
+                  <Route path="/collections/*" element={<Navigate to="/products" replace />} />
 
                   {/* 404 */}
                   <Route path="*" element={<NotFoundPage />} />

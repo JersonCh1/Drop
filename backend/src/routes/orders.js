@@ -242,6 +242,16 @@ router.post('/', async (req, res) => {
 
     await client.end();
 
+    // 🚀 AUTOMATIZACIÓN DSERS: Procesar orden automáticamente
+    try {
+      const dsersService = require('../services/dsersOrderService');
+      await dsersService.handleNewOrder(orderId);
+      console.log(`✅ Orden ${orderResult.rows[0].order_number} enviada a DSers automáticamente`);
+    } catch (dsersError) {
+      console.error('⚠️  Error procesando orden con DSers (continuando):', dsersError.message);
+      // No fallar la orden si DSers falla, solo logear
+    }
+
     // Respuesta exitosa con URL de pago
     const response = {
       success: true,

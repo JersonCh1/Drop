@@ -12,9 +12,9 @@ const { calculateShippingCost, getFallbackShippingRates } = require('../services
 const SHIPPING_RATES = {
   LOCAL: {
     name: 'Local (Perú)',
-    baseRate: 5.00,
-    perKg: 2.00,
-    deliveryDays: '2-4 días'
+    baseRate: 0.00, // 🚚 ENVÍO GRATIS PARA PERÚ
+    perKg: 0.00,
+    deliveryDays: '15-30 días'
   },
   SOUTH_AMERICA: {
     name: 'Sudamérica',

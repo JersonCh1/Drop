@@ -86,7 +86,15 @@
       "Bash(timeout 90 node:*)",
       "Bash(timeout 120 node:*)",
       "Bash(timeout 25 node:*)",
-      "Bash(timeout 50 node:*)"
+      "Bash(timeout 50 node:*)",
+      "Bash(Get-Process -Name node -ErrorAction SilentlyContinue)",
+      "Bash(Where-Object { $_MainWindowTitle -match \"backend|3001\" })",
+      "Bash(Start-Sleep -Seconds 1)",
+      "Bash(timeout 30 node:*)",
+      "Bash(timeout 20 node:*)",
+      "Bash(del mejorar-descripciones-y-reviews.js verificar-reviews.js ver-producto-magsafe.js resumen-final.js limpiar-reviews.js)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:zwfHcUfTAZoQMZNbvuSDJiBFWYzesYkk@shinkansen.proxy.rlwy.net:47497/railway\" node -e:*)",
+      "Bash(del:*)"
     ],
     "deny": [],
     "ask": []

@@ -224,29 +224,59 @@ router.post('/import', verifyAdmin, async (req, res) => {
         variants: {
           create: productData.variants.length > 0
             ? (() => {
-                // Separar colores y modelos de las variantes
+                // Separar colores, modelos y otras propiedades de las variantes
                 const colors = [];
                 const models = [];
+                const otherProperties = new Map(); // Para propiedades como "Size", "Style", etc.
 
                 productData.variants.forEach(variant => {
                   if (!variant.name.includes(':')) return;
 
                   const [property, value] = variant.name.split(':').map(s => s.trim());
+                  const propertyLower = property.toLowerCase();
 
-                  if (property.toLowerCase().includes('color')) {
-                    colors.push(value);
-                  } else if (property.toLowerCase().includes('modelo') || property.toLowerCase().includes('model')) {
-                    models.push(value);
+                  if (propertyLower.includes('color') || propertyLower.includes('colour')) {
+                    if (!colors.includes(value)) {
+                      colors.push(value);
+                    }
+                  } else if (propertyLower.includes('modelo') || propertyLower.includes('model') ||
+                             propertyLower.includes('phone') || propertyLower.includes('teléfono') ||
+                             propertyLower.includes('compatible')) {
+                    // Limpiar texto del modelo
+                    const cleanModel = value
+                      .replace(/^Para\s+/i, '')
+                      .replace(/^For\s+/i, '')
+                      .trim();
+                    if (!models.includes(cleanModel)) {
+                      models.push(cleanModel);
+                    }
+                  } else {
+                    // Otras propiedades (Size, Style, etc.)
+                    if (!otherProperties.has(property)) {
+                      otherProperties.set(property, []);
+                    }
+                    if (!otherProperties.get(property).includes(value)) {
+                      otherProperties.get(property).push(value);
+                    }
                   }
                 });
+
+                console.log(`   📊 Propiedades encontradas:`);
+                console.log(`      - Colores: ${colors.length} (${colors.join(', ')})`);
+                console.log(`      - Modelos: ${models.length} (${models.join(', ')})`);
+                if (otherProperties.size > 0) {
+                  otherProperties.forEach((values, key) => {
+                    console.log(`      - ${key}: ${values.length} (${values.join(', ')})`);
+                  });
+                }
 
                 // Si tenemos ambos (colores y modelos), crear combinaciones
                 if (colors.length > 0 && models.length > 0) {
                   const combinations = [];
                   let skuIndex = 1;
 
-                  colors.forEach(color => {
-                    models.forEach(model => {
+                  models.forEach(model => {
+                    colors.forEach(color => {
                       combinations.push({
                         name: `${model} - ${color}`,
                         price: parseFloat(salePrice.toFixed(2)),
@@ -260,12 +290,46 @@ router.post('/import', verifyAdmin, async (req, res) => {
                     });
                   });
 
-                  console.log(`   ✅ Creadas ${combinations.length} combinaciones (${colors.length} colores × ${models.length} modelos)`);
+                  console.log(`   ✅ Creadas ${combinations.length} combinaciones (${models.length} modelos × ${colors.length} colores)`);
                   return combinations;
                 }
 
-                // Si solo hay una dimensión, crear variantes simples
-                const simpleVariants = productData.variants.slice(0, 10).map((variant, index) => {
+                // Si solo tenemos modelos, crear variante por modelo con nombre limpio
+                if (models.length > 0 && colors.length === 0) {
+                  const modelVariants = models.map((model, index) => ({
+                    name: model,
+                    price: parseFloat(salePrice.toFixed(2)),
+                    sku: `${slug}-${skuTimestamp}-${index + 1}`,
+                    stockQuantity: 100,
+                    supplierProductId: null,
+                    isActive: true,
+                    color: null,
+                    material: model
+                  }));
+
+                  console.log(`   ✅ Creadas ${modelVariants.length} variantes de modelo`);
+                  return modelVariants;
+                }
+
+                // Si solo tenemos colores, crear variante por color
+                if (colors.length > 0 && models.length === 0) {
+                  const colorVariants = colors.map((color, index) => ({
+                    name: color,
+                    price: parseFloat(salePrice.toFixed(2)),
+                    sku: `${slug}-${skuTimestamp}-${index + 1}`,
+                    stockQuantity: 100,
+                    supplierProductId: null,
+                    isActive: true,
+                    color: color,
+                    material: null
+                  }));
+
+                  console.log(`   ✅ Creadas ${colorVariants.length} variantes de color`);
+                  return colorVariants;
+                }
+
+                // Si solo hay una dimensión no estándar, crear variantes simples
+                const simpleVariants = productData.variants.slice(0, 30).map((variant, index) => {
                   const variantData = {
                     name: variant.name,
                     price: parseFloat(salePrice.toFixed(2)),
@@ -279,17 +343,19 @@ router.post('/import', verifyAdmin, async (req, res) => {
 
                   if (variant.name.includes(':')) {
                     const [property, value] = variant.name.split(':').map(s => s.trim());
+                    const propertyLower = property.toLowerCase();
 
-                    if (property.toLowerCase().includes('color')) {
+                    if (propertyLower.includes('color')) {
                       variantData.color = value;
-                    } else if (property.toLowerCase().includes('modelo') || property.toLowerCase().includes('model')) {
-                      variantData.material = value;
+                    } else if (propertyLower.includes('modelo') || propertyLower.includes('model')) {
+                      variantData.material = value.replace(/^Para\s+/i, '').replace(/^For\s+/i, '').trim();
                     }
                   }
 
                   return variantData;
                 });
 
+                console.log(`   ✅ Creadas ${simpleVariants.length} variantes simples`);
                 return simpleVariants;
               })()
             : [{

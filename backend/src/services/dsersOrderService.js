@@ -333,8 +333,14 @@ async function handleNewOrder(orderId) {
     // 3. Procesar orden para DSers
     const result = await processDSersOrder(orderId);
 
-    // 4. TODO: Enviar notificación por email/Telegram/Discord
-    console.log(`📧 Notificación: Nueva orden ${order.orderNumber} lista para DSers`);
+    // 4. Enviar notificación por email
+    try {
+      const notificationService = require('./dsersNotificationService');
+      await notificationService.sendNewOrderNotification(order, dsersOrderData);
+      console.log(`📧 Notificación enviada: Nueva orden ${order.orderNumber} lista para DSers`);
+    } catch (emailError) {
+      console.error('⚠️  Error enviando notificación (continuando):', emailError.message);
+    }
 
     return result;
 
