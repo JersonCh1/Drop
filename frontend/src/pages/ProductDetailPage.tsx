@@ -357,14 +357,14 @@ const ProductDetailPage: React.FC = () => {
                                   }
                                 }}
                                 disabled={!isAvailable}
-                                className={`p-4 border-2 rounded-lg text-left transition-all ${
+                                className={`p-4 border-3 rounded-xl text-left transition-all duration-300 hover:scale-105 ${
                                   selectedVariant?.color === color
-                                    ? 'border-cyan-600 bg-cyan-50 dark:bg-cyan-900/30 ring-2 ring-cyan-200 dark:ring-cyan-700'
-                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                                    ? 'border-cyan-600 dark:border-cyan-500 bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-900/40 dark:to-blue-900/30 ring-4 ring-cyan-300/50 dark:ring-cyan-600/50 shadow-lg shadow-cyan-200/50 dark:shadow-cyan-900/50'
+                                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-cyan-400 dark:hover:border-cyan-500 hover:shadow-md'
                                 } ${!isAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
                               >
-                                <div className="font-medium text-gray-900 dark:text-white">{color}</div>
-                                <div className="text-sm text-gray-600 dark:text-gray-400">{formatPrice(parseFloat(variant?.price || '0'))}</div>
+                                <div className="font-bold text-gray-900 dark:text-white text-base">{color}</div>
+                                <div className="text-lg font-extrabold text-cyan-600 dark:text-cyan-400 mt-2">{formatPrice(parseFloat(variant?.price || '0'))}</div>
                                 {!isAvailable && (
                                   <div className="text-xs text-red-600 mt-1">Agotado</div>
                                 )}
