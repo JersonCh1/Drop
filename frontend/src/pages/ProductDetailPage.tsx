@@ -375,6 +375,8 @@ const ProductDetailPage: React.FC = () => {
                       </>
                     )}
                   </div>
+                );
+              })()}
 
               {/* Quantity Selector */}
               <div className="mb-6">
