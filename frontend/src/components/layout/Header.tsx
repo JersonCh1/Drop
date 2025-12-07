@@ -62,8 +62,37 @@ const Header: React.FC<HeaderProps> = () => {
   };
 
   return (
-    <header
-      className={`sticky top-0 z-50 transition-all duration-300 ${
+    <>
+      {/* Banner de Beneficios - Sticky Top */}
+      <div className="sticky top-0 z-50 bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-600 text-white py-2.5 shadow-md">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs sm:text-sm font-medium">
+            <div className="flex items-center space-x-2">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="font-semibold">Envío Gratis +S/80</span>
+            </div>
+            <div className="hidden sm:block h-4 w-px bg-white/30"></div>
+            <div className="flex items-center space-x-2">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Devoluciones 30 días</span>
+            </div>
+            <div className="hidden sm:block h-4 w-px bg-white/30"></div>
+            <div className="flex items-center space-x-2">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <span>Pago 100% Seguro</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <header
+      className={`sticky top-[42px] z-40 transition-all duration-300 ${
         isScrolled
           ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50'
           : 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm dark:shadow-gray-800/50'
@@ -422,6 +451,7 @@ const Header: React.FC<HeaderProps> = () => {
         }
       `}</style>
     </header>
+    </>
   );
 };
 

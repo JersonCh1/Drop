@@ -88,6 +88,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-3xl shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 p-8 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-2xl hover:border-blue-300/50 dark:hover:border-blue-500/50 transition-all duration-500">
+      {/* Badge de ENVÍO GRATIS - MUY NOTABLE */}
+      <div className="absolute -top-3 -right-3 z-10">
+        <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-full shadow-xl shadow-green-500/50 transform rotate-12 hover:rotate-0 transition-transform duration-300">
+          <div className="flex items-center space-x-1.5">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <span className="text-xs font-extrabold tracking-wide">ENVÍO GRATIS</span>
+          </div>
+        </div>
+      </div>
+
       {/* Decorative gradient blob - más sutil */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/5 to-cyan-400/5 dark:from-blue-500/10 dark:to-cyan-500/10 rounded-full blur-3xl -z-10"></div>
 
@@ -122,12 +134,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
               </div>
             </div>
           </div>
-          <p className="text-sm text-blue-600 dark:text-blue-400 font-medium mt-3 flex items-center">
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            Envío gratis a todo el mundo
-          </p>
+          <div className="mt-3 bg-green-100/80 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-lg px-3 py-2">
+            <p className="text-sm text-green-700 dark:text-green-300 font-bold flex items-center">
+              <svg className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Envío GRATIS en compras +S/80 con código <span className="ml-1 bg-green-200 dark:bg-green-800 px-2 py-0.5 rounded font-extrabold">ENVIOGRATIS</span>
+            </p>
+          </div>
         </div>
 
         {/* Model Selection - Más elegante */}
