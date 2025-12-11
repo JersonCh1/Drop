@@ -12,14 +12,16 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('📦 Service Worker: Caching files');
+        // Caching files silently
         // Use addAll but handle errors gracefully
         return cache.addAll(urlsToCache).catch((error) => {
-          console.warn('⚠️ Some files failed to cache:', error);
+          // Some files failed to cache (silent)
           // Cache files individually to avoid failing entire batch
           return Promise.all(
             urlsToCache.map(url =>
-              cache.add(url).catch(err => console.warn(`Failed to cache ${url}:`, err))
+              cache.add(url).catch(err => {
+                // Failed to cache (silent)
+              })
             )
           );
         });
@@ -35,7 +37,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('🗑️ Service Worker: Deleting old cache', cacheName);
+            // Deleting old cache silently
             return caches.delete(cacheName);
           }
         })
@@ -138,4 +140,4 @@ function openDB() {
   });
 }
 
-console.log('✅ Service Worker loaded');
+// Service Worker loaded silently

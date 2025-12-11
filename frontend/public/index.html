@@ -130,30 +130,32 @@
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('%PUBLIC_URL%/service-worker.js')
             .then((registration) => {
-              console.log('✅ Service Worker registrado:', registration.scope);
-
+              // Service Worker registered silently
               // Check for updates
               registration.addEventListener('updatefound', () => {
                 const newWorker = registration.installing;
                 newWorker.addEventListener('statechange', () => {
                   if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    console.log('🔄 Nueva versión disponible. Recarga para actualizar.');
+                    // New version available (silent)
                   }
                 });
               });
             })
             .catch((error) => {
-              console.log('❌ Error registrando Service Worker:', error);
+              // Error registering Service Worker (silent in production)
+              if (process.env.NODE_ENV === 'development') {
+                console.error('Service Worker error:', error);
+              }
             });
         });
       }
 
-      // Install prompt
+      // Install prompt (silent)
       let deferredPrompt;
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        console.log('📱 App puede ser instalada');
+        // App can be installed (silent)
       });
     </script>
   </body>
