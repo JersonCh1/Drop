@@ -15,7 +15,8 @@ class DevToolsProtection {
 
   private init() {
     // Método 1: Detectar DevTools por dimensiones de la ventana
-    this.detectDevTools();
+    // DESACTIVADO - Puede causar falsos positivos
+    // this.detectDevTools();
 
     // Método 2: Deshabilitar click derecho
     this.disableRightClick();
@@ -24,7 +25,8 @@ class DevToolsProtection {
     this.disableKeyboardShortcuts();
 
     // Método 4: Detectar debugger
-    this.preventDebugger();
+    // DESACTIVADO - Puede causar falsos positivos
+    // this.preventDebugger();
 
     // Método 5: Limpiar console.log en producción
     this.disableConsole();
@@ -33,7 +35,8 @@ class DevToolsProtection {
     this.protectSourceCode();
 
     // Método 7: Detectar herramientas de inspección
-    this.detectInspectionTools();
+    // DESACTIVADO - Puede causar falsos positivos
+    // this.detectInspectionTools();
   }
 
   // Detectar si DevTools está abierto
