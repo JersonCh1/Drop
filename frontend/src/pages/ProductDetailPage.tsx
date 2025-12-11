@@ -102,8 +102,8 @@ const ProductDetailPage: React.FC = () => {
 
     const item = {
       id: selectedVariant ? selectedVariant.id : product.id,
-      productId: parseInt(product.id.replace(/[^0-9]/g, '')) || 1,
-      variantId: selectedVariant ? parseInt(selectedVariant.id.replace(/[^0-9]/g, '')) : undefined,
+      productId: product.id, // ✅ Usar el ID real del producto (string o number)
+      variantId: selectedVariant ? selectedVariant.id : undefined, // ✅ Usar el ID real de la variante
       name: product.name,
       price,
       model: product.model || selectedVariant?.name || 'Universal',

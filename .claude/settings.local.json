@@ -94,7 +94,8 @@
       "Bash(timeout 20 node:*)",
       "Bash(del mejorar-descripciones-y-reviews.js verificar-reviews.js ver-producto-magsafe.js resumen-final.js limpiar-reviews.js)",
       "Bash(DATABASE_URL=\"postgresql://postgres:zwfHcUfTAZoQMZNbvuSDJiBFWYzesYkk@shinkansen.proxy.rlwy.net:47497/railway\" node -e:*)",
-      "Bash(del:*)"
+      "Bash(del:*)",
+      "Bash(start http://localhost:3000)"
     ],
     "deny": [],
     "ask": []
