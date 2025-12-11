@@ -144,16 +144,17 @@ router.get('/track', async (req, res) => {
 
 // POST /api/orders - Crear nueva orden
 router.post('/', async (req, res) => {
-  const client = await getDbClient();
-  
+  const { PrismaClient } = require('@prisma/client');
+  const prisma = new PrismaClient();
+
   try {
     const { customerInfo, items, subtotal, shippingCost, total, paymentMethod = 'manual' } = req.body;
 
-    console.log('📦 Nueva orden recibida:', { 
-      email: customerInfo?.email, 
-      total, 
+    console.log('📦 Nueva orden recibida:', {
+      email: customerInfo?.email,
+      total,
       items: items?.length,
-      paymentMethod 
+      paymentMethod
     });
 
     // Validar datos requeridos
@@ -164,89 +165,56 @@ router.post('/', async (req, res) => {
       });
     }
 
-    await client.connect();
-
     // Generar número de orden único
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
 
-    // Insertar orden principal con valores por defecto para campos opcionales
-    const orderResult = await client.query(`
-      INSERT INTO orders (
-        order_number, 
-        customer_first_name, 
-        customer_last_name, 
-        customer_email, 
-        customer_phone, 
-        shipping_address, 
-        shipping_city, 
-        shipping_state, 
-        shipping_postal_code, 
-        shipping_country, 
-        notes, 
-        subtotal, 
-        shipping_cost, 
-        tax,
-        total, 
-        payment_method, 
-        status, 
-        payment_status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
-      RETURNING id, order_number, created_at
-    `, [
-      orderNumber,
-      customerInfo.firstName || 'Cliente',
-      customerInfo.lastName || 'Apellido',
-      customerInfo.email,
-      customerInfo.phone || 'No proporcionado',
-      customerInfo.address || 'No proporcionada',
-      customerInfo.city || 'Ciudad',
-      customerInfo.state || 'Estado',
-      customerInfo.postalCode || '00000',
-      customerInfo.country || 'PE',
-      customerInfo.notes || null,
-      subtotal || total,
-      shippingCost || 0,
-      0, // tax
-      total,
-      paymentMethod,
-      'pending',
-      'pending'
-    ]);
+    // Crear orden con Prisma Client (evita problemas de tipos)
+    const order = await prisma.order.create({
+      data: {
+        orderNumber,
+        customerFirstName: customerInfo.firstName || 'Cliente',
+        customerLastName: customerInfo.lastName || 'Apellido',
+        customerEmail: customerInfo.email,
+        customerPhone: customerInfo.phone || 'No proporcionado',
+        shippingAddress: customerInfo.address || 'No proporcionada',
+        shippingCity: customerInfo.city || 'Ciudad',
+        shippingState: customerInfo.state || 'Estado',
+        shippingPostalCode: customerInfo.postalCode || '00000',
+        shippingCountry: customerInfo.country || 'PE',
+        notes: customerInfo.notes || null,
+        subtotal: subtotal || total,
+        shippingCost: shippingCost || 0,
+        tax: 0,
+        total,
+        paymentMethod,
+        status: 'PENDING',
+        paymentStatus: 'PENDING',
+        // Crear items de la orden
+        items: {
+          create: items.map(item => ({
+            productId: String(item.productId), // ✅ Asegurar que sea string
+            variantId: item.variantId ? String(item.variantId) : null, // ✅ Asegurar que sea string
+            productName: item.name || 'Producto',
+            productModel: item.model || '',
+            productColor: item.color || '',
+            quantity: item.quantity || 1,
+            price: item.price || 0,
+            total: (item.price || 0) * (item.quantity || 1)
+          }))
+        }
+      },
+      include: {
+        items: true
+      }
+    });
 
-    const orderId = orderResult.rows[0].id;
-
-    // Insertar items de la orden
-    for (const item of items) {
-      await client.query(`
-        INSERT INTO order_items (
-          order_id, 
-          product_id, 
-          product_name, 
-          product_model, 
-          product_color, 
-          quantity, 
-          price, 
-          total
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      `, [
-        orderId,
-        item.productId || 1,
-        item.name || 'Producto',
-        item.model || '',
-        item.color || '',
-        item.quantity || 1,
-        item.price || 0,
-        (item.price || 0) * (item.quantity || 1)
-      ]);
-    }
-
-    await client.end();
+    await prisma.$disconnect();
 
     // 🚀 AUTOMATIZACIÓN DSERS: Procesar orden automáticamente
     try {
       const dsersService = require('../services/dsersOrderService');
-      await dsersService.handleNewOrder(orderId);
-      console.log(`✅ Orden ${orderResult.rows[0].order_number} enviada a DSers automáticamente`);
+      await dsersService.handleNewOrder(order.id);
+      console.log(`✅ Orden ${order.orderNumber} enviada a DSers automáticamente`);
     } catch (dsersError) {
       console.error('⚠️  Error procesando orden con DSers (continuando):', dsersError.message);
       // No fallar la orden si DSers falla, solo logear
@@ -257,29 +225,30 @@ router.post('/', async (req, res) => {
       success: true,
       message: 'Orden creada exitosamente',
       data: {
-        orderId,
-        orderNumber: orderResult.rows[0].order_number,
+        orderId: order.id,
+        orderNumber: order.orderNumber,
         total,
-        createdAt: orderResult.rows[0].created_at,
+        createdAt: order.createdAt,
         status: 'pending',
         // URL de pago para WhatsApp o método manual
-        paymentUrl: `https://wa.me/51999888777?text=Hola!%20Acabo%20de%20realizar%20una%20orden%20${orderResult.rows[0].order_number}%20por%20$${total}%20USD`,
+        paymentUrl: `https://wa.me/51999888777?text=Hola!%20Acabo%20de%20realizar%20una%20orden%20${order.orderNumber}%20por%20$${total}%20USD`,
         paymentInstructions: 'Te contactaremos por WhatsApp para coordinar el pago y envío.'
       }
     };
 
-    console.log(`✅ Orden creada: ${orderResult.rows[0].order_number} - $${total}`);
+    console.log(`✅ Orden creada: ${order.orderNumber} - $${total}`);
 
     res.status(201).json(response);
 
   } catch (error) {
     console.error('❌ Error al crear orden:', error);
-    
-    // Asegurarse de cerrar la conexión en caso de error
+    console.error('❌ Stack trace:', error.stack);
+
+    // Asegurarse de cerrar la conexión Prisma en caso de error
     try {
-      await client.end();
+      await prisma.$disconnect();
     } catch (closeError) {
-      console.error('Error cerrando conexión:', closeError);
+      console.error('Error cerrando conexión Prisma:', closeError);
     }
 
     res.status(500).json({
