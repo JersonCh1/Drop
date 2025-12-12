@@ -868,6 +868,10 @@ app.get('/api/admin/stats', verifyAdminToken, async (req, res) => {
 const analyticsRoutes = require('./routes/analytics');
 app.use('/api/analytics', analyticsRoutes);
 
+// =================== RUTAS DE FACEBOOK PRODUCT FEED (DYNAMIC ADS) ===================
+const facebookProductFeedRoutes = require('./routes/facebookProductFeed');
+app.use('/api/facebook/product-feed', facebookProductFeedRoutes);
+
 // =================== RUTAS DE PRODUCTOS ===================
 const productsRoutes = require('./routes/products-prisma'); // Using Prisma for SQLite
 app.use('/api/products', productsRoutes);
