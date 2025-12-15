@@ -4,9 +4,6 @@ const crypto = require('crypto');
 const axios = require('axios');
 const { PrismaClient } = require('@prisma/client');
 const cjAuthService = require('../services/cjAuthService');
-const { paymentLimiter } = require('../middleware/rateLimiter');
-const { validateIzipayFormToken, validateIzipayWebhook } = require('../validators/payment.validator');
-const logger = require('../utils/logger');
 
 const prisma = new PrismaClient();
 
@@ -28,9 +25,9 @@ console.log('Izipay HMAC Key:', IZIPAY_HMACSHA256 ? '✓ Configurado' : '✗ Fal
  * Endpoint: POST /izipay/formtoken
  * Genera el FormToken para el formulario de pago
  */
-router.post('/formtoken', paymentLimiter, validateIzipayFormToken, async (req, res) => {
+router.post('/formtoken', async (req, res) => {
   try {
-    logger.info('Izipay - Generando FormToken', { orderId: req.body.orderId });
+    console.log('🔵 Izipay - Generando FormToken');
 
     const {
       amount,
@@ -47,12 +44,23 @@ router.post('/formtoken', paymentLimiter, validateIzipayFormToken, async (req, r
       city,
       state,
       zipCode,
-      payMethod
+      payMethod // Puede ser: 'CARD', 'YAPE_CODE', 'PLIN', null (por defecto tarjetas)
     } = req.body;
 
-    // Validar credenciales de Izipay
+    // Debug: mostrar todos los datos recibidos
+    console.log('📥 Datos recibidos:', JSON.stringify(req.body, null, 2));
+
+    // Validaciones
+    if (!amount || !orderId || !email) {
+      console.error('❌ Faltan datos:', { amount, orderId, email });
+      return res.status(400).json({
+        success: false,
+        message: 'Faltan datos requeridos: amount, orderId, email'
+      });
+    }
+
     if (!IZIPAY_USERNAME || !IZIPAY_PASSWORD) {
-      logger.error('Credenciales de Izipay no configuradas');
+      console.error('❌ Credenciales de Izipay no configuradas');
       return res.status(500).json({
         success: false,
         message: 'Credenciales de Izipay no configuradas en el servidor'

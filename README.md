@@ -19,7 +19,6 @@
 ## 📋 Tabla de Contenidos
 
 - [🎯 Quick Start](#-quick-start)
-- [🔒 Seguridad](#-seguridad)
 - [✨ Características](#-características)
 - [🏗️ Stack Tecnológico](#️-stack-tecnológico)
 - [🔐 Configuración](#-configuración)
@@ -56,70 +55,8 @@ npm start
 ### Acceso Admin
 
 - **URL:** http://localhost:3000/admin
-- **Usuario:** Configurado en `.env` (`ADMIN_USERNAME`)
-- **Contraseña:** Configurado en `.env` (`ADMIN_PASSWORD_HASH`)
-
-> **⚠️ SEGURIDAD:** Las credenciales ahora están encriptadas con bcrypt. Ver [SECURITY_GUIDE.md](./SECURITY_GUIDE.md) para configuración.
-
----
-
-## 🔒 Seguridad
-
-### 🛡️ Características de Seguridad Implementadas
-
-Este proyecto implementa las mejores prácticas de seguridad para e-commerce:
-
-#### ✅ Autenticación y Autorización
-- **Contraseñas encriptadas** con bcrypt (10 rounds)
-- **JWT** para sesiones seguras (tokens con expiración)
-- **Variables de entorno** para credenciales (nunca en código)
-- **Middleware de autenticación** en rutas admin
-
-#### ✅ Protección contra Ataques
-- **Rate Limiting**: Previene brute-force y DDoS
-  - Login: 5 intentos / 15 min
-  - Registro: 3 intentos / hora
-  - Pagos: 10 intentos / hora
-- **CORS restrictivo**: Solo orígenes autorizados en producción
-- **Helmet.js**: Headers de seguridad HTTP
-- **Validación robusta**: Joi schemas en todos los endpoints críticos
-
-#### ✅ Logging y Monitoreo
-- **Winston**: Logging profesional estructurado
-- **Logs rotados**: Máx 5MB por archivo, 5 archivos históricos
-- **Niveles de log**: error, warn, info, http, debug
-- **Auditoría completa**: Todos los logins y pagos registrados
-
-#### ✅ Manejo de Errores
-- **Middleware global**: Captura todos los errores
-- **Respuestas seguras**: No expone stack traces en producción
-- **Logging automático**: Todos los errores registrados
-- **Códigos HTTP apropiados**: 401, 403, 429, 500, etc.
-
-### 📚 Documentación de Seguridad
-
-- **[SECURITY_IMPROVEMENTS.md](./SECURITY_IMPROVEMENTS.md)** - Cambios implementados
-- **[SECURITY_GUIDE.md](./SECURITY_GUIDE.md)** - Guía completa de seguridad
-- **[.env.example](./backend/.env.example)** - Configuración de variables
-
-### 🔑 Configuración Inicial de Seguridad
-
-```bash
-# 1. Copia .env.example
-cp backend/.env.example backend/.env
-
-# 2. Genera hash de contraseña admin
-cd backend
-node -e "const bcrypt = require('bcryptjs'); console.log(bcrypt.hashSync('TU_PASSWORD_AQUI', 10));"
-
-# 3. Genera JWT secret
-node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-
-# 4. Edita .env con los valores generados
-nano .env
-```
-
-**Nivel de Seguridad Actual: 🟢 ALTA**
+- **Usuario:** `admin`
+- **Contraseña:** `admin123`
 
 ---
 

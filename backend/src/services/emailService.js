@@ -34,7 +34,7 @@ class EmailService {
         config.service = 'hotmail';
       }
 
-      this.transporter = nodemailer.createTransport(config);
+      this.transporter = nodemailer.createTransporter(config);
 
       // Verificar conexión
       await this.transporter.verify();

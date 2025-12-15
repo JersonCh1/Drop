@@ -4,7 +4,6 @@ const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { registerLimiter, loginLimiter } = require('../middleware/rateLimiter');
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'dropshipping-super-secret-key-2024';
@@ -33,7 +32,7 @@ function verifyCustomerToken(req, res, next) {
 }
 
 // POST /api/auth/register - Registro de cliente
-router.post('/register', registerLimiter, async (req, res) => {
+router.post('/register', async (req, res) => {
   try {
     const { email, password, firstName, lastName, phone } = req.body;
 
@@ -120,7 +119,7 @@ router.post('/register', registerLimiter, async (req, res) => {
 });
 
 // POST /api/auth/login - Login de cliente
-router.post('/login', loginLimiter, async (req, res) => {
+router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 

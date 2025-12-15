@@ -50,8 +50,7 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
     "uuid": "^9.0.0",
-    "whatsapp-web.js": "^1.22.2",
-    "winston": "^3.19.0"
+    "whatsapp-web.js": "^1.22.2"
   },
   "devDependencies": {
     "@types/jest": "^29.5.4",
