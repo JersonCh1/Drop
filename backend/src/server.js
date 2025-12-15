@@ -6,6 +6,8 @@ const helmet = require('helmet');
 const fileUpload = require('express-fileupload');
 const cron = require('node-cron');
 const morgan = require('morgan');
+const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -39,7 +41,6 @@ app.use(helmet({
 
 app.use(cors({
   origin: function(origin, callback) {
-    // Permitir requests sin origin (como Postman) o desde localhost
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:3001',
@@ -47,13 +48,22 @@ app.use(cors({
       'https://www.casepro.es',
       'https://casepro.es',
       'https://flashfunded-frontend.vercel.app',
+      'https://drop-seven-pi.vercel.app',
       process.env.FRONTEND_URL
     ].filter(Boolean);
 
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    // En desarrollo, permitir requests sin origin (Postman)
+    if (!origin && process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+
+    // Verificar si el origin está permitido
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(null, true); // En desarrollo, permitir todos
+      // En producción, rechazar orígenes no autorizados
+      console.warn(`⚠️ CORS bloqueó origen: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
@@ -77,6 +87,26 @@ app.use(fileUpload({
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('combined'));
 }
+
+// =================== RATE LIMITING ===================
+// Rate limiter para login admin (5 intentos / 15 min)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: 'Demasiados intentos de login',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter para pagos (10 intentos / hora)
+const paymentLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: 'Demasiadas solicitudes de pago',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Manejar favicon.ico
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
@@ -218,16 +248,21 @@ app.get('/api/test-db', async (req, res) => {
 // =================== RUTAS DE AUTENTICACIÓN ADMIN ===================
 
 // POST /api/admin/login - Login de administrador
-app.post('/api/admin/login', async (req, res) => {
+app.post('/api/admin/login', loginLimiter, async (req, res) => {
   try {
     console.log('🔑 Intento de login admin:', { username: req.body.username });
     const { username, password } = req.body;
 
-    // Credenciales hardcodeadas (en producción usar base de datos hash)
-    const ADMIN_USERNAME = 'admin';
-    const ADMIN_PASSWORD = 'admin123';
+    // Credenciales desde variables de entorno con bcrypt
+    const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+    const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
 
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+    // Fallback: Si no hay hash, usar password plano (desarrollo)
+    const isValidPassword = ADMIN_PASSWORD_HASH
+      ? bcrypt.compareSync(password, ADMIN_PASSWORD_HASH)
+      : password === 'admin123';
+
+    if (username === ADMIN_USERNAME && isValidPassword) {
       // Generar JWT válido
       const token = jwt.sign(
         {
