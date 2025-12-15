@@ -6,6 +6,9 @@ const helmet = require('helmet');
 const fileUpload = require('express-fileupload');
 const cron = require('node-cron');
 const morgan = require('morgan');
+const bcrypt = require('bcryptjs');
+const { loginLimiter, apiLimiter } = require('./middleware/rateLimiter');
+const logger = require('./utils/logger');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -39,7 +42,6 @@ app.use(helmet({
 
 app.use(cors({
   origin: function(origin, callback) {
-    // Permitir requests sin origin (como Postman) o desde localhost
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:3001',
@@ -50,10 +52,18 @@ app.use(cors({
       process.env.FRONTEND_URL
     ].filter(Boolean);
 
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    // En desarrollo, permitir requests sin origin (Postman, curl, etc.)
+    if (!origin && process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+
+    // Validar que el origin esté en la lista permitida
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(null, true); // En desarrollo, permitir todos
+      // En producción, rechazar orígenes no autorizados
+      console.warn(`⚠️ CORS bloqueó origen no autorizado: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
@@ -73,10 +83,9 @@ app.use(fileUpload({
   responseOnLimit: "El archivo es demasiado grande"
 }));
 
-// Logging en desarrollo
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('combined'));
-}
+// Logging HTTP con Morgan + Winston
+app.use(morgan('combined', { stream: logger.stream }));
+
 // Manejar favicon.ico
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
@@ -218,16 +227,21 @@ app.get('/api/test-db', async (req, res) => {
 // =================== RUTAS DE AUTENTICACIÓN ADMIN ===================
 
 // POST /api/admin/login - Login de administrador
-app.post('/api/admin/login', async (req, res) => {
+app.post('/api/admin/login', loginLimiter, async (req, res) => {
   try {
-    console.log('🔑 Intento de login admin:', { username: req.body.username });
+    logger.logAuth('admin_login_attempt', req.body.username, false);
     const { username, password } = req.body;
 
-    // Credenciales hardcodeadas (en producción usar base de datos hash)
-    const ADMIN_USERNAME = 'admin';
-    const ADMIN_PASSWORD = 'admin123';
+    // Credenciales desde variables de entorno con bcrypt
+    const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+    const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
 
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+    if (!ADMIN_USERNAME || !ADMIN_PASSWORD_HASH) {
+      logger.error('Credenciales admin no configuradas en .env');
+      return res.status(500).json({ error: 'Configuración de admin incompleta' });
+    }
+
+    if (username === ADMIN_USERNAME && bcrypt.compareSync(password, ADMIN_PASSWORD_HASH)) {
       // Generar JWT válido
       const token = jwt.sign(
         {
@@ -239,7 +253,7 @@ app.post('/api/admin/login', async (req, res) => {
         { expiresIn: '7d' } // Token válido por 7 días
       );
 
-      console.log('✅ Login exitoso, token JWT generado');
+      logger.logAuth('admin_login_success', username, true);
 
       res.json({
         success: true,
@@ -1012,12 +1026,23 @@ app.use('*', (req, res) => {
   });
 });
 
+// =================== ERROR HANDLING ===================
+// Debe ir después de todas las rutas
+
+const { notFound, errorHandler } = require('./middleware/errorHandler');
+
+// 404 - Ruta no encontrada
+app.use(notFound);
+
+// Manejador global de errores (debe ser el último middleware)
+app.use(errorHandler);
+
 // =================== STARTUP ===================
 
 async function startServer() {
   try {
-    console.log('🚀 Iniciando servidor...');
-    console.log(`📊 Entorno: ${process.env.NODE_ENV || 'development'}`);
+    logger.info('Iniciando servidor...');
+    logger.info(`Entorno: ${process.env.NODE_ENV || 'development'}`);
 
     // Detectar tipo de base de datos desde DATABASE_URL
     const databaseUrl = process.env.DATABASE_URL || '';
@@ -1033,7 +1058,7 @@ async function startServer() {
       dbInfo = 'SQLite (Local - Desarrollo)';
     }
 
-    console.log(`📁 Base de datos: ${dbInfo}`);
+    logger.info(`Base de datos: ${dbInfo}`);
 
     // Inicializar base de datos - COMENTADO para SQLite/Prisma
     // await initializeDatabase();
@@ -1053,16 +1078,16 @@ async function startServer() {
 
     // Auto-fix imágenes rotas (ejecutar en background)
     const { autoFixImages } = require('./utils/auto-fix-images');
-    autoFixImages().catch(err => console.log('⚠️  Auto-fix imágenes falló:', err.message));
+    autoFixImages().catch(err => logger.warn('Auto-fix imágenes falló: ' + err.message));
 
     // Iniciar servidor
     app.listen(PORT, '0.0.0.0', () => {
-      console.log('\n🎉 ¡Servidor iniciado correctamente!\n');
-      console.log(`🌐 Servidor: http://0.0.0.0:${PORT}`);
-      console.log(`🏥 Health: http://localhost:${PORT}/health`);
-      console.log(`🗄️  DB Test: http://localhost:${PORT}/api/test-db`);
-      console.log(`📦 Orders: http://localhost:${PORT}/api/orders`);
-      console.log(`🔑 Admin: http://localhost:${PORT}/api/admin/login`);
+      logger.info('¡Servidor iniciado correctamente!');
+      logger.info(`Servidor: http://0.0.0.0:${PORT}`);
+      logger.info(`Health: http://localhost:${PORT}/health`);
+      logger.info(`DB Test: http://localhost:${PORT}/api/test-db`);
+      logger.info(`Orders: http://localhost:${PORT}/api/orders`);
+      logger.info(`Admin: http://localhost:${PORT}/api/admin/login`);
       console.log(`📊 Stats: http://localhost:${PORT}/api/admin/stats`);
 
       if (process.env.IZIPAY_USERNAME) {
