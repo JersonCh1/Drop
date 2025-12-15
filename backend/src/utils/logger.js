@@ -44,36 +44,50 @@ const logFormat = process.env.NODE_ENV === 'production' ? prodFormat : devFormat
 
 // Crear directorio de logs si no existe
 const logsDir = path.join(__dirname, '../../logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
+let useFileLogging = true;
+
+try {
+  if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir, { recursive: true });
+  }
+} catch (error) {
+  console.warn('⚠️ No se pudo crear directorio de logs, usando solo console');
+  useFileLogging = false;
 }
 
 // Transports: dónde se guardan los logs
-const transports = [
-  // Errores en archivo separado
-  new winston.transports.File({
-    filename: path.join(logsDir, 'error.log'),
-    level: 'error',
-    maxsize: 5242880, // 5MB
-    maxFiles: 5,
-  }),
+const transports = [];
 
-  // Todos los logs en archivo combined
-  new winston.transports.File({
-    filename: path.join(logsDir, 'combined.log'),
-    maxsize: 5242880, // 5MB
-    maxFiles: 5,
-  }),
-];
-
-// En desarrollo, también mostrar en consola
-if (process.env.NODE_ENV !== 'production') {
-  transports.push(
-    new winston.transports.Console({
-      format: devFormat,
-    })
-  );
+// Intentar agregar file transports solo si el directorio se creó correctamente
+if (useFileLogging) {
+  try {
+    transports.push(
+      // Errores en archivo separado
+      new winston.transports.File({
+        filename: path.join(logsDir, 'error.log'),
+        level: 'error',
+        maxsize: 5242880, // 5MB
+        maxFiles: 5,
+      }),
+      // Todos los logs en archivo combined
+      new winston.transports.File({
+        filename: path.join(logsDir, 'combined.log'),
+        maxsize: 5242880, // 5MB
+        maxFiles: 5,
+      })
+    );
+  } catch (error) {
+    console.warn('⚠️ Error creando file transports, usando solo console');
+    useFileLogging = false;
+  }
 }
+
+// Siempre agregar console transport (especialmente en producción si file logging falla)
+transports.push(
+  new winston.transports.Console({
+    format: process.env.NODE_ENV === 'production' ? prodFormat : devFormat,
+  })
+);
 
 // Crear el logger
 const logger = winston.createLogger({
