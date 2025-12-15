@@ -1,5 +1,6 @@
 const winston = require('winston');
 const path = require('path');
+const fs = require('fs');
 
 // Definir niveles de log
 const levels = {
@@ -43,6 +44,9 @@ const logFormat = process.env.NODE_ENV === 'production' ? prodFormat : devFormat
 
 // Crear directorio de logs si no existe
 const logsDir = path.join(__dirname, '../../logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
 
 // Transports: dónde se guardan los logs
 const transports = [
