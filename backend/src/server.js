@@ -52,8 +52,8 @@ app.use(cors({
       process.env.FRONTEND_URL
     ].filter(Boolean);
 
-    // En desarrollo, permitir requests sin origin (Postman)
-    if (!origin && process.env.NODE_ENV !== 'production') {
+    // Permitir requests sin origin (healthcheck, Postman, curl)
+    if (!origin) {
       return callback(null, true);
     }
 
@@ -61,7 +61,7 @@ app.use(cors({
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      // En producción, rechazar orígenes no autorizados
+      // Rechazar orígenes no autorizados
       console.warn(`⚠️ CORS bloqueó origen: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
