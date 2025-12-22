@@ -95,7 +95,18 @@
       "Bash(del mejorar-descripciones-y-reviews.js verificar-reviews.js ver-producto-magsafe.js resumen-final.js limpiar-reviews.js)",
       "Bash(DATABASE_URL=\"postgresql://postgres:zwfHcUfTAZoQMZNbvuSDJiBFWYzesYkk@shinkansen.proxy.rlwy.net:47497/railway\" node -e:*)",
       "Bash(del:*)",
-      "Bash(start http://localhost:3000)"
+      "Bash(start http://localhost:3000)",
+      "mcp__ide__getDiagnostics",
+      "Bash(wc:*)",
+      "Bash(git -C /c/Users/Jerson/Desktop/DROP/dropshipping-iphone log --oneline)",
+      "Bash(timeout 10 npm start)",
+      "Bash(git revert:*)",
+      "Bash(timeout 8 npm start)",
+      "Bash(xargs cat:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(xargs:*)",
+      "Bash(npm audit fix:*)"
     ],
     "deny": [],
     "ask": []
